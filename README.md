@@ -1,172 +1,101 @@
-TechForge
+# TechForge Architecture Specification v1.0
 
-Conceito:
+## 1. Visão Geral
 
-Tech = Tecnologia
-Forge = Forja / Criação
+TechForge é uma plataforma corporativa modular destinada à execução de ferramentas técnicas e comerciais através de módulos independentes.
 
-A plataforma não é uma ferramenta específica.
+O objetivo principal da plataforma é permitir que novas funcionalidades sejam adicionadas através de módulos sem necessidade de alterações no Core da aplicação.
 
-Ela é uma "forja" para ferramentas corporativas.
+A plataforma deve operar inicialmente em modo desktop/local e futuramente suportar implantação centralizada em servidores Linux com múltiplos usuários simultâneos.
 
-Visão do Produto
+---
 
-TechForge é uma plataforma corporativa modular para execução de ferramentas técnicas e comerciais.
+# 2. Objetivos
 
-Características:
+## Objetivos Principais
 
-Instalação local em desktop
-Execução futura em servidor Linux
-Arquitetura baseada em módulos/plugins
-Marketplace integrado
-SDK oficial para desenvolvimento
-Interface moderna e minimalista
-Área máxima disponível para os módulos
-Suporte a assinatura e validação de módulos
-Sistema preparado para múltiplos desenvolvedores
-Stack Tecnológica
-Frontend
-React
-TypeScript
-Vite
-TailwindCSS
-shadcn/ui
+* Plataforma modular baseada em plugins.
+* Instalação local em qualquer desktop.
+* Possibilidade de migração futura para ambiente servidor.
+* Interface moderna, limpa e focada no conteúdo.
+* Marketplace integrado para distribuição de módulos.
+* SDK oficial para desenvolvimento de módulos.
+* Sistema de validação e assinatura de módulos.
+* Estrutura padronizada para desenvolvedores terceiros.
 
-Motivo:
+## Não Objetivos
 
-Leve
-Moderno
-Fácil manutenção
-Excelente aparência visual
-Backend
-Python
-FastAPI
+* ERP.
+* CRM completo.
+* Sistema com múltiplos níveis complexos de permissão.
+* Dashboard executivo com KPIs e gráficos excessivos.
 
-Motivo:
+---
 
-APIs
-Integrações
-Ferramentas técnicas
-IA futura
-Banco
+# 3. Princípios Arquiteturais
 
-Modo Local:
+## Módulo é o protagonista
 
-SQLite
-
-Modo Servidor:
-
-PostgreSQL
-
-Abstraídos pelo SDK.
-
-Estrutura de Categorias
-
-Exemplo:
-
-Backup
-├── Veeam
-│   ├── M365 Sizing
-│   ├── Salesforce Sizing
-│   └── VBR Sizing
-
-Virtualização
-├── VMware
-│   ├── Health Check
-│   ├── Capacity Planning
-│   └── RVTools Analyzer
-
-Cloud
-├── AWS
-├── Azure
-
-Comercial
-├── Leads
-├── Propostas
-
-O módulo não cria menus.
-
-O módulo apenas declara:
-
-category: Backup
-vendor: Veeam
-
-O Core monta automaticamente.
-
-Filosofia da Interface
-
-Princípio principal:
-
-O módulo é o protagonista.
+A plataforma deve ocupar o mínimo possível da interface.
 
 Meta:
 
-95% do espaço para o módulo
-5% para a plataforma
-Layout
+* 95% da área útil destinada aos módulos.
+* 5% destinada ao Core.
 
-Modo Dashboard:
+## Core desacoplado
 
-┌──────────────────────┐
-│ Header compacto      │
-├──────────────────────┤
-│ Categorias           │
-│ Módulos              │
-└──────────────────────┘
+O Core não deve conter regras de negócio dos módulos.
 
-Modo Módulo:
+Responsabilidades do Core:
 
-┌──────────────────────┐
-│ Header mínimo        │
-├──────────────────────┤
-│                      │
-│      Módulo          │
-│                      │
-└──────────────────────┘
+* Navegação.
+* Registro de módulos.
+* Marketplace.
+* SDK.
+* Configuração.
+* Health Check.
+* Logs.
+* Atualizações.
 
-Sidebar recolhida automaticamente.
+## Desenvolvimento orientado a plugins
 
-Marketplace
+O sucesso da arquitetura será medido pela capacidade de adicionar novos módulos sem alterar o código do Core.
 
-Categorias:
+---
 
-Instalados
+# 4. Stack Tecnológica
 
-Disponíveis
+## Frontend
 
-Atualizações
+* React
+* TypeScript
+* Vite
+* TailwindCSS
+* shadcn/ui
 
-Desenvolvimento
-Instalação
+## Backend
 
-Fluxo:
+* Python
+* FastAPI
 
-Marketplace
+## Banco de Dados
 
-↓
+Modo Local:
 
-Download
+* SQLite
 
-↓
+Modo Servidor:
 
-Repository
+* PostgreSQL
 
-↓
+Acesso sempre realizado através do SDK.
 
-Validação
+---
 
-↓
+# 5. Estrutura do Projeto
 
-Instalação
-
-↓
-
-Registro
-
-↓
-
-Disponível
-Estrutura de Diretórios
+```text
 techforge/
 
 core/
@@ -178,19 +107,23 @@ cli/
 marketplace/
 
 modules/
-
-repository/
-
-installed/
+├── repository/
+└── installed/
 
 shared/
-
-logs/
 
 docs/
 
 config/
-Estrutura de um Módulo
+
+logs/
+```
+
+---
+
+# 6. Estrutura de um Módulo
+
+```text
 module_name/
 
 manifest.yaml
@@ -204,10 +137,15 @@ assets/
 docs/
 
 tests/
-Manifesto
+```
 
-Versão inicial:
+---
 
+# 7. Manifesto do Módulo
+
+Exemplo:
+
+```yaml
 id: veeam_m365
 
 name: Veeam M365 Sizing
@@ -237,110 +175,167 @@ checksum:
 homepage:
 
 documentation:
-SDK Oficial
+```
 
-Todos os módulos utilizarão apenas o SDK.
+---
+
+# 8. Categorias
 
 Exemplo:
 
-sdk.database
+Backup
 
-sdk.storage
+* Veeam
+* Commvault
 
-sdk.logger
+Virtualização
 
-sdk.notifications
+* VMware
+* Hyper-V
 
-sdk.settings
+Cloud
 
-sdk.marketplace
-SDK Frontend
-sdk.ui.card()
+* AWS
+* Azure
 
-sdk.ui.table()
+Comercial
 
-sdk.ui.form()
+* Leads
+* Propostas
 
-sdk.ui.modal()
+As categorias serão montadas automaticamente pelo Core.
 
-sdk.ui.notification()
+---
 
-ou componentes React.
+# 9. App Shell
 
-Ciclo de Vida do Módulo
+O Core fornecerá:
 
-Obrigatório:
+* Header compacto.
+* Sidebar recolhível.
+* Breadcrumb.
+* Notificações.
+* Marketplace.
+* Configurações.
 
-install()
+Os módulos serão carregados dentro da área principal da aplicação.
 
-enable()
+Não será permitido abrir módulos em novas abas.
 
-disable()
+Não será permitido que módulos controlem menus globais.
 
-upgrade()
+---
 
-health_check()
+# 10. Ciclo de Vida dos Módulos
 
-uninstall()
-Segurança
+Métodos obrigatórios:
 
-Todo módulo terá:
+* install()
+* enable()
+* disable()
+* upgrade()
+* health_check()
+* uninstall()
 
-Assinatura
+---
 
-Checksum
+# 11. SDK
 
-Validação de integridade
-Central de Notificações
+Backend:
 
-Exemplos:
+* sdk.database
+* sdk.storage
+* sdk.logger
+* sdk.settings
+* sdk.notifications
 
-Módulo atualizado
+Frontend:
 
-Nova versão disponível
+* sdk.ui.card
+* sdk.ui.table
+* sdk.ui.form
+* sdk.ui.modal
+* sdk.ui.notification
 
-Incompatibilidade detectada
+---
 
-Assinatura inválida
+# 12. Marketplace
 
-Checksum divergente
-Developer Center
+Funcionalidades:
 
-Integrado ao sistema.
+* Instalar módulo
+* Atualizar módulo
+* Remover módulo
+* Verificar compatibilidade
+* Validar assinatura
+* Validar checksum
+
+Categorias:
+
+* Instalados
+* Disponíveis
+* Atualizações
+
+---
+
+# 13. Segurança
+
+Todo módulo deverá possuir:
+
+* Versionamento
+* Checksum
+* Assinatura
+* Compatibilidade declarada
+
+O sistema deverá exibir alertas quando houver:
+
+* Assinatura inválida
+* Checksum divergente
+* Versão incompatível
+
+---
+
+# 14. Developer Center
 
 Conteúdo:
 
-Introdução
+* Introdução
+* Estrutura dos módulos
+* Manifesto
+* SDK Backend
+* SDK Frontend
+* Exemplos
+* Boas práticas
+* Publicação
 
-Criando módulos
+---
 
-SDK Backend
+# 15. Roadmap
 
-SDK Frontend
+Fase 1
 
-Manifesto
+* Core
+* Layout
+* App Shell
 
-Exemplos
+Fase 2
 
-Boas práticas
+* Module Loader
+* Registry
 
-Publicação
-CLI Oficial
+Fase 3
 
-Exemplo:
+* Marketplace
 
-techforge create-module
+Fase 4
 
-Resultado:
+* Developer Center
+* CLI
 
-novo_modulo/
+Fase 5
 
-manifest.yaml
+* Assinaturas
+* Compatibilidade
+* Health Checks
 
-backend/
-
-frontend/
-
-tests/
-
-docs/
+Somente após a conclusão dessas fases os módulos funcionais serão desenvolvidos.
