@@ -1,0 +1,25 @@
+# TechForge Module Manifest
+# Copie este arquivo para o diretório raiz do seu módulo como manifest.yaml
+
+id: my_module_id           # único, snake_case
+name: My Module Name
+version: 1.0.0
+
+platform_min_version: 1.0.0
+platform_max_version: 2.0.0
+
+category: Backup           # deve corresponder a um slug de categoria registrada
+
+vendor: My Company
+author: Developer Name
+description: Breve descrição do módulo
+
+entry_backend: backend/main.py     # relativo à raiz do módulo
+entry_frontend: frontend/index.tsx # relativo à raiz do módulo
+
+homepage: https://example.com
+documentation: https://docs.example.com
+
+# Preenchidos automaticamente ao publicar no Marketplace (Phase 5)
+signature:
+checksum:

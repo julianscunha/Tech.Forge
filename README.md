@@ -1,341 +1,103 @@
-# TechForge Architecture Specification v1.0
+# TechForge — Fase 1: Core Platform
 
-## 1. Visão Geral
-
-TechForge é uma plataforma corporativa modular destinada à execução de ferramentas técnicas e comerciais através de módulos independentes.
-
-O objetivo principal da plataforma é permitir que novas funcionalidades sejam adicionadas através de módulos sem necessidade de alterações no Core da aplicação.
-
-A plataforma deve operar inicialmente em modo desktop/local e futuramente suportar implantação centralizada em servidores Linux com múltiplos usuários simultâneos.
+Plataforma corporativa modular para execução de ferramentas técnicas e comerciais via plugins.
 
 ---
 
-# 2. Objetivos
+## Estrutura do Projeto
 
-## Objetivos Principais
-
-* Plataforma modular baseada em plugins.
-* Instalação local em qualquer desktop.
-* Possibilidade de migração futura para ambiente servidor.
-* Interface moderna, limpa e focada no conteúdo.
-* Marketplace integrado para distribuição de módulos.
-* SDK oficial para desenvolvimento de módulos.
-* Sistema de validação e assinatura de módulos.
-* Estrutura padronizada para desenvolvedores terceiros.
-
-## Não Objetivos
-
-* ERP.
-* CRM completo.
-* Sistema com múltiplos níveis complexos de permissão.
-* Dashboard executivo com KPIs e gráficos excessivos.
-
----
-
-# 3. Princípios Arquiteturais
-
-## Módulo é o protagonista
-
-A plataforma deve ocupar o mínimo possível da interface.
-
-Meta:
-
-* 95% da área útil destinada aos módulos.
-* 5% destinada ao Core.
-
-## Core desacoplado
-
-O Core não deve conter regras de negócio dos módulos.
-
-Responsabilidades do Core:
-
-* Navegação.
-* Registro de módulos.
-* Marketplace.
-* SDK.
-* Configuração.
-* Health Check.
-* Logs.
-* Atualizações.
-
-## Desenvolvimento orientado a plugins
-
-O sucesso da arquitetura será medido pela capacidade de adicionar novos módulos sem alterar o código do Core.
-
----
-
-# 4. Stack Tecnológica
-
-## Frontend
-
-* React
-* TypeScript
-* Vite
-* TailwindCSS
-* shadcn/ui
-
-## Backend
-
-* Python
-* FastAPI
-
-## Banco de Dados
-
-Modo Local:
-
-* SQLite
-
-Modo Servidor:
-
-* PostgreSQL
-
-Acesso sempre realizado através do SDK.
-
----
-
-# 5. Estrutura do Projeto
-
-```text
+```
 techforge/
-
-core/
-
-sdk/
-
-cli/
-
-marketplace/
-
-modules/
-├── repository/
-└── installed/
-
-shared/
-
-docs/
-
-config/
-
-logs/
+├── core/
+│   ├── backend/          # FastAPI + SQLAlchemy + SQLite
+│   └── frontend/         # React + TypeScript + Vite + TailwindCSS
+├── sdk/
+│   ├── python/           # SDK Python (stub Phase 2)
+│   └── frontend/         # SDK TypeScript (stub Phase 2)
+├── cli/                  # CLI (Phase 4)
+├── marketplace/          # Marketplace (Phase 3)
+├── modules/
+│   ├── repository/       # Módulos disponíveis para download
+│   └── installed/        # Módulos instalados ativos
+├── shared/               # Contratos e tipos compartilhados
+├── docs/                 # Documentação técnica
+├── config/               # .env e configurações
+└── logs/                 # Logs da plataforma
 ```
 
 ---
 
-# 6. Estrutura de um Módulo
+## Iniciando o Projeto
 
-```text
-module_name/
+### Backend
 
-manifest.yaml
+```bash
+cd core/backend
+pip install -r requirements.txt
+cp ../../config/.env.example ../../config/.env
+python run.py
+# API disponível em http://127.0.0.1:8000
+# Docs em http://127.0.0.1:8000/api/docs
+```
 
-backend/
+### Frontend
 
-frontend/
-
-assets/
-
-docs/
-
-tests/
+```bash
+cd core/frontend
+npm install
+npm run dev
+# App disponível em http://localhost:5173
 ```
 
 ---
 
-# 7. Manifesto do Módulo
+## Decisões Arquiteturais
 
-Exemplo:
+### Por que FastAPI + SQLAlchemy async?
+- Permite migração transparente SQLite → PostgreSQL via troca de `DATABASE_URL`
+- Async nativo prepara para múltiplos módulos rodando concorrentemente
 
-```yaml
-id: veeam_m365
+### Por que Zustand?
+- Estado global leve sem boilerplate Redux
+- Persist middleware para salvar tema e estado da sidebar no localStorage
 
-name: Veeam M365 Sizing
-
-version: 1.0.0
-
-platform_min_version: 1.0.0
-
-platform_max_version: 2.0.0
-
-category: Backup
-
-vendor: Veeam
-
-author: TechForge Team
-
-description: Sizing para Microsoft 365
-
-entry_backend: backend/main.py
-
-entry_frontend: frontend/index.tsx
-
-signature:
-
-checksum:
-
-homepage:
-
-documentation:
-```
+### Por que React Router v6 com Outlet?
+- O `<AppShell>` envolve todas as rotas via `<Outlet />`
+- Em Phase 2, o Plugin Loader injeta rotas de módulos dinamicamente neste mesmo shell
 
 ---
 
-# 8. Categorias
+## Pontos de Extensão para Fases Futuras
 
-Exemplo:
+### Phase 2 — Plugin Loader
+- `core/frontend/src/AppRouter.tsx` — comentário `PLUGIN LOADER HOOK` indica onde adicionar `<Route path="modules/:moduleId/*">`
+- `core/frontend/src/lib/navigation.ts` — seção `id: 'modules'` recebe `NavItem[]` injetados dinamicamente
+- `core/backend/app/api/routes/modules.py` — endpoint `POST /modules` registra módulo; em Phase 2 dispara `install()` e `enable()`
+- `core/backend/app/services/registry.py` — `ModuleService` será estendido com métodos de lifecycle
 
-Backup
+### Phase 3 — Marketplace
+- `marketplace/` — diretório reservado para o servidor de distribuição
+- `core/frontend/src/pages/MarketplacePage.tsx` — placeholder pronto para implementação
+- Endpoint `/api/v1/modules` já aceita `checksum` e `signature` no payload
 
-* Veeam
-* Commvault
+### Phase 4 — CLI
+- `cli/` — diretório reservado
+- `sdk/python/techforge_sdk.py` — interface do SDK que a CLI utilizará
 
-Virtualização
-
-* VMware
-* Hyper-V
-
-Cloud
-
-* AWS
-* Azure
-
-Comercial
-
-* Leads
-* Propostas
-
-As categorias serão montadas automaticamente pelo Core.
+### Phase 5 — Segurança
+- Campos `signature` e `checksum` já existem no modelo `Module`
+- `StatusBadge` já suporta estado `error` para alertas de assinatura inválida
 
 ---
 
-# 9. App Shell
+## API Endpoints (Phase 1)
 
-O Core fornecerá:
-
-* Header compacto.
-* Sidebar recolhível.
-* Breadcrumb.
-* Notificações.
-* Marketplace.
-* Configurações.
-
-Os módulos serão carregados dentro da área principal da aplicação.
-
-Não será permitido abrir módulos em novas abas.
-
-Não será permitido que módulos controlem menus globais.
-
----
-
-# 10. Ciclo de Vida dos Módulos
-
-Métodos obrigatórios:
-
-* install()
-* enable()
-* disable()
-* upgrade()
-* health_check()
-* uninstall()
-
----
-
-# 11. SDK
-
-Backend:
-
-* sdk.database
-* sdk.storage
-* sdk.logger
-* sdk.settings
-* sdk.notifications
-
-Frontend:
-
-* sdk.ui.card
-* sdk.ui.table
-* sdk.ui.form
-* sdk.ui.modal
-* sdk.ui.notification
-
----
-
-# 12. Marketplace
-
-Funcionalidades:
-
-* Instalar módulo
-* Atualizar módulo
-* Remover módulo
-* Verificar compatibilidade
-* Validar assinatura
-* Validar checksum
-
-Categorias:
-
-* Instalados
-* Disponíveis
-* Atualizações
-
----
-
-# 13. Segurança
-
-Todo módulo deverá possuir:
-
-* Versionamento
-* Checksum
-* Assinatura
-* Compatibilidade declarada
-
-O sistema deverá exibir alertas quando houver:
-
-* Assinatura inválida
-* Checksum divergente
-* Versão incompatível
-
----
-
-# 14. Developer Center
-
-Conteúdo:
-
-* Introdução
-* Estrutura dos módulos
-* Manifesto
-* SDK Backend
-* SDK Frontend
-* Exemplos
-* Boas práticas
-* Publicação
-
----
-
-# 15. Roadmap
-
-Fase 1
-
-* Core
-* Layout
-* App Shell
-
-Fase 2
-
-* Module Loader
-* Registry
-
-Fase 3
-
-* Marketplace
-
-Fase 4
-
-* Developer Center
-* CLI
-
-Fase 5
-
-* Assinaturas
-* Compatibilidade
-* Health Checks
-
-Somente após a conclusão dessas fases os módulos funcionais serão desenvolvidos.
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/platform/status` | Status e contadores da plataforma |
+| GET | `/api/v1/categories` | Lista categorias registradas |
+| POST | `/api/v1/categories` | Cria categoria |
+| GET | `/api/v1/categories/:slug` | Detalhe de categoria |
+| GET | `/api/v1/modules` | Lista módulos instalados |
+| POST | `/api/v1/modules` | Registra módulo |
+| GET | `/api/v1/modules/:id` | Detalhe de módulo |

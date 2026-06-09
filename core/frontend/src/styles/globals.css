@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Font overrides (using DM Sans + DM Mono from Google Fonts) ────────────── */
+:root {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* ── Light Theme ────────────────────────────────────────────────────────────── */
+:root,
+.theme-light {
+  --bg:            220 13% 98%;
+  --bg-subtle:     220 10% 94%;
+  --bg-elevated:   0 0% 100%;
+
+  --border:        220 13% 88%;
+  --border-subtle: 220 13% 93%;
+
+  --text:          222 20% 12%;
+  --text-muted:    222 10% 40%;
+  --text-subtle:   222 8% 60%;
+
+  --accent:        239 84% 67%;
+  --accent-hover:  239 84% 60%;
+  --accent-muted:  239 84% 96%;
+  --accent-fg:     0 0% 100%;
+
+  --success:       142 76% 36%;
+  --warning:       38 92% 50%;
+  --danger:        0 84% 60%;
+
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 52px;
+  --header-height: 44px;
+}
+
+/* ── Dark Theme ─────────────────────────────────────────────────────────────── */
+.theme-dark {
+  --bg:            222 20% 10%;
+  --bg-subtle:     222 18% 13%;
+  --bg-elevated:   222 18% 15%;
+
+  --border:        222 15% 20%;
+  --border-subtle: 222 15% 17%;
+
+  --text:          220 15% 92%;
+  --text-muted:    220 8% 55%;
+  --text-subtle:   220 6% 38%;
+
+  --accent:        239 84% 67%;
+  --accent-hover:  239 84% 72%;
+  --accent-muted:  239 50% 20%;
+  --accent-fg:     0 0% 100%;
+
+  --success:       142 60% 45%;
+  --warning:       38 92% 50%;
+  --danger:        0 72% 58%;
+
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 52px;
+  --header-height: 44px;
+}
+
+/* ── Base resets ─────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: hsl(var(--bg));
+  color: hsl(var(--text));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--text-subtle));
+}
+
+/* ── Focus ring ──────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────────── */
+.sidebar-transition {
+  transition: width 0.2s ease, min-width 0.2s ease;
+}

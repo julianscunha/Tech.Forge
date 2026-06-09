@@ -1,52 +1,27 @@
-# =========================
-# Dependencies
-# =========================
-node_modules/
-
-# =========================
-# Logs
-# =========================
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# =========================
-# Build / Output
-# =========================
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
 dist/
-build/
-coverage/
+*.db
 
-# =========================
-# Environment variables
-# =========================
+# Node
+node_modules/
+dist/
+.cache/
+*.local
+
+# Env
 .env
-.env.*
 !.env.example
 
-# =========================
-# OS files
-# =========================
-.DS_Store
-Thumbs.db
+# Logs
+logs/*.log
+logs/*.txt
 
-# =========================
-# IDE / Editor
-# =========================
+# IDE
 .vscode/
 .idea/
 *.swp
-*.swo
-
-# =========================
-# Temporary files
-# =========================
-tmp/
-temp/
-
-# =========================
-# Cache
-# =========================
-.cache/
