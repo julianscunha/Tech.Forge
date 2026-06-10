@@ -3,16 +3,16 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const PATH_LABELS: Record<string, string> = {
-  '': 'Dashboard',
+  '':           'Dashboard',
+  'modules':    'Módulos',
   'marketplace': 'Marketplace',
-  'settings': 'Configurações',
-  // Phase 2: module paths will be added dynamically
+  'settings':   'Configurações',
 }
 
 export function Breadcrumb() {
   const { pathname } = useLocation()
-
   const segments = pathname.split('/').filter(Boolean)
+
   const crumbs = [
     { label: 'TechForge', to: '/' },
     ...segments.map((seg, i) => ({
@@ -24,7 +24,8 @@ export function Breadcrumb() {
   return (
     <nav
       aria-label="breadcrumb"
-      className="flex items-center gap-1 px-4 h-8 flex-shrink-0 border-b border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg))]"
+      className="flex items-center gap-1 px-4 h-8 flex-shrink-0
+        border-b border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg))]"
     >
       {crumbs.map((crumb, i) => {
         const isLast = i === crumbs.length - 1

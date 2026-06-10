@@ -70,3 +70,52 @@ export interface NavSection {
 // ── Theme ─────────────────────────────────────────────────────────────────────
 
 export type Theme = 'light' | 'dark'
+
+// ── Module Engine (Phase 2) ───────────────────────────────────────────────────
+
+export type ModuleStatus = 'INSTALLED' | 'DISABLED' | 'INVALID' | 'INCOMPATIBLE'
+
+export interface ModuleEntry {
+  module_id: string
+  name: string
+  version: string
+  category: string
+  vendor: string
+  author: string
+  description: string
+  status: ModuleStatus
+  install_date: string
+  errors: string[]
+  warnings: string[]
+  platform_min_version: string
+  platform_max_version: string
+  entry_backend: string | null
+  entry_frontend: string | null
+  is_active: boolean
+  manifest_raw?: Record<string, unknown> | null
+}
+
+export interface RegistrySummary {
+  total: number
+  installed: number
+  disabled: number
+  invalid: number
+  categories: string[]
+}
+
+export interface LoadEvent {
+  timestamp: string
+  module_id: string | null
+  level: 'info' | 'warning' | 'error'
+  message: string
+  details: Record<string, unknown>
+}
+
+export interface LoaderResult {
+  scanned: number
+  installed: number
+  disabled: number
+  invalid: number
+  incompatible: number
+  journal: LoadEvent[]
+}

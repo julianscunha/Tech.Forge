@@ -1,6 +1,6 @@
 import { useLocation, NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Store, Settings, Puzzle,
+  LayoutDashboard, Store, Settings, Puzzle, Boxes,
   ChevronRight, type LucideIcon,
 } from 'lucide-react'
 import { useAppStore } from '@/store/app'
@@ -8,12 +8,12 @@ import { CORE_NAV } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types'
 
-// ── Icon registry — maps string names to Lucide components ───────────────────
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
   Store,
   Settings,
   Puzzle,
+  Boxes,
 }
 
 function NavIcon({ name, size = 15 }: { name: string; size?: number }) {
@@ -21,7 +21,6 @@ function NavIcon({ name, size = 15 }: { name: string; size?: number }) {
   return <Icon size={size} />
 }
 
-// ── Single nav item ───────────────────────────────────────────────────────────
 function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   return (
     <NavLink
@@ -42,13 +41,10 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
       <span className="flex-shrink-0 flex items-center justify-center w-5">
         <NavIcon name={item.icon} size={15} />
       </span>
-
-      {!collapsed && (
-        <span className="truncate leading-none">{item.label}</span>
-      )}
-
+      {!collapsed && <span className="truncate leading-none">{item.label}</span>}
       {!collapsed && item.badge !== undefined && (
-        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--accent-muted))] px-1 text-[10px] font-medium text-[hsl(var(--accent))]">
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full
+          bg-[hsl(var(--accent-muted))] px-1 text-[10px] font-medium text-[hsl(var(--accent))]">
           {item.badge}
         </span>
       )}
@@ -56,11 +52,10 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
   )
 }
 
-// ── Main Sidebar ──────────────────────────────────────────────────────────────
 export function Sidebar() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
   const location = useLocation()
-  void location // used by NavLink internally
+  void location
 
   return (
     <aside
@@ -74,13 +69,11 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div
-        className={cn(
-          'flex items-center h-[var(--header-height)] flex-shrink-0',
-          'border-b border-[hsl(var(--border-subtle))] px-3',
-          collapsed ? 'justify-center' : 'gap-2.5'
-        )}
-      >
+      <div className={cn(
+        'flex items-center h-[var(--header-height)] flex-shrink-0',
+        'border-b border-[hsl(var(--border-subtle))] px-3',
+        collapsed ? 'justify-center' : 'gap-2.5'
+      )}>
         <div className="w-6 h-6 rounded-md bg-[hsl(var(--accent))] flex items-center justify-center flex-shrink-0">
           <ChevronRight size={12} className="text-white" strokeWidth={2.5} />
         </div>
@@ -95,14 +88,11 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-1.5 space-y-4">
         {CORE_NAV.map((section) => (
           <div key={section.id}>
-            {/* Section label */}
             {!collapsed && section.label && (
               <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-widest text-[hsl(var(--text-subtle))]">
                 {section.label}
               </p>
             )}
-
-            {/* Items */}
             {section.items.length > 0 ? (
               <div className="space-y-0.5">
                 {section.items.map((item) => (
@@ -110,10 +100,9 @@ export function Sidebar() {
                 ))}
               </div>
             ) : (
-              /* Empty modules section placeholder */
-              !collapsed && section.id === 'modules' && (
-                <p className="px-2 py-1.5 text-xs text-[hsl(var(--text-subtle))] italic">
-                  Nenhum módulo instalado
+              !collapsed && section.id === 'modules-installed' && (
+                <p className="px-2 py-1 text-xs text-[hsl(var(--text-subtle))] italic">
+                  Nenhum módulo ativo
                 </p>
               )
             )}
@@ -121,7 +110,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer: version */}
+      {/* Footer */}
       {!collapsed && (
         <div className="px-3 py-2 border-t border-[hsl(var(--border-subtle))]">
           <p className="text-[10px] font-mono text-[hsl(var(--text-subtle))]">v1.0.0</p>

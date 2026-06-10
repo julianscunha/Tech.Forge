@@ -3,8 +3,9 @@ import type { NavSection } from '@/types'
 /**
  * Static Core navigation.
  *
- * In Phase 2, the Plugin Loader will call `registerModuleNavItem()`
- * to inject module entries into the "modules" section below.
+ * PLUGIN LOADER HOOK — Phase 2+:
+ * When the registry loads modules with status INSTALLED, the Plugin Loader
+ * calls registerModuleNavItem() to inject entries into the 'modules' section.
  * This keeps navigation extensible without modifying this file.
  */
 export const CORE_NAV: NavSection[] = [
@@ -12,24 +13,25 @@ export const CORE_NAV: NavSection[] = [
     id: 'core',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/' },
+      { id: 'modules',   label: 'Módulos',   icon: 'Boxes',           path: '/modules' },
     ],
   },
   {
     id: 'platform',
     label: 'Plataforma',
     items: [
-      { id: 'marketplace', label: 'Marketplace', icon: 'Store', path: '/marketplace' },
-      { id: 'settings', label: 'Configurações', icon: 'Settings', path: '/settings' },
+      { id: 'marketplace', label: 'Marketplace',  icon: 'Store',    path: '/marketplace' },
+      { id: 'settings',    label: 'Configurações', icon: 'Settings', path: '/settings' },
     ],
   },
   {
     /**
-     * PLUGIN LOADER HOOK — Phase 2
-     * This section will be populated dynamically when modules are loaded.
-     * Each enabled module contributes one NavItem here via Plugin Loader.
+     * PLUGIN LOADER HOOK — Phase 2+
+     * Populated at runtime when modules are enabled.
+     * Each INSTALLED module contributes one NavItem here.
      */
-    id: 'modules',
-    label: 'Módulos',
-    items: [],  // injected at runtime by Plugin Loader
+    id: 'modules-installed',
+    label: 'Módulos Ativos',
+    items: [],
   },
 ]

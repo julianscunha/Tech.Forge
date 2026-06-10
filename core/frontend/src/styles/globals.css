@@ -111,3 +111,12 @@ body {
 .sidebar-transition {
   transition: width 0.2s ease, min-width 0.2s ease;
 }
+
+/* Phase 2 additions */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.22s ease-out;
+}

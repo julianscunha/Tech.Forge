@@ -33,3 +33,21 @@ export const modulesApi = {
   list: () => request<Module[]>('/modules'),
   get: (moduleId: string) => request<Module>(`/modules/${moduleId}`),
 }
+
+// ── Module Registry (Phase 2) ─────────────────────────────────────────────────
+
+import type { ModuleEntry, RegistrySummary, LoaderResult } from '@/types'
+
+export const registryApi = {
+  summary: () =>
+    request<RegistrySummary>('/registry/summary'),
+
+  listModules: (developerMode = false) =>
+    request<ModuleEntry[]>(`/registry/modules?developer_mode=${developerMode}`),
+
+  getModule: (moduleId: string, developerMode = false) =>
+    request<ModuleEntry>(`/registry/modules/${moduleId}?developer_mode=${developerMode}`),
+
+  getLoaderJournal: () =>
+    request<LoaderResult>('/registry/loader/journal'),
+}
