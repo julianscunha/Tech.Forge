@@ -58,7 +58,13 @@ class ValidationReport:
 REQUIRED_MANIFEST_FIELDS = (
     "id", "name", "version", "category", "vendor",
     "author", "description", "entry_backend", "entry_frontend",
+    "icon", "order",   # §7.1 — navigation & presentation, required
 )
+
+VALID_COLORS = {
+    "blue", "green", "red", "yellow", "orange",
+    "purple", "pink", "cyan", "teal", "indigo", "gray",
+}
 
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
@@ -163,6 +169,33 @@ class ModuleCLIValidator:
                    if compat else
                    f"Platform {platform_version} is OUTSIDE declared range "
                    f"[{raw.get('platform_min_version')}, {raw.get('platform_max_version')}]")
+
+        # ── 9b. icon format ───────────────────────────────────────────────────
+        import re as _re
+        icon_val = str(raw.get("icon", "")).strip()
+        icon_ok = bool(_re.match(r"^[a-z][a-z0-9-]{1,63}$", icon_val)) if icon_val else False
+        report.add("icon format", icon_ok,
+                   f"icon={icon_val!r} — valid kebab-case lucide name" if icon_ok
+                   else f"icon={icon_val!r} — must be kebab-case lucide name (e.g. shield-check)")
+
+        # ── 9c. order is a non-negative integer ────────────────────────────────
+        try:
+            order_val = int(raw.get("order", -1))
+            order_ok = order_val >= 0
+        except (ValueError, TypeError):
+            order_ok = False
+        report.add("order value", order_ok,
+                   f"order={raw.get('order')} — valid" if order_ok
+                   else f"order must be a non-negative integer, got: {raw.get('order')!r}")
+
+        # ── 9d. color is optional but must be a known design-system value ──────
+        color_val = raw.get("color")
+        if color_val:
+            color_ok = str(color_val).lower() in VALID_COLORS
+            report.add("color value", color_ok,
+                       f"color={color_val!r} — valid design-system color" if color_ok
+                       else f"color={color_val!r} not in allowed set",
+                       level="warning")
 
         # ── 10. Backend contract check (static AST) ───────────────────────────
         backend_file = module_path / str(raw.get("entry_backend", "backend/main.py"))

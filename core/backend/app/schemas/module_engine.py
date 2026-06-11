@@ -25,6 +25,11 @@ class ModuleEntryRead(BaseModel):
     entry_frontend: Optional[str]
     is_active:   bool
 
+    # UI display fields
+    icon:  Optional[str] = None
+    color: Optional[str] = None
+    order: Optional[int] = None
+
     # Only present when Developer Mode is enabled
     manifest_raw: Optional[dict] = None
 

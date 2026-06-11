@@ -55,6 +55,11 @@ class ModuleEntry:
     entry_backend:  Optional[str] = None
     entry_frontend: Optional[str] = None
 
+    # UI display fields (from manifest)
+    icon:  Optional[str] = None
+    color: Optional[str] = None
+    order: Optional[int] = None
+
     # Developer Mode — raw manifest payload
     manifest_raw: dict = field(default_factory=dict, repr=False)
 
@@ -86,6 +91,9 @@ class ModuleEntry:
             platform_max_version=manifest.platform_max_version,
             entry_backend=manifest.entry_backend,
             entry_frontend=manifest.entry_frontend,
+            icon=manifest.icon,
+            color=manifest.color,
+            order=manifest.order,
             manifest_raw=manifest.raw,
         )
 

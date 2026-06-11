@@ -1,0 +1,28 @@
+id: veeam_m365
+name: Veeam M365 Sizing
+version: 1.0.0
+
+platform_min_version: 1.0.0
+platform_max_version: 2.0.0
+
+category: Backup
+vendor: Veeam
+author: TechForge Team
+description: Sizing para Microsoft 365.
+
+# Navigation & Presentation (§7.1) — required
+icon: shield-check
+order: 10
+
+# Optional presentation
+color: blue
+
+entry_backend: backend/main.py
+entry_frontend: frontend/index.tsx
+
+homepage:
+documentation:
+
+# Security fields — populated by Marketplace in Phase 5
+signature:
+checksum:

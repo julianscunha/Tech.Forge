@@ -26,6 +26,9 @@ class ModuleSpec:
     vendor: str         # Vendor / company name
     author: str         # Author full name
     description: str    # One-line description
+    icon: str = "puzzle"
+    color: str = "blue"
+    order: int = 10
     platform_min: str = "1.0.0"
     platform_max: str = "999.999.999"
     version: str = "1.0.0"
@@ -60,6 +63,13 @@ vendor: {{ spec.vendor }}
 author: {{ spec.author }}
 description: >
   {{ spec.description }}
+
+# Navigation & Presentation (§7.1) — required
+icon: {{ spec.icon }}
+order: {{ spec.order }}
+
+# Optional presentation
+color: {{ spec.color }}
 
 entry_backend: backend/main.py
 entry_frontend: frontend/index.tsx

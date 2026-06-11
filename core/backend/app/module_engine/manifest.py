@@ -5,6 +5,9 @@ Reads a module's manifest.yaml file, validates all required fields, checks
 semantic correctness, and returns a structured ParsedManifest dataclass.
 
 Raises ManifestError with a human-readable message on any violation.
+
+§7.1 — Navigation & Presentation fields (icon, order) are REQUIRED.
+       color is optional but validated when present.
 """
 from __future__ import annotations
 
@@ -28,9 +31,9 @@ class ManifestError(Exception):
 class ParsedManifest:
     """
     Strongly-typed representation of a validated manifest.yaml.
-    All fields mirror the spec in TechForge Architecture Specification §7.
+    All fields mirror TechForge Architecture Specification §7 and §7.1.
     """
-    # Required fields
+    # ── Required identity fields ──────────────────────────────────────────────
     id: str
     name: str
     version: str
@@ -41,25 +44,41 @@ class ParsedManifest:
     entry_backend: str
     entry_frontend: str
 
-    # Version constraints (required by spec; default to open range if absent)
+    # ── Required navigation/presentation fields (§7.1) ────────────────────────
+    icon: str          # lucide-react icon name — e.g. "shield-check", "database"
+    order: int         # display order within category/vendor group (lower = first)
+
+    # ── Version constraints ───────────────────────────────────────────────────
     platform_min_version: str = "0.0.0"
     platform_max_version: str = "999.999.999"
 
-    # Optional fields
+    # ── Optional presentation field (§7.1) ────────────────────────────────────
+    color: Optional[str] = None   # accent color hint — "blue", "green", "red", etc.
+
+    # ── Optional metadata ─────────────────────────────────────────────────────
     homepage: Optional[str] = None
     documentation: Optional[str] = None
 
-    # Security fields — populated in Phase 5
+    # ── Security fields — Phase 5 ─────────────────────────────────────────────
     signature: Optional[str] = None
     checksum: Optional[str] = None
 
-    # Raw parsed content preserved for Developer Mode display
+    # ── Raw YAML — preserved for Developer Mode ───────────────────────────────
     raw: dict = field(default_factory=dict, repr=False)
 
 
-# ── Semver helper ─────────────────────────────────────────────────────────────
+# ── Validation helpers ────────────────────────────────────────────────────────
 
 _SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+
+# Lucide icon names are kebab-case letters/digits/hyphens, 2–64 chars
+_ICON_RE = re.compile(r"^[a-z][a-z0-9-]{1,63}$")
+
+# Valid color accent names accepted by the design system
+VALID_COLORS = {
+    "blue", "green", "red", "yellow", "orange",
+    "purple", "pink", "cyan", "teal", "indigo", "gray",
+}
 
 
 def _assert_semver(value: str, field_name: str) -> None:
@@ -73,20 +92,24 @@ def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(int(p) for p in v.split("."))
 
 
-# ── Parser ────────────────────────────────────────────────────────────────────
+# ── Required fields ───────────────────────────────────────────────────────────
+# icon and order added per §7.1 — now mandatory.
 
 REQUIRED_FIELDS = (
     "id", "name", "version", "category", "vendor",
     "author", "description", "entry_backend", "entry_frontend",
+    "icon", "order",
 )
 
+
+# ── Parser ────────────────────────────────────────────────────────────────────
 
 class ManifestParser:
     """
     Stateless parser for module manifest.yaml files.
 
     Usage:
-        manifest = ManifestParser.parse(Path("modules/installed/hello_world"))
+        manifest = ManifestParser.parse(Path("modules/installed/veeam_m365"))
     """
 
     @staticmethod
@@ -94,24 +117,35 @@ class ManifestParser:
         """
         Locate, load, and validate the manifest.yaml inside *module_path*.
 
+        Validation order:
+          1. File existence
+          2. Valid YAML
+          3. Required fields present (including icon, order)
+          4. id format (snake_case)
+          5. Semver fields
+          6. icon format (kebab-case lucide name)
+          7. order is a non-negative integer
+          8. color is a known design-system accent (when provided)
+          9. platform_min ≤ platform_max
+
         Args:
             module_path: Absolute or relative path to the module root directory.
 
         Returns:
-            ParsedManifest instance with all fields populated.
+            ParsedManifest with all fields populated.
 
         Raises:
             ManifestError: on any structural or semantic violation.
         """
         manifest_file = module_path / "manifest.yaml"
 
-        # ── File existence ────────────────────────────────────────────────────
+        # ── 1. File existence ─────────────────────────────────────────────────
         if not manifest_file.exists():
             raise ManifestError(
                 f"manifest.yaml not found in module directory: {module_path}"
             )
 
-        # ── YAML parse ────────────────────────────────────────────────────────
+        # ── 2. YAML parse ─────────────────────────────────────────────────────
         try:
             raw: dict = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError as exc:
@@ -120,14 +154,21 @@ class ManifestParser:
         if not isinstance(raw, dict):
             raise ManifestError("manifest.yaml must be a YAML mapping at the top level.")
 
-        # ── Required fields presence ──────────────────────────────────────────
-        missing = [f for f in REQUIRED_FIELDS if not raw.get(f)]
+        # ── 3. Required fields ────────────────────────────────────────────────
+        missing = [f for f in REQUIRED_FIELDS if raw.get(f) is None or raw.get(f) == ""]
         if missing:
             raise ManifestError(
                 f"manifest.yaml is missing required fields: {', '.join(missing)}"
             )
 
-        # ── Semver validation ─────────────────────────────────────────────────
+        # ── 4. id format ──────────────────────────────────────────────────────
+        module_id = str(raw["id"]).strip()
+        if not re.match(r"^[a-z][a-z0-9_]{1,63}$", module_id):
+            raise ManifestError(
+                f"Module id must be lowercase snake_case, 2-64 chars, got: {module_id!r}"
+            )
+
+        # ── 5. Semver validation ──────────────────────────────────────────────
         _assert_semver(str(raw["version"]), "version")
 
         platform_min = str(raw.get("platform_min_version", "0.0.0"))
@@ -140,12 +181,35 @@ class ManifestParser:
                 f"platform_min_version ({platform_min}) must be ≤ platform_max_version ({platform_max})"
             )
 
-        # ── id format ────────────────────────────────────────────────────────
-        module_id = str(raw["id"]).strip()
-        if not re.match(r"^[a-z][a-z0-9_]{1,63}$", module_id):
+        # ── 6. icon format ────────────────────────────────────────────────────
+        icon_value = str(raw["icon"]).strip()
+        if not _ICON_RE.match(icon_value):
             raise ManifestError(
-                f"Module id must be lowercase snake_case, 2-64 chars, got: {module_id!r}"
+                f"Field 'icon' must be a kebab-case lucide-react icon name "
+                f"(e.g. 'shield-check', 'database'), got: {icon_value!r}"
             )
+
+        # ── 7. order must be a non-negative integer ───────────────────────────
+        try:
+            order_value = int(raw["order"])
+        except (ValueError, TypeError):
+            raise ManifestError(
+                f"Field 'order' must be a non-negative integer, got: {raw['order']!r}"
+            )
+        if order_value < 0:
+            raise ManifestError(
+                f"Field 'order' must be ≥ 0, got: {order_value}"
+            )
+
+        # ── 8. color validation (optional) ────────────────────────────────────
+        color_value: Optional[str] = None
+        if raw.get("color"):
+            color_value = str(raw["color"]).strip().lower()
+            if color_value not in VALID_COLORS:
+                raise ManifestError(
+                    f"Field 'color' must be one of {sorted(VALID_COLORS)}, "
+                    f"got: {color_value!r}"
+                )
 
         return ParsedManifest(
             id=module_id,
@@ -157,11 +221,14 @@ class ManifestParser:
             description=str(raw["description"]).strip(),
             entry_backend=str(raw["entry_backend"]).strip(),
             entry_frontend=str(raw["entry_frontend"]).strip(),
+            icon=icon_value,
+            order=order_value,
+            color=color_value,
             platform_min_version=platform_min,
             platform_max_version=platform_max,
-            homepage=raw.get("homepage"),
-            documentation=raw.get("documentation"),
-            signature=raw.get("signature"),
-            checksum=raw.get("checksum"),
+            homepage=raw.get("homepage") or None,
+            documentation=raw.get("documentation") or None,
+            signature=raw.get("signature") or None,
+            checksum=raw.get("checksum") or None,
             raw=raw,
         )

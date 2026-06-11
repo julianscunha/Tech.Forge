@@ -51,3 +51,43 @@ export const registryApi = {
   getLoaderJournal: () =>
     request<LoaderResult>('/registry/loader/journal'),
 }
+
+// ── Marketplace (Phase 4) ─────────────────────────────────────────────────────
+
+import type { PackageInfo, OperationResponse, OperationLogEntry } from '@/types'
+
+export const marketplaceApi = {
+  installed:  () => request<PackageInfo[]>('/marketplace/installed'),
+  available:  () => request<PackageInfo[]>('/marketplace/available'),
+  updates:    () => request<PackageInfo[]>('/marketplace/updates'),
+
+  install: (moduleId: string) =>
+    request<OperationResponse>(`/marketplace/install/${moduleId}`, { method: 'POST' }),
+
+  remove: (moduleId: string) =>
+    request<OperationResponse>(`/marketplace/remove/${moduleId}`, { method: 'DELETE' }),
+
+  update: (moduleId: string) =>
+    request<OperationResponse>(`/marketplace/update/${moduleId}`, { method: 'POST' }),
+
+  importMod: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<OperationResponse>('/marketplace/import', {
+      method: 'POST',
+      headers: {},   // let browser set multipart boundary
+      body: form,
+    })
+  },
+
+  log: (limit = 50) =>
+    request<OperationLogEntry[]>(`/marketplace/log?limit=${limit}`),
+}
+
+// ── Navigation Tree (§7.1) ────────────────────────────────────────────────────
+
+import type { NavigationTree } from '@/types'
+
+export const navigationApi = {
+  getTree: () => request<NavigationTree>('/registry/navigation'),
+}

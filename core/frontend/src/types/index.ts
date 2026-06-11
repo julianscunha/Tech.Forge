@@ -119,3 +119,80 @@ export interface LoaderResult {
   incompatible: number
   journal: LoadEvent[]
 }
+
+// ── Marketplace (Phase 4) ─────────────────────────────────────────────────────
+
+export type CompatibilityLevel = 'compatible' | 'warning' | 'incompatible'
+export type TrustLevel = 'verified' | 'community' | 'unsigned' | 'untrusted'
+
+export interface PackageInfo {
+  module_id: string
+  name: string
+  version: string
+  category: string
+  vendor: string
+  author: string
+  description: string
+  platform_min_version: string
+  platform_max_version: string
+  compatibility: CompatibilityLevel
+  is_installed: boolean
+  installed_version: string | null
+  install_date: string | null
+  trust_level: TrustLevel
+  signature: string | null
+  checksum: string | null
+  publisher: string | null
+  icon: string | null
+  color: string | null
+  order: number | null
+  has_update: boolean
+  homepage: string | null
+  documentation: string | null
+}
+
+export interface OperationResponse {
+  success: boolean
+  status: string
+  module_id: string
+  message: string
+}
+
+export interface OperationLogEntry {
+  timestamp: string
+  operation: string
+  module_id: string
+  version: string
+  status: string
+  message: string
+  details: Record<string, unknown>
+}
+
+// ── Navigation Tree (§7.1) ────────────────────────────────────────────────────
+
+export interface NavModuleNode {
+  module_id: string
+  name:      string
+  icon:      string
+  color:     string | null
+  order:     number
+  path:      string
+  vendor:    string
+  category:  string
+}
+
+export interface NavVendorNode {
+  vendor:  string
+  modules: NavModuleNode[]
+}
+
+export interface NavCategoryNode {
+  category:      string
+  total_modules: number
+  vendors:       NavVendorNode[]
+}
+
+export interface NavigationTree {
+  total_modules: number
+  categories:    NavCategoryNode[]
+}

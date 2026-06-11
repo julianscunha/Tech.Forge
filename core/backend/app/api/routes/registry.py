@@ -59,6 +59,9 @@ async def list_registry_modules(
             entry_backend=e.entry_backend,
             entry_frontend=e.entry_frontend,
             is_active=e.is_active,
+            icon=e.icon,
+            color=e.color,
+            order=e.order,
             manifest_raw=e.manifest_raw if developer_mode else None,
         )
         for e in entries
@@ -118,5 +121,80 @@ async def get_loader_journal() -> LoaderResultRead:
                 "details": ev.details,
             }
             for ev in result.journal
+        ],
+    )
+
+
+# ── Navigation tree (§7.1) ────────────────────────────────────────────────────
+
+from pydantic import BaseModel as _BaseModel
+from app.module_engine.navigation import NavigationBuilder
+
+
+class NavModuleRead(_BaseModel):
+    module_id: str
+    name:      str
+    icon:      str
+    color:     str | None
+    order:     int
+    path:      str
+    vendor:    str
+    category:  str
+
+
+class NavVendorRead(_BaseModel):
+    vendor:  str
+    modules: list[NavModuleRead]
+
+
+class NavCategoryRead(_BaseModel):
+    category:      str
+    total_modules: int
+    vendors:       list[NavVendorRead]
+
+
+class NavigationTreeRead(_BaseModel):
+    total_modules: int
+    categories:    list[NavCategoryRead]
+
+
+@router.get("/navigation", response_model=NavigationTreeRead, summary="Auto-generated navigation tree")
+async def get_navigation_tree() -> NavigationTreeRead:
+    """
+    Returns the complete navigation tree built from all INSTALLED modules.
+
+    Structure: category → vendor → modules (sorted by order asc).
+    Only INSTALLED modules are included (INVALID/INCOMPATIBLE are excluded).
+    The frontend Sidebar consumes this endpoint to build navigation automatically
+    without any manual configuration.
+    """
+    tree = NavigationBuilder.build()
+    return NavigationTreeRead(
+        total_modules=tree.total_modules,
+        categories=[
+            NavCategoryRead(
+                category=cat.category,
+                total_modules=cat.total_modules,
+                vendors=[
+                    NavVendorRead(
+                        vendor=v.vendor,
+                        modules=[
+                            NavModuleRead(
+                                module_id=m.module_id,
+                                name=m.name,
+                                icon=m.icon,
+                                color=m.color,
+                                order=m.order,
+                                path=m.path,
+                                vendor=m.vendor,
+                                category=m.category,
+                            )
+                            for m in v.modules
+                        ],
+                    )
+                    for v in cat.vendors
+                ],
+            )
+            for cat in tree.categories
         ],
     )
