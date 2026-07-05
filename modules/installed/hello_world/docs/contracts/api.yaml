@@ -1,0 +1,23 @@
+service_id: hello_world
+description: Reference module — exposes a ping/info endpoint for architecture validation.
+version: 1.0.0
+dependencies: []
+
+exports:
+  - name: ping
+    description: Returns the module health status.
+    parameters: []
+    returns:
+      type: PingResult
+    examples:
+      - "GET /api/v1/modules/hello_world/ping"
+      - "→ {\"module\": \"hello_world\", \"status\": \"ok\", \"version\": \"1.0.0\"}"
+
+  - name: info
+    description: Returns module identity metadata (id, name, category, vendor).
+    parameters: []
+    returns:
+      type: ModuleInfo
+    examples:
+      - "GET /api/v1/modules/hello_world/info"
+      - "→ {\"module_id\": \"hello_world\", \"name\": \"Hello World\", \"category\": \"Examples\"}"

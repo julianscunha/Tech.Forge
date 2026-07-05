@@ -13,10 +13,10 @@
  * The module never configures its own nav — it only provides manifest metadata.
  * The Core owns all navigation composition (§7.1 restriction).
  */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Store, Settings, Puzzle, Boxes,
+  LayoutDashboard, Store, Settings, Puzzle, Boxes, BookOpen,
   ChevronRight, ChevronDown, type LucideIcon,
 
   // Module icon palette — all kebab-case names mapped to components
@@ -29,7 +29,6 @@ import { useAppStore } from '@/store/app'
 import { useNavStore } from '@/store/nav'
 import { cn } from '@/lib/utils'
 import type { NavModuleNode } from '@/types'
-import { useState } from 'react'
 
 // ── Icon registry — all lucide names a module may declare ─────────────────────
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -266,6 +265,7 @@ export function Sidebar() {
   const CORE_ITEMS: StaticItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { id: 'modules',   label: 'Módulos',   icon: Boxes,           path: '/modules' },
+    { id: 'dev-center', label: 'Developer Center', icon: BookOpen,   path: '/developer-center' },
   ]
 
   const PLATFORM_ITEMS: StaticItem[] = [

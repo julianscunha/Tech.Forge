@@ -120,3 +120,79 @@ body {
 .animate-slide-in-right {
   animation: slide-in-right 0.22s ease-out;
 }
+
+/* ── Developer Center — Markdown prose ─────────────────────────────────────── */
+.prose-techforge {
+  color: hsl(var(--text));
+  line-height: 1.75;
+  font-size: 14px;
+  max-width: 72ch;
+}
+.prose-techforge h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 1rem; letter-spacing: -0.02em; color: hsl(var(--text)); border-bottom: 1px solid hsl(var(--border-subtle)); padding-bottom: 0.5rem; }
+.prose-techforge h2 { font-size: 1.15rem; font-weight: 600; margin: 2rem 0 0.75rem; color: hsl(var(--text)); }
+.prose-techforge h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: hsl(var(--text)); }
+.prose-techforge h4 { font-size: 0.9rem; font-weight: 600; margin: 1rem 0 0.4rem; color: hsl(var(--text-muted)); }
+.prose-techforge p  { margin: 0 0 1rem; color: hsl(var(--text-muted)); }
+.prose-techforge ul, .prose-techforge ol { margin: 0 0 1rem 1.25rem; color: hsl(var(--text-muted)); }
+.prose-techforge li { margin-bottom: 0.25rem; }
+.prose-techforge a  { color: hsl(var(--accent)); text-decoration: underline; text-underline-offset: 2px; }
+.prose-techforge a:hover { color: hsl(var(--accent-hover)); }
+.prose-techforge strong { color: hsl(var(--text)); font-weight: 600; }
+.prose-techforge blockquote {
+  border-left: 3px solid hsl(var(--accent));
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: hsl(var(--accent-muted));
+  border-radius: 0 6px 6px 0;
+  color: hsl(var(--text-muted));
+  font-style: italic;
+}
+.prose-techforge table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 13px; }
+.prose-techforge th { background: hsl(var(--bg-subtle)); color: hsl(var(--text-muted)); font-weight: 500; text-align: left; padding: 6px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid hsl(var(--border)); }
+.prose-techforge td { padding: 8px 12px; border-bottom: 1px solid hsl(var(--border-subtle)); color: hsl(var(--text-muted)); }
+.prose-techforge tr:last-child td { border-bottom: none; }
+.prose-techforge code {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  background: hsl(var(--bg-subtle));
+  color: hsl(var(--accent));
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border-subtle));
+}
+.prose-techforge pre {
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  position: relative;
+}
+.prose-techforge pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: hsl(var(--text-muted));
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.prose-techforge hr { border: none; border-top: 1px solid hsl(var(--border-subtle)); margin: 2rem 0; }
+
+/* Copy button for code blocks */
+.copy-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-family: 'DM Sans', sans-serif;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--bg-elevated));
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.prose-techforge pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: hsl(var(--bg-subtle)); color: hsl(var(--text)); }

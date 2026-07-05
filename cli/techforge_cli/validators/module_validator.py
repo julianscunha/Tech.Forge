@@ -224,4 +224,101 @@ class ModuleCLIValidator:
                        "Default export found" if has_default
                        else "No default export — Plugin Loader needs a default React component")
 
+        # ── 12. §16 Documentation First Principle ──────────────────────────────
+        ModuleCLIValidator._check_documentation_first(report, module_path, raw)
+
         return report
+
+    @staticmethod
+    def _check_documentation_first(report: ValidationReport, module_path: Path, raw: dict) -> None:
+        """
+        §16 — Documentation First Principle.
+
+        A module is not "done" without: Implementation + Contract + Documentation
+        + Example. Service modules (module_type: service) additionally require
+        a complete contract (every export typed, with returns and examples) and
+        all three example tiers (basic, advanced, integration).
+        """
+        module_type = str(raw.get("module_type", "application")).strip().lower()
+        is_service  = module_type == "service"
+        docs_dir    = module_path / "docs"
+
+        # ── Documentation: overview.md ────────────────────────────────────────
+        overview = docs_dir / "overview.md"
+        overview_ok = overview.exists() and len(overview.read_text(encoding="utf-8").strip()) > 40
+        report.add("§16 Documentation: overview.md", overview_ok,
+                   "docs/overview.md present and non-trivial" if overview_ok
+                   else "docs/overview.md missing or too short — required by §16 Documentation First Principle")
+
+        # ── Example: at least basic.md is mandatory for every module ──────────
+        examples_dir = docs_dir / "examples"
+        basic_exists = (examples_dir / "basic.md").exists()
+        report.add("§16 Example: basic.md", basic_exists,
+                   "docs/examples/basic.md present" if basic_exists
+                   else "docs/examples/basic.md missing — every module must provide at least one functional example")
+
+        # ── Service modules: contract completeness + all 3 example tiers ──────
+        if not is_service:
+            return
+
+        contract_path = docs_dir / "contracts" / "api.yaml"
+        if not contract_path.exists():
+            report.add("§16 Contract: api.yaml present", False,
+                       "module_type is 'service' but docs/contracts/api.yaml is missing")
+        else:
+            report.add("§16 Contract: api.yaml present", True, str(contract_path))
+            ModuleCLIValidator._check_contract_completeness(report, contract_path)
+
+        for tier in ("advanced.md", "integration.md"):
+            exists = (examples_dir / tier).exists()
+            report.add(f"§16 Example: {tier}", exists,
+                       f"docs/examples/{tier} present" if exists
+                       else f"docs/examples/{tier} missing — required for service modules (module_type: service)")
+
+    @staticmethod
+    def _check_contract_completeness(report: ValidationReport, contract_path: Path) -> None:
+        """
+        §16 — every export in api.yaml must declare: name, description,
+        parameters (each with type + required), returns, and examples.
+        """
+        try:
+            import yaml
+            raw_contract = yaml.safe_load(contract_path.read_text(encoding="utf-8")) or {}
+        except Exception as exc:
+            report.add("§16 Contract: parseable", False, f"api.yaml invalid: {exc}")
+            return
+
+        exports = raw_contract.get("exports", [])
+        if not exports:
+            report.add("§16 Contract: has exports", False,
+                       "api.yaml has no entries under 'exports'")
+            return
+        report.add("§16 Contract: has exports", True, f"{len(exports)} export(s) declared")
+
+        for exp in exports:
+            if not isinstance(exp, dict):
+                continue
+            name = str(exp.get("name", "?"))
+            prefix = f"§16 Contract '{name}'"
+
+            report.add(f"{prefix}: name", bool(exp.get("name")),
+                       "has name" if exp.get("name") else "missing name")
+            report.add(f"{prefix}: description", bool(exp.get("description")),
+                       "has description" if exp.get("description") else "missing description")
+
+            params = exp.get("parameters", [])
+            params_ok = all(
+                isinstance(p, dict) and p.get("type") and "required" in p
+                for p in params
+            )
+            report.add(f"{prefix}: parameters typed", params_ok,
+                       f"{len(params)} parameter(s), all typed with required flag" if params_ok
+                       else "one or more parameters missing 'type' or 'required'")
+
+            returns = exp.get("returns")
+            report.add(f"{prefix}: returns", bool(returns),
+                       "has returns" if returns else "missing returns")
+
+            examples = exp.get("examples", [])
+            report.add(f"{prefix}: examples", bool(examples),
+                       f"{len(examples)} example(s)" if examples else "no examples provided")

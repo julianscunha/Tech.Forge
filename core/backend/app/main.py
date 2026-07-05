@@ -8,6 +8,7 @@ from app.db.database import init_db
 from app.api import api_router
 from app.module_engine.loader import ModuleLoader
 from app.module_engine import journal as loader_journal
+from app.doc_engine import doc_indexer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,28 +22,27 @@ async def lifespan(app: FastAPI):
     """
     Startup sequence:
       1. Initialize / migrate database tables
-      2. Run Module Loader — scan installed/ → validate → register
-      3. Store loader journal for Developer Mode
+      2. Module Loader — scan installed/ → validate → register
+      3. Documentation Indexer — index core docs + installed module docs
     """
     logger.info("TechForge %s starting up…", settings.PLATFORM_VERSION)
 
-    # Step 1 — DB
     await init_db()
     logger.info("Database initialized.")
 
-    # Step 2 — Module Loader (Phase 2)
     loader = ModuleLoader()
     result = await loader.scan_installed()
-
-    # Step 3 — preserve journal for /api/v1/registry/loader/journal
     loader_journal.store(result)
     logger.info(
-        "Module Loader finished: %d installed, %d invalid, %d incompatible.",
+        "Module Loader: %d installed, %d invalid, %d incompatible.",
         result.installed, result.invalid, result.incompatible,
     )
 
+    # Phase 5 — Documentation Engine
+    count = doc_indexer.rebuild()
+    logger.info("Documentation Engine: %d documents indexed.", count)
+
     yield
-    # Shutdown — nothing to teardown for SQLite / in-memory registry
 
 
 def create_app() -> FastAPI:
@@ -54,7 +54,6 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc",
         lifespan=lifespan,
     )
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
@@ -62,7 +61,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
     app.include_router(api_router)
     return app
 

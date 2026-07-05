@@ -7,6 +7,7 @@ const PATH_LABELS: Record<string, string> = {
   'modules':    'Módulos',
   'marketplace': 'Marketplace',
   'settings':   'Configurações',
+  'developer-center': 'Developer Center',
 }
 
 export function Breadcrumb() {

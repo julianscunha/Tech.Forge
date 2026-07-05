@@ -384,6 +384,18 @@ class TestCLIValidatorNavFields:
             "entry_frontend": "frontend/index.tsx",
             "icon": "shield-check", "order": 10, "color": "blue",
         }))
+        # §16 Documentation First Principle — required for every module
+        (mod / "docs" / "overview.md").write_text(
+            "# Valid Module\n\nOverview for the test fixture module.",
+            encoding="utf-8",
+        )
+        (mod / "docs" / "examples").mkdir()
+        (mod / "docs" / "examples" / "basic.md").write_text(
+            "## Objetivo\n\nExemplo básico.\n\n## Entradas\n\nNenhuma.\n\n"
+            "## Saídas\n\nOK.\n\n## Exemplo\n\n```python\npass\n```\n\n"
+            "## Observações\n\nFixture de teste.",
+            encoding="utf-8",
+        )
         return mod
 
     def test_valid_module_passes_with_icon_order(self, tmp_path):

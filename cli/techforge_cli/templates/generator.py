@@ -276,11 +276,91 @@ techforge package-module .
 │   └── index.tsx
 ├── assets/
 ├── docs/
-│   └── README.md
+│   ├── README.md
+│   ├── overview.md
+│   └── examples/
+│       └── basic.md
 └── tests/
     └── test_module.py
 ```
 """
+
+# ── §16 Documentation First Principle ─────────────────────────────────────────
+# Every scaffolded module ships with overview.md and examples/basic.md so it
+# passes `techforge validate-module` immediately. Edit these to describe your
+# actual implementation before publishing.
+
+OVERVIEW_TEMPLATE = """\
+---
+title: {{ spec.name }} — Overview
+order: 1
+tags: [{{ spec.id }}, {{ spec.category | lower }}]
+---
+
+# {{ spec.name }}
+
+**Category:** {{ spec.category }}
+**Vendor:** {{ spec.vendor }}
+**Version:** {{ spec.version }}
+
+## Descrição
+
+{{ spec.description }}
+
+## O que faz
+
+- TODO: descreva a primeira funcionalidade principal
+- TODO: descreva a segunda funcionalidade principal
+
+## Quando usar
+
+TODO: descreva o caso de uso ideal para este módulo.
+
+## Configuração
+
+TODO: liste as settings obrigatórias, se houver:
+- `setting_key` (tipo): descrição
+"""
+
+BASIC_EXAMPLE_TEMPLATE = """\
+---
+title: {{ spec.name }} — Exemplo Básico
+order: 1
+tags: [{{ spec.id }}, basic, example]
+---
+
+## Objetivo
+
+TODO: descreva o uso mínimo deste módulo.
+
+## Entradas
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| TODO | TODO | TODO | TODO |
+
+## Saídas
+
+```json
+{
+  "status": "ok"
+}
+```
+
+## Exemplo
+
+```python
+from techforge_sdk import create_sdk
+sdk = create_sdk("{{ spec.id }}")
+
+# TODO: substitua pelo uso real do seu módulo
+```
+
+## Observações
+
+TODO: adicione observações relevantes sobre este exemplo.
+"""
+
 
 TEST_TEMPLATE = """\
 \"\"\"
@@ -399,6 +479,7 @@ class TemplateGenerator:
         # Create directory structure
         for subdir in ("backend", "frontend", "assets", "docs", "tests"):
             (module_dir / subdir).mkdir(parents=True)
+        (module_dir / "docs" / "examples").mkdir()
 
         # Render and write each file
         ctx = {"spec": spec}
@@ -414,6 +495,13 @@ class TemplateGenerator:
 
         self._write(module_dir / "docs" / "README.md",
                     README_TEMPLATE, ctx)
+
+        # §16 Documentation First Principle — required so the module
+        # passes `techforge validate-module` immediately after creation.
+        self._write(module_dir / "docs" / "overview.md",
+                    OVERVIEW_TEMPLATE, ctx)
+        self._write(module_dir / "docs" / "examples" / "basic.md",
+                    BASIC_EXAMPLE_TEMPLATE, ctx)
 
         self._write(module_dir / "tests" / "test_module.py",
                     TEST_TEMPLATE, ctx)

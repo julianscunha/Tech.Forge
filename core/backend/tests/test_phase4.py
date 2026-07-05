@@ -45,6 +45,8 @@ MANIFEST_BASE = {
     "description": "A test package.",
     "entry_backend": "backend/main.py",
     "entry_frontend": "frontend/index.tsx",
+    "icon": "shield-check",
+    "order": 10,
 }
 
 

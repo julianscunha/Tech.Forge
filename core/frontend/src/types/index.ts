@@ -196,3 +196,69 @@ export interface NavigationTree {
   total_modules: number
   categories:    NavCategoryNode[]
 }
+
+// ── Documentation Engine (Phase 5) ───────────────────────────────────────────
+
+export interface DocEntryMeta {
+  id:        string
+  title:     string
+  category:  string
+  order:     number
+  tags:      string[]
+  excerpt:   string
+  module_id: string | null
+}
+
+export interface DocEntryFull extends DocEntryMeta {
+  content: string
+}
+
+export interface DocSearchResult {
+  doc_id:    string
+  title:     string
+  category:  string
+  excerpt:   string
+  module_id: string | null
+  score:     number
+}
+
+export interface ServiceExport {
+  name:        string
+  description: string
+  parameters:  { name: string; type: string; description: string; required: boolean }[]
+  returns:     string | null
+  examples:    string[]
+}
+
+export interface ServiceContract {
+  service_id:   string
+  module_id:    string
+  description:  string
+  version:      string
+  exports:      ServiceExport[]
+  dependencies: string[]
+}
+
+export interface DocSummary {
+  total_docs:      number
+  total_contracts: number
+  categories:      Record<string, number>
+}
+
+// ── §16 Documentation First Principle — Completeness ──────────────────────────
+
+export interface DoDCheck {
+  name:     string
+  passed:   boolean
+  required: boolean
+  detail:   string
+}
+
+export interface CompletenessReport {
+  module_id:   string
+  module_type: string
+  is_complete: boolean
+  score:       number
+  missing:     string[]
+  checks:      DoDCheck[]
+}

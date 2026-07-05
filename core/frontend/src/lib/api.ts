@@ -1,4 +1,16 @@
-import type { PlatformStatus, Category, Module } from '@/types'
+// All imports must be at the top of the file
+import type {
+  PlatformStatus,
+  Category,
+  Module,
+  ModuleEntry,
+  RegistrySummary,
+  LoaderResult,
+  PackageInfo,
+  OperationResponse,
+  OperationLogEntry,
+  NavigationTree,
+} from '@/types'
 
 const BASE_URL = '/api/v1'
 
@@ -24,19 +36,17 @@ export const platformApi = {
 
 export const categoriesApi = {
   list: () => request<Category[]>('/categories'),
-  get: (slug: string) => request<Category>(`/categories/${slug}`),
+  get:  (slug: string) => request<Category>(`/categories/${slug}`),
 }
 
-// ── Modules ───────────────────────────────────────────────────────────────────
+// ── Modules (Phase 1 DB) ──────────────────────────────────────────────────────
 
 export const modulesApi = {
   list: () => request<Module[]>('/modules'),
-  get: (moduleId: string) => request<Module>(`/modules/${moduleId}`),
+  get:  (moduleId: string) => request<Module>(`/modules/${moduleId}`),
 }
 
 // ── Module Registry (Phase 2) ─────────────────────────────────────────────────
-
-import type { ModuleEntry, RegistrySummary, LoaderResult } from '@/types'
 
 export const registryApi = {
   summary: () =>
@@ -54,12 +64,10 @@ export const registryApi = {
 
 // ── Marketplace (Phase 4) ─────────────────────────────────────────────────────
 
-import type { PackageInfo, OperationResponse, OperationLogEntry } from '@/types'
-
 export const marketplaceApi = {
-  installed:  () => request<PackageInfo[]>('/marketplace/installed'),
-  available:  () => request<PackageInfo[]>('/marketplace/available'),
-  updates:    () => request<PackageInfo[]>('/marketplace/updates'),
+  installed: () => request<PackageInfo[]>('/marketplace/installed'),
+  available: () => request<PackageInfo[]>('/marketplace/available'),
+  updates:   () => request<PackageInfo[]>('/marketplace/updates'),
 
   install: (moduleId: string) =>
     request<OperationResponse>(`/marketplace/install/${moduleId}`, { method: 'POST' }),
@@ -74,9 +82,9 @@ export const marketplaceApi = {
     const form = new FormData()
     form.append('file', file)
     return request<OperationResponse>('/marketplace/import', {
-      method: 'POST',
-      headers: {},   // let browser set multipart boundary
-      body: form,
+      method:  'POST',
+      headers: {},     // let the browser set the multipart boundary
+      body:    form,
     })
   },
 
@@ -86,8 +94,43 @@ export const marketplaceApi = {
 
 // ── Navigation Tree (§7.1) ────────────────────────────────────────────────────
 
-import type { NavigationTree } from '@/types'
-
 export const navigationApi = {
   getTree: () => request<NavigationTree>('/registry/navigation'),
+}
+
+// ── Documentation Engine (Phase 5) ───────────────────────────────────────────
+
+import type {
+  DocEntryMeta, DocEntryFull, DocSearchResult,
+  ServiceContract, DocSummary,
+} from '@/types'
+
+export const docsApi = {
+  summary:    () => request<DocSummary>('/docs/summary'),
+  list:       (category?: string, module_id?: string) => {
+    const params = new URLSearchParams()
+    if (category)  params.set('category', category)
+    if (module_id) params.set('module_id', module_id)
+    const q = params.toString()
+    return request<DocEntryMeta[]>(`/docs/list${q ? '?' + q : ''}`)
+  },
+  article:    (docId: string) => request<DocEntryFull>(`/docs/article/${docId}`),
+  search:     (q: string, limit = 20) =>
+    request<DocSearchResult[]>(`/docs/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  contracts:  () => request<ServiceContract[]>('/docs/contracts'),
+  contract:   (moduleId: string) => request<ServiceContract>(`/docs/contracts/${moduleId}`),
+  reindex:    () => request<{ indexed: number; contracts: number }>('/docs/reindex', { method: 'POST' }),
+  exportAI:   (categories?: string) => {
+    const q = categories ? `?categories=${encodeURIComponent(categories)}` : ''
+    return fetch(`/api/v1/docs/export/ai-context${q}`).then(r => r.text())
+  },
+}
+
+// ── §16 Documentation First Principle — Completeness ──────────────────────────
+
+import type { CompletenessReport } from '@/types'
+
+export const completenessApi = {
+  all:  () => request<CompletenessReport[]>('/docs/completeness'),
+  byModule: (moduleId: string) => request<CompletenessReport>(`/docs/completeness/${moduleId}`),
 }

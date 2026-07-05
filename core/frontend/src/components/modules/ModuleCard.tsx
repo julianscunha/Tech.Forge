@@ -1,15 +1,17 @@
 import { AlertCircle, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
-import type { ModuleEntry } from '@/types'
+import { CompletenessBadge } from './CompletenessBadge'
+import type { ModuleEntry, CompletenessReport } from '@/types'
 
 interface Props {
   module: ModuleEntry
   developerMode: boolean
+  completeness?: CompletenessReport
   onClick: (module: ModuleEntry) => void
 }
 
-export function ModuleCard({ module, developerMode, onClick }: Props) {
+export function ModuleCard({ module, developerMode, completeness, onClick }: Props) {
   const hasIssues = module.errors.length > 0
 
   return (
@@ -49,6 +51,13 @@ export function ModuleCard({ module, developerMode, onClick }: Props) {
           />
         </div>
       </div>
+
+      {/* §16 Documentation completeness */}
+      {completeness && (
+        <div className="mb-2">
+          <CompletenessBadge score={completeness.score} isComplete={completeness.is_complete} />
+        </div>
+      )}
 
       {/* Description */}
       <p className="text-xs text-[hsl(var(--text-muted))] line-clamp-2 leading-relaxed">

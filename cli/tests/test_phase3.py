@@ -53,7 +53,26 @@ def make_valid_module(tmp: Path, module_id: str = "test_mod") -> Path:
         "description": "A test module.",
         "entry_backend": "backend/main.py",
         "entry_frontend": "frontend/index.tsx",
+        "icon": "shield-check",
+        "order": 10,
+        "color": "blue",
     }), encoding="utf-8")
+
+    # §16 Documentation First Principle — every module needs overview.md
+    # and at least one example (basic.md), regardless of module_type.
+    (mod / "docs" / "overview.md").write_text(
+        "# Test Module\n\nThis is a test module used for automated testing.",
+        encoding="utf-8",
+    )
+    (mod / "docs" / "examples").mkdir()
+    (mod / "docs" / "examples" / "basic.md").write_text(
+        "## Objetivo\n\nExemplo básico de uso.\n\n"
+        "## Entradas\n\nNenhuma.\n\n"
+        "## Saídas\n\n`dict` de status.\n\n"
+        "## Exemplo\n\n```python\nresult = module.ping()\n```\n\n"
+        "## Observações\n\nApenas para testes automatizados.",
+        encoding="utf-8",
+    )
 
     (mod / "backend" / "main.py").write_text(
         "from fastapi import APIRouter\n"

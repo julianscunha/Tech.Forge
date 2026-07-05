@@ -1,0 +1,42 @@
+service_id: veeam_m365
+description: Veeam M365 Sizing — calcula capacidade de backup para Microsoft 365.
+version: 1.0.0
+dependencies: []
+
+exports:
+  - name: calculate_storage
+    description: Calcula o storage necessário para backup M365 baseado no perfil de usuários.
+    parameters:
+      - name: users
+        type: int
+        description: Número de usuários licenciados M365.
+        required: true
+      - name: mailbox_quota_gb
+        type: float
+        description: Quota por caixa de correio em GB.
+        required: true
+      - name: sharepoint_gb
+        type: float
+        description: Consumo total de SharePoint em GB.
+        required: false
+      - name: teams_gb
+        type: float
+        description: Consumo total de Teams em GB.
+        required: false
+      - name: retention_years
+        type: int
+        description: Período de retenção em anos.
+        required: false
+    returns:
+      type: StorageSizingResult
+    examples:
+      - "result = await calculate_storage(users=500, mailbox_quota_gb=50, retention_years=3)"
+      - "result = await calculate_storage(users=1000, mailbox_quota_gb=100, sharepoint_gb=5000)"
+
+  - name: ping
+    description: Health check endpoint.
+    parameters: []
+    returns:
+      type: PingResult
+    examples:
+      - "GET /api/v1/modules/veeam_m365/ping"

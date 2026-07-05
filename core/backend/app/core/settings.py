@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     MODULES_REPOSITORY_PATH: Path = BASE_DIR / "modules" / "repository"
     MODULES_CACHE_PATH: Path = BASE_DIR / "modules" / "cache"
     LOGS_PATH: Path = BASE_DIR / "logs"
+    BASE_DIR: Path = BASE_DIR
 
     model_config = {"env_file": str(BASE_DIR / "config" / ".env"), "extra": "ignore"}
 
