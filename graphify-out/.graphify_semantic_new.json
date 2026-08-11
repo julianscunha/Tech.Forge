@@ -1,0 +1,2962 @@
+{
+  "nodes": [
+    {
+      "id": "techforge_platform",
+      "label": "TechForge Platform",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "1-103",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "fastapi_backend",
+      "label": "TechForge Backend (FastAPI + SQLAlchemy async + SQLite)",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "react_frontend",
+      "label": "TechForge Frontend (React + TypeScript + Vite + TailwindCSS)",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "13",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "techforge_cli",
+      "label": "TechForge CLI",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "17",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "techforge_marketplace",
+      "label": "TechForge Marketplace",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "19",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "techforge_sdk",
+      "label": "TechForge SDK (techforge_sdk)",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "30-31",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_shell",
+      "label": "App Shell",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\app-shell.md",
+      "source_location": "1-53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "module_lifecycle_contract",
+      "label": "ModuleContract (Module Lifecycle Contract)",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "module_lifecycle",
+      "label": "Module Lifecycle",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "11-25",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "module_registry",
+      "label": "Module Registry",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "1-68",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "package_manager",
+      "label": "Package Manager",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "1-82",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "mod_file_format",
+      "label": ".mod File Format (ZIP package)",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "48-61",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "hello_world_example",
+      "label": "Hello World Module (Reference Module)",
+      "file_type": "document",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\examples\\hello-world.md",
+      "source_location": "1-105",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "documentation_first_principle",
+      "label": "Documentation First Principle (§16)",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "1-156",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "developer_center",
+      "label": "Developer Center",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\development-guide.md",
+      "source_location": "1-149",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "module_loader",
+      "label": "Module Loader",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "58-68",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "module_status_system",
+      "label": "Module Status System (INSTALLED | DISABLED | INVALID | INCOMPATIBLE)",
+      "file_type": "concept",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "19-27",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validate_module_cmd",
+      "label": "techforge validate-module Command",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\development-guide.md",
+      "source_location": "84-101",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_shell_layout",
+      "label": "App Shell Layout (Header + Sidebar + Module Area)",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\app-shell.md",
+      "source_location": "13-24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "fastapi_sqlalchemy_async_rationale",
+      "label": "Rationale: FastAPI + SQLAlchemy async",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "56-58",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "zustand_rationale",
+      "label": "Rationale: Zustand for Global State",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "60-62",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "react_router_v6_rationale",
+      "label": "Rationale: React Router v6 with Outlet",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "64-66",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "doc_completeness_checker",
+      "label": "DocCompletenessChecker",
+      "file_type": "code",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "76",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "all_example_tiers",
+      "label": "Three Example Tiers (basic.md, advanced.md, integration.md)",
+      "file_type": "rationale",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "78-94",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "writing_docs_guide",
+      "label": "Writing Documentation Guide",
+      "file_type": "document",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\writing-docs.md",
+      "source_location": "1-169",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "development_guide",
+      "label": "Complete Development Guide",
+      "file_type": "document",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\development-guide.md",
+      "source_location": "1-149",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "faq",
+      "label": "FAQ (Frequently Asked Questions)",
+      "file_type": "document",
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\faq\\faq.md",
+      "source_location": "1-86",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "TechForge",
+      "type": "concept",
+      "labels": [
+        "platform",
+        "enterprise",
+        "modular"
+      ]
+    },
+    {
+      "id": "Core",
+      "type": "component",
+      "labels": [
+        "platform-core",
+        "minimalist"
+      ]
+    },
+    {
+      "id": "ModuleRegistry",
+      "type": "component",
+      "labels": [
+        "runtime",
+        "registry"
+      ]
+    },
+    {
+      "id": "ModuleLoader",
+      "type": "component",
+      "labels": [
+        "loader",
+        "validation"
+      ]
+    },
+    {
+      "id": "NavigationBuilder",
+      "type": "component",
+      "labels": [
+        "navigation",
+        "sidebar"
+      ]
+    },
+    {
+      "id": "PackageManager",
+      "type": "component",
+      "labels": [
+        "packages",
+        "modules"
+      ]
+    },
+    {
+      "id": "SDK",
+      "type": "component",
+      "labels": [
+        "official-sdk"
+      ]
+    },
+    {
+      "id": "DeveloperCenter",
+      "type": "component",
+      "labels": [
+        "documentation"
+      ]
+    },
+    {
+      "id": "AppShell",
+      "type": "component",
+      "labels": [
+        "frontend",
+        "layout"
+      ]
+    },
+    {
+      "id": "manifest.yaml",
+      "type": "file",
+      "labels": [
+        "module-contract",
+        "yaml",
+        "declarative"
+      ]
+    },
+    {
+      "id": "api.yaml",
+      "type": "file",
+      "labels": [
+        "service-contract",
+        "yaml",
+        "public-interface"
+      ]
+    },
+    {
+      "id": "settings.json",
+      "type": "file",
+      "labels": [
+        "persistence",
+        "per-module"
+      ]
+    },
+    {
+      "id": "manifest.example.yaml",
+      "type": "file",
+      "labels": [
+        "example",
+        "template"
+      ]
+    },
+    {
+      "id": "Module",
+      "type": "concept",
+      "labels": [
+        "plugin",
+        "independent",
+        "extendable"
+      ]
+    },
+    {
+      "id": "ServiceModule",
+      "type": "concept",
+      "labels": [
+        "service",
+        "export",
+        "contract"
+      ]
+    },
+    {
+      "id": "techforge_sdk",
+      "type": "package",
+      "labels": [
+        "python",
+        "backend-sdk"
+      ]
+    },
+    {
+      "id": "@techforge/sdk",
+      "type": "package",
+      "labels": [
+        "typescript",
+        "react",
+        "frontend-sdk"
+      ]
+    },
+    {
+      "id": "create_sdk",
+      "type": "function",
+      "labels": [
+        "factory",
+        "scoped-instance"
+      ]
+    },
+    {
+      "id": "sdk.logger",
+      "type": "service",
+      "labels": [
+        "structured-logging",
+        "module-prefixed"
+      ]
+    },
+    {
+      "id": "sdk.settings",
+      "type": "service",
+      "labels": [
+        "persistence",
+        "per-module-config"
+      ]
+    },
+    {
+      "id": "sdk.storage",
+      "type": "service",
+      "labels": [
+        "file-storage",
+        "isolated"
+      ]
+    },
+    {
+      "id": "sdk.database",
+      "type": "service",
+      "labels": [
+        "sql",
+        "isolated",
+        "per-module"
+      ]
+    },
+    {
+      "id": "sdk.notifications",
+      "type": "service",
+      "labels": [
+        "queue",
+        "ui-notifications"
+      ]
+    },
+    {
+      "id": "ModulePage",
+      "type": "component",
+      "labels": [
+        "wrapper",
+        "required",
+        "page"
+      ]
+    },
+    {
+      "id": "PageHeader",
+      "type": "component",
+      "labels": [
+        "header",
+        "title",
+        "actions"
+      ]
+    },
+    {
+      "id": "Card",
+      "type": "component",
+      "labels": [
+        "container",
+        "padding"
+      ]
+    },
+    {
+      "id": "DataTable",
+      "type": "component",
+      "labels": [
+        "table",
+        "sortable",
+        "columns"
+      ]
+    },
+    {
+      "id": "Modal",
+      "type": "component",
+      "labels": [
+        "dialog",
+        "overlay"
+      ]
+    },
+    {
+      "id": "Button",
+      "type": "component",
+      "labels": [
+        "action",
+        "variants"
+      ]
+    },
+    {
+      "id": "EmptyState",
+      "type": "component",
+      "labels": [
+        "empty",
+        "placeholder"
+      ]
+    },
+    {
+      "id": "LoadingState",
+      "type": "component",
+      "labels": [
+        "loading",
+        "spinner"
+      ]
+    },
+    {
+      "id": "moduleConfig",
+      "type": "contract",
+      "labels": [
+        "frontend-config",
+        "mandatory"
+      ]
+    },
+    {
+      "id": "ModulePageConfig",
+      "type": "type",
+      "labels": [
+        "typescript",
+        "interface"
+      ]
+    },
+    {
+      "id": "field_id",
+      "type": "field",
+      "labels": [
+        "required",
+        "snake_case"
+      ]
+    },
+    {
+      "id": "field_name",
+      "type": "field",
+      "labels": [
+        "required",
+        "display-name"
+      ]
+    },
+    {
+      "id": "field_version",
+      "type": "field",
+      "labels": [
+        "required",
+        "semver"
+      ]
+    },
+    {
+      "id": "field_category",
+      "type": "field",
+      "labels": [
+        "required",
+        "sidebar-grouping"
+      ]
+    },
+    {
+      "id": "field_vendor",
+      "type": "field",
+      "labels": [
+        "required",
+        "author-org"
+      ]
+    },
+    {
+      "id": "field_author",
+      "type": "field",
+      "labels": [
+        "required",
+        "developer"
+      ]
+    },
+    {
+      "id": "field_description",
+      "type": "field",
+      "labels": [
+        "required",
+        "one-line"
+      ]
+    },
+    {
+      "id": "field_entry_backend",
+      "type": "field",
+      "labels": [
+        "required",
+        "path",
+        "backend-entry"
+      ]
+    },
+    {
+      "id": "field_entry_frontend",
+      "type": "field",
+      "labels": [
+        "required",
+        "path",
+        "frontend-entry"
+      ]
+    },
+    {
+      "id": "field_icon",
+      "type": "field",
+      "labels": [
+        "required",
+        "kebab-case",
+        "lucide-react"
+      ]
+    },
+    {
+      "id": "field_order",
+      "type": "field",
+      "labels": [
+        "required",
+        "int",
+        "sidebar-position"
+      ]
+    },
+    {
+      "id": "field_color",
+      "type": "field",
+      "labels": [
+        "optional",
+        "highlight"
+      ]
+    },
+    {
+      "id": "field_platform_min_version",
+      "type": "field",
+      "labels": [
+        "optional",
+        "compatibility"
+      ]
+    },
+    {
+      "id": "field_platform_max_version",
+      "type": "field",
+      "labels": [
+        "optional",
+        "compatibility"
+      ]
+    },
+    {
+      "id": "field_module_type",
+      "type": "field",
+      "labels": [
+        "optional",
+        "application-or-service"
+      ]
+    },
+    {
+      "id": "field_signature",
+      "type": "field",
+      "labels": [
+        "optional",
+        "digital-signature",
+        "phase-5"
+      ]
+    },
+    {
+      "id": "field_checksum",
+      "type": "field",
+      "labels": [
+        "optional",
+        "sha-256",
+        "phase-5"
+      ]
+    },
+    {
+      "id": "field_service_id",
+      "type": "field",
+      "labels": [
+        "service-contract",
+        "identifier"
+      ]
+    },
+    {
+      "id": "field_dependencies",
+      "type": "field",
+      "labels": [
+        "service-contract",
+        "list"
+      ]
+    },
+    {
+      "id": "field_exports",
+      "type": "field",
+      "labels": [
+        "service-contract",
+        "public-api"
+      ]
+    },
+    {
+      "id": "lucide-react",
+      "type": "library",
+      "labels": [
+        "icons",
+        "react"
+      ]
+    },
+    {
+      "id": "semver",
+      "type": "convention",
+      "labels": [
+        "versioning",
+        "x.y.z"
+      ]
+    },
+    {
+      "id": "kebab-case",
+      "type": "convention",
+      "labels": [
+        "naming",
+        "icon-names"
+      ]
+    },
+    {
+      "id": "snake_case",
+      "type": "convention",
+      "labels": [
+        "naming",
+        "module-id"
+      ]
+    },
+    {
+      "id": "modules_installed",
+      "type": "directory",
+      "labels": [
+        "active-modules",
+        "runtime"
+      ]
+    },
+    {
+      "id": "modules_repository",
+      "type": "directory",
+      "labels": [
+        "available-packages",
+        ".mod-files"
+      ]
+    },
+    {
+      "id": "create-module",
+      "type": "command",
+      "labels": [
+        "cli",
+        "scaffold"
+      ]
+    },
+    {
+      "id": "validate-module",
+      "type": "command",
+      "labels": [
+        "cli",
+        "validation"
+      ]
+    },
+    {
+      "id": "package-module",
+      "type": "command",
+      "labels": [
+        "cli",
+        "packaging"
+      ]
+    },
+    {
+      "id": "PermissionError",
+      "type": "error",
+      "labels": [
+        "security",
+        "path-traversal-blocked"
+      ]
+    },
+    {
+      "id": "install_module_cmd",
+      "type": "command",
+      "labels": [
+        "manual-install",
+        "copy"
+      ]
+    },
+    {
+      "id": "BlogBackup",
+      "type": "concept",
+      "labels": [
+        "example-category"
+      ]
+    },
+    {
+      "id": "upload_file",
+      "type": "export",
+      "labels": [
+        "service-export",
+        "storage"
+      ]
+    },
+    {
+      "id": "download_file",
+      "type": "export",
+      "labels": [
+        "service-export",
+        "storage"
+      ]
+    },
+    {
+      "id": "phase2_module_engine",
+      "type": "Document",
+      "label": "Phase 2: Module Engine",
+      "path": "docs/phase2_module_engine.md",
+      "summary": "Defines the Phase 2 plugin infrastructure: ManifestParser, ModuleValidator, ModuleRegistry, ModuleLoader, and LoaderJournal. No business modules included—only plugin scaffolding."
+    },
+    {
+      "id": "phase4_package_manager",
+      "type": "Document",
+      "label": "Phase 4: Package Manager & Marketplace",
+      "path": "docs/phase4_package_manager.md",
+      "summary": "Implements the full package management layer with .mod ZIP format, install/remove/update flows, hot-reload, RepositoryProvider abstraction, Marketplace REST API, and OperationLog."
+    },
+    {
+      "id": "setup_windows",
+      "type": "Document",
+      "label": "TechForge Setup (Windows)",
+      "path": "docs/setup_windows.md",
+      "summary": "Step-by-step Windows setup guide covering backend (FastAPI on port 8000), frontend (Vite on port 5173), prerequisites, common errors, and directory layout."
+    },
+    {
+      "id": "hello_world",
+      "type": "Module",
+      "label": "hello_world Module",
+      "path": "modules/installed/hello_world",
+      "summary": "Reference/validation module for the Phase 2 plugin architecture. Exposes ping and info endpoints. Not a functional business module. id=hello_world, version=1.0.0, category=Examples, vendor=TechForge."
+    },
+    {
+      "id": "manifest_parser",
+      "type": "Component",
+      "label": "ManifestParser",
+      "path": "core/backend/app/module_engine/manifest.py",
+      "summary": "Parses and validates manifest.yaml for each module. Enforces required fields (id, name, version, category, vendor, author, description, entry_backend, entry_frontend) and semver format."
+    },
+    {
+      "id": "module_validator",
+      "type": "Component",
+      "label": "ModuleValidator",
+      "path": "core/backend/app/module_engine/validator.py",
+      "summary": "Validates module directory structure and platform version compatibility. Checks for backend/ and frontend/ subdirectories, entry point existence, and version range. Emits warnings for missing assets/docs/tests."
+    },
+    {
+      "id": "module_registry",
+      "type": "Component",
+      "label": "ModuleRegistry",
+      "path": "core/backend/app/module_engine/registry.py",
+      "summary": "In-memory singleton registry storing runtime state of all modules. Supports all(), get(), by_status(), by_category(), count_total, count_installed, categories. Also supports runtime register/deregister/set_status."
+    },
+    {
+      "id": "module_loader",
+      "type": "Component",
+      "label": "ModuleLoader",
+      "path": "core/backend/app/module_engine/loader.py",
+      "summary": "Orchestrates the full scan of modules/installed/ at startup. Delegates to ManifestParser and ModuleValidator for each module directory. Integrated into FastAPI lifespan for automatic initialization."
+    },
+    {
+      "id": "loader_journal",
+      "type": "Component",
+      "label": "LoaderJournal",
+      "path": "core/backend/app/module_engine/journal.py",
+      "summary": "Stores the last scan result for Developer Mode. REST endpoint GET /api/v1/registry/loader/journal. Each event has timestamp, module_id, level, message, details."
+    },
+    {
+      "id": "package_manager",
+      "type": "Component",
+      "label": "PackageManager",
+      "path": "core/backend/app/module_engine/package_manager.py",
+      "summary": "Sole component authorized to write to modules/installed/. Implements install/remove/update flows with hot-reload, backup/rollback, and atomic file operations. Logs all operations to OperationLog."
+    },
+    {
+      "id": "repository_provider",
+      "type": "Component",
+      "label": "RepositoryProvider",
+      "path": "core/backend/app/module_engine/repository_provider.py",
+      "summary": "ABC abstraction decoupling PackageManager from specific sources. LocalRepositoryProvider reads .mod from modules/repository/ (Fase 4). RemoteRepositoryProvider calls REST Marketplace API (Fase 5)."
+    },
+    {
+      "id": "operation_log",
+      "type": "Component",
+      "label": "OperationLog",
+      "path": "core/backend/app/module_engine/operation_log.py",
+      "summary": "In-process singleton logging all package operations (install/remove/update). Fields: timestamp, operation, module_id, version, status, message, details. Accessible via GET /api/v1/marketplace/log. Phase 5: persists to SQLite."
+    },
+    {
+      "id": "marketplace_api",
+      "type": "APICollection",
+      "label": "Marketplace REST API",
+      "path": "",
+      "summary": "Fase 4 REST endpoints for package management: installed, available, updates, install/{id}, remove/{id}, update/{id}, import, compatibility, log."
+    },
+    {
+      "id": "registry_api",
+      "type": "APICollection",
+      "label": "Registry REST API",
+      "path": "",
+      "summary": "Fase 2 REST endpoints for module registry: /api/v1/registry/summary, /api/v1/registry/modules, /api/v1/registry/modules/{module_id}, /api/v1/registry/loader/journal, /api/v1/health, /api/v1/health/{module_id}."
+    },
+    {
+      "id": "mod_format",
+      "type": "Concept",
+      "label": ".mod File Format",
+      "path": "",
+      "summary": "ZIP-structured package format for module distribution. Contains manifest.yaml, backend/, frontend/, optional assets/docs/tests, and META-INF/TECHFORGE and META-INF/BUILD. Sidecar .sha256 for checksum. META-INF/SIGNATURE planned for Fase 5."
+    },
+    {
+      "id": "hot_reload",
+      "type": "Concept",
+      "label": "Hot Reload",
+      "path": "",
+      "summary": "Post-install/update/remove mechanism: re-runs ModuleLoader.scan_installed() and stores result in LoaderJournal. Registry updated in-memory without process restart. Frontend refetches data."
+    },
+    {
+      "id": "developer_mode",
+      "type": "Concept",
+      "label": "Developer Mode",
+      "path": "",
+      "summary": "Toggle in Modules page that enables detailed module view: mono module_id font, Loading Journal toolbar button, entry points display, manifest.yaml as JSON. Backend includes ?developer_mode=true in requests."
+    },
+    {
+      "id": "techforge_sdk",
+      "type": "SDK",
+      "label": "techforge_sdk",
+      "path": "sdk/python/techforge_sdk/",
+      "summary": "Python SDK interface used by CLI commands (techforge install, validate, package). Reusable by PackageManager and CLI for module validation before install."
+    },
+    {
+      "id": "techforge_cli",
+      "type": "CLI",
+      "label": "TechForge CLI",
+      "path": "cli/",
+      "summary": "CLI commands: techforge create-module, techforge validate-module, techforge package-module, techforge install <module>. Validates 20 checks of module conformity before packaging."
+    },
+    {
+      "id": "hello_world_api_ping",
+      "type": "APIEndpoint",
+      "label": "GET /api/v1/modules/hello_world/ping",
+      "path": "modules/installed/hello_world/docs/contracts/api.yaml",
+      "summary": "Returns module health status. Returns JSON: {\"module\": \"hello_world\", \"status\": \"ok\", \"version\": \"1.0.0\"}."
+    },
+    {
+      "id": "hello_world_api_info",
+      "type": "APIEndpoint",
+      "label": "GET /api/v1/modules/hello_world/info",
+      "path": "modules/installed/hello_world/docs/contracts/api.yaml",
+      "summary": "Returns module identity metadata. Returns JSON with module_id, name, category, vendor fields."
+    },
+    {
+      "id": "hello_world_advanced",
+      "type": "Document",
+      "label": "Hello World — Advanced Example",
+      "path": "modules/installed/hello_world/docs/examples/advanced.md",
+      "summary": "Demonstrates full lifecycle: install (idempotent, increments install_count), enable, health_check, info endpoint, disable (preserves settings), upgrade. Uses techforge_sdk for settings persistence at data/settings.json."
+    },
+    {
+      "id": "windows_setup_prereq",
+      "type": "Concept",
+      "label": "Windows Setup Prerequisites",
+      "path": "docs/setup_windows.md",
+      "summary": "Requires Python 3.11+, Node.js 18+, Git optional. Backend on http://127.0.0.1:8000, frontend on http://localhost:5173. Vite proxies /api/* to backend automatically."
+    },
+    {
+      "id": "module_lifecycle",
+      "type": "Concept",
+      "label": "Module Lifecycle",
+      "path": "docs/phase2_module_engine.md",
+      "summary": "Module lifecycle events: install(), enable(), disable(), upgrade(), health_check(), uninstall(). For hello_world all are no-ops except health_check which returns {status: 'ok'}."
+    },
+    {
+      "id": "phase_extension_points",
+      "type": "Document",
+      "label": "Extension Points",
+      "path": "docs/phase2_module_engine.md",
+      "summary": "Phase 3: Marketplace runtime install. Phase 2+: dynamic plugin route loader. Phase 5: security (signature, checksum, trust_level). Phase 4: CLI via techforge_sdk."
+    },
+    {
+      "id": "module:hello_world",
+      "type": "module",
+      "label": "hello_world",
+      "attrs": {
+        "version": "1.0.0",
+        "category": "Examples",
+        "vendor": "TechForge",
+        "module_type": "service",
+        "description": "Minimal reference module that validates the Phase 2–4 plugin architecture"
+      }
+    },
+    {
+      "id": "module:veeam_m365",
+      "type": "module",
+      "label": "veeam_m365",
+      "attrs": {
+        "version": "1.0.0",
+        "description": "Veeam M365 Sizing — calcula capacidade de backup para Microsoft 365"
+      }
+    },
+    {
+      "id": "endpoint:hello_world_ping",
+      "type": "endpoint",
+      "label": "hello_world/ping",
+      "attrs": {
+        "method": "GET",
+        "path": "/api/v1/modules/hello_world/ping"
+      }
+    },
+    {
+      "id": "endpoint:hello_world_info",
+      "type": "endpoint",
+      "label": "hello_world/info",
+      "attrs": {
+        "method": "GET",
+        "path": "/api/v1/modules/hello_world/info"
+      }
+    },
+    {
+      "id": "endpoint:veeam_m365_ping",
+      "type": "endpoint",
+      "label": "veeam_m365/ping",
+      "attrs": {
+        "method": "GET",
+        "path": "/api/v1/modules/veeam_m365/ping"
+      }
+    },
+    {
+      "id": "export:calculate_storage",
+      "type": "export",
+      "label": "calculate_storage",
+      "attrs": {
+        "returns": "StorageSizingResult",
+        "parameters": [
+          "users:int",
+          "mailbox_quota_gb:float",
+          "sharepoint_gb:float",
+          "teams_gb:float",
+          "retention_years:int"
+        ]
+      }
+    },
+    {
+      "id": "export:ping",
+      "type": "export",
+      "label": "ping",
+      "attrs": {
+        "returns": "PingResult"
+      }
+    },
+    {
+      "id": "type:StorageSizingResult",
+      "type": "type",
+      "label": "StorageSizingResult"
+    },
+    {
+      "id": "type:PingResult",
+      "type": "type",
+      "label": "PingResult"
+    },
+    {
+      "id": "sdk:techforge_sdk",
+      "type": "sdk",
+      "label": "techforge_sdk"
+    },
+    {
+      "id": "pattern:health_check",
+      "type": "pattern",
+      "label": "health_check"
+    },
+    {
+      "id": "pattern:integration",
+      "type": "pattern",
+      "label": "module_integration"
+    },
+    {
+      "id": "concept:ModuleContract",
+      "type": "concept",
+      "label": "ModuleContract"
+    },
+    {
+      "id": "tool:PluginLoader",
+      "type": "tool",
+      "label": "Plugin Loader"
+    },
+    {
+      "id": "tool:DocEngine",
+      "type": "tool",
+      "label": "Documentation Engine"
+    },
+    {
+      "id": "tool:PackageManager",
+      "type": "tool",
+      "label": "Package Manager"
+    },
+    {
+      "id": "module:my_consumer_module",
+      "type": "module",
+      "label": "my_consumer_module"
+    },
+    {
+      "id": "product:Microsoft365",
+      "type": "product",
+      "label": "Microsoft 365"
+    },
+    {
+      "id": "concept:backup_sizing",
+      "type": "concept",
+      "label": "backup_sizing"
+    },
+    {
+      "id": "category:Examples",
+      "type": "category",
+      "label": "Examples"
+    },
+    {
+      "id": "module_veeam_m365",
+      "label": "veeam_m365",
+      "type": "module",
+      "attributes": {
+        "name": "Veeam M365 Sizing",
+        "version": "1.0.0",
+        "category": "Backup",
+        "module_type": "service",
+        "vendor": "Veeam",
+        "author": "TechForge Team",
+        "description": "Sizing para Microsoft 365.",
+        "platform_min_version": "1.0.0",
+        "platform_max_version": "2.0.0",
+        "icon": "shield-check",
+        "color": "blue",
+        "order": 10,
+        "entry_backend": "backend/main.py",
+        "entry_frontend": "frontend/index.tsx",
+        "status": "stub"
+      }
+    },
+    {
+      "id": "file_overview_md",
+      "label": "overview.md",
+      "type": "documentation",
+      "attributes": {
+        "path": "modules/installed/veeam_m365/docs/overview.md",
+        "title": "Veeam M365 Sizing — Overview",
+        "order": 1
+      }
+    },
+    {
+      "id": "file_basic_md",
+      "label": "basic.md",
+      "type": "documentation",
+      "attributes": {
+        "path": "modules/installed/veeam_m365/docs/examples/basic.md",
+        "title": "Veeam M365 Sizing — Exemplo Básico",
+        "order": 1
+      }
+    },
+    {
+      "id": "file_advanced_md",
+      "label": "advanced.md",
+      "type": "documentation",
+      "attributes": {
+        "path": "modules/installed/veeam_m365/docs/examples/advanced.md",
+        "title": "Veeam M365 Sizing — Exemplo Avançado",
+        "order": 2
+      }
+    },
+    {
+      "id": "file_integration_md",
+      "label": "integration.md",
+      "type": "documentation",
+      "attributes": {
+        "path": "modules/installed/veeam_m365/docs/examples/integration.md",
+        "title": "Veeam M365 Sizing — Exemplo de Integração",
+        "order": 3
+      }
+    },
+    {
+      "id": "function_calculate_storage",
+      "label": "calculate_storage",
+      "type": "function",
+      "attributes": {
+        "module": "veeam_m365",
+        "async": true,
+        "returns": "dict"
+      }
+    },
+    {
+      "id": "param_users",
+      "label": "users",
+      "type": "parameter",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "int",
+        "required": true,
+        "description": "Número de usuários licenciados M365"
+      }
+    },
+    {
+      "id": "param_mailbox_quota_gb",
+      "label": "mailbox_quota_gb",
+      "type": "parameter",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "required": true,
+        "description": "Quota por caixa de correio em GB"
+      }
+    },
+    {
+      "id": "param_sharepoint_gb",
+      "label": "sharepoint_gb",
+      "type": "parameter",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "required": false,
+        "description": "Consumo total de SharePoint em GB"
+      }
+    },
+    {
+      "id": "param_teams_gb",
+      "label": "teams_gb",
+      "type": "parameter",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "required": false,
+        "description": "Consumo total de Teams em GB"
+      }
+    },
+    {
+      "id": "param_retention_years",
+      "label": "retention_years",
+      "type": "parameter",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "int",
+        "required": false,
+        "description": "Período de retenção em anos"
+      }
+    },
+    {
+      "id": "output_total_gb",
+      "label": "total_gb",
+      "type": "output_field",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "description": "Total em GB calculado"
+      }
+    },
+    {
+      "id": "output_recommended_repo_gb",
+      "label": "recommended_repo_gb",
+      "type": "output_field",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "description": "Storage recomendado para repositório em GB com margem de crescimento"
+      }
+    },
+    {
+      "id": "output_growth_factor",
+      "label": "growth_factor",
+      "type": "output_field",
+      "attributes": {
+        "function": "calculate_storage",
+        "data_type": "float",
+        "description": "Fator de crescimento aplicado"
+      }
+    },
+    {
+      "id": "module_sales_proposal_module",
+      "label": "sales_proposal_module",
+      "type": "module",
+      "attributes": {
+        "name": "Sales Proposal Module",
+        "description": "Módulo comercial que gera propostas de backup consultando veeam_m365"
+      }
+    },
+    {
+      "id": "sdk_techforge_sdk",
+      "label": "techforge_sdk",
+      "type": "sdk",
+      "attributes": {
+        "function": "create_sdk",
+        "usage": "Framework SDK para criação de módulos"
+      }
+    },
+    {
+      "id": "service_generate_backup_proposal",
+      "label": "generate_backup_proposal",
+      "type": "service_export",
+      "attributes": {
+        "module": "sales_proposal_module",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tenant_profile",
+            "type": "dict",
+            "required": true,
+            "description": "Perfil do tenant M365"
+          }
+        ],
+        "returns": "BackupProposal",
+        "description": "Gera proposta de backup consultando veeam_m365"
+      }
+    },
+    {
+      "id": "tenant_profile",
+      "label": "tenant_profile",
+      "type": "parameter",
+      "attributes": {
+        "function": "generate_backup_proposal",
+        "data_type": "dict",
+        "required": true,
+        "description": "Perfil do tenant M365 do cliente",
+        "schema": {
+          "users": "int",
+          "mailbox_quota_gb": "float",
+          "sharepoint_gb": "float",
+          "teams_gb": "float",
+          "retention_years": "int"
+        }
+      }
+    },
+    {
+      "id": "technology_m365",
+      "label": "Microsoft 365",
+      "type": "technology",
+      "attributes": {
+        "category": "productivity_platform",
+        "components": [
+          "Exchange",
+          "SharePoint",
+          "Teams",
+          "OneDrive"
+        ]
+      }
+    },
+    {
+      "id": "technology_veeam",
+      "label": "Veeam Backup",
+      "type": "technology",
+      "attributes": {
+        "vendor": "Veeam",
+        "category": "backup_solution"
+      }
+    },
+    {
+      "id": "concept_compliance",
+      "label": "compliance",
+      "type": "concept",
+      "attributes": {
+        "context": "retenção estendida (ex: 7 anos)",
+        "impact": "aumenta proporcionalmente o growth_factor e storage recomendado"
+      }
+    },
+    {
+      "id": "concept_backup_sizing",
+      "label": "backup sizing",
+      "type": "concept",
+      "attributes": {
+        "description": "Cálculo de capacidade e dimensionamento de soluções de backup",
+        "inputs": [
+          "users",
+          "mailbox_quota_gb",
+          "sharepoint_gb",
+          "teams_gb",
+          "retention_years"
+        ],
+        "outputs": [
+          "total_gb",
+          "recommended_repo_gb",
+          "growth_factor"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "fastapi_backend",
+      "target": "techforge_platform",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "12",
+      "weight": 1.0
+    },
+    {
+      "source": "react_frontend",
+      "target": "techforge_platform",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "13",
+      "weight": 1.0
+    },
+    {
+      "source": "react_frontend",
+      "target": "app_shell",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "65",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_cli",
+      "target": "techforge_platform",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "17",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_marketplace",
+      "target": "techforge_platform",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "19",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "techforge_platform",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "16",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_platform",
+      "target": "module_lifecycle_contract",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "9",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle",
+      "target": "module_lifecycle_contract",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "9",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "module_lifecycle_contract",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "30-31",
+      "weight": 1.0
+    },
+    {
+      "source": "hello_world_example",
+      "target": "module_lifecycle_contract",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\examples\\hello-world.md",
+      "source_location": "46",
+      "weight": 1.0
+    },
+    {
+      "source": "hello_world_example",
+      "target": "techforge_sdk",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\examples\\hello-world.md",
+      "source_location": "45-48",
+      "weight": 1.0
+    },
+    {
+      "source": "module_loader",
+      "target": "module_registry",
+      "relation": "writes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "9",
+      "weight": 1.0
+    },
+    {
+      "source": "module_loader",
+      "target": "module_status_system",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "20-27",
+      "weight": 1.0
+    },
+    {
+      "source": "module_registry",
+      "target": "module_status_system",
+      "relation": "manages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "20-27",
+      "weight": 1.0
+    },
+    {
+      "source": "package_manager",
+      "target": "module_registry",
+      "relation": "writes",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "29-33",
+      "weight": 1.0
+    },
+    {
+      "source": "package_manager",
+      "target": "module_loader",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "60-66",
+      "weight": 1.0
+    },
+    {
+      "source": "package_manager",
+      "target": "mod_file_format",
+      "relation": "reads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "48-61",
+      "weight": 1.0
+    },
+    {
+      "source": "module_registry",
+      "target": "app_shell_layout",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "14",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_marketplace",
+      "target": "package_manager",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "81",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle",
+      "target": "hello_world_example",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\examples\\hello-world.md",
+      "source_location": "14",
+      "weight": 1.0
+    },
+    {
+      "source": "hello_world_example",
+      "target": "module_registry",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\examples\\hello-world.md",
+      "source_location": "14",
+      "weight": 1.0
+    },
+    {
+      "source": "developer_center",
+      "target": "documentation_first_principle",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\development-guide.md",
+      "source_location": "1-149",
+      "weight": 1.0
+    },
+    {
+      "source": "react_frontend",
+      "target": "app_shell_layout",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\app-shell.md",
+      "source_location": "42",
+      "weight": 1.0
+    },
+    {
+      "source": "fastapi_sqlalchemy_async_rationale",
+      "target": "fastapi_backend",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "56-58",
+      "weight": 1.0
+    },
+    {
+      "source": "zustand_rationale",
+      "target": "react_frontend",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "60-62",
+      "weight": 1.0
+    },
+    {
+      "source": "react_router_v6_rationale",
+      "target": "app_shell",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "64-66",
+      "weight": 1.0
+    },
+    {
+      "source": "validate_module_cmd",
+      "target": "documentation_first_principle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "112-113",
+      "weight": 1.0
+    },
+    {
+      "source": "doc_completeness_checker",
+      "target": "documentation_first_principle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "76",
+      "weight": 1.0
+    },
+    {
+      "source": "all_example_tiers",
+      "target": "documentation_first_principle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "78-94",
+      "weight": 1.0
+    },
+    {
+      "source": "all_example_tiers",
+      "target": "module_lifecycle",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md",
+      "source_location": "80-94",
+      "weight": 1.0
+    },
+    {
+      "source": "development_guide",
+      "target": "developer_center",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\development-guide.md",
+      "source_location": "1-149",
+      "weight": 1.0
+    },
+    {
+      "source": "writing_docs_guide",
+      "target": "developer_center",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\writing-docs.md",
+      "source_location": "1-169",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle",
+      "target": "module_registry",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "1-82",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle",
+      "target": "package_manager",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "1-82",
+      "weight": 1.0
+    },
+    {
+      "source": "package_manager",
+      "target": "module_lifecycle",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "36-46",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_marketplace",
+      "target": "mod_file_format",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\package-manager.md",
+      "source_location": "48-61",
+      "weight": 1.0
+    },
+    {
+      "source": "app_shell",
+      "target": "module_registry",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\app-shell.md",
+      "source_location": "35-37",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle_contract",
+      "target": "module_registry",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "9",
+      "weight": 1.0
+    },
+    {
+      "source": "module_status_system",
+      "target": "app_shell_layout",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "27",
+      "weight": 1.0
+    },
+    {
+      "source": "module_lifecycle_contract",
+      "target": "module_lifecycle",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "9",
+      "weight": 1.0
+    },
+    {
+      "source": "module_registry",
+      "target": "module_lifecycle",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-registry.md",
+      "source_location": "20-27",
+      "weight": 1.0
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "module_lifecycle_contract",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md",
+      "source_location": "30-31",
+      "weight": 1.0
+    },
+    {
+      "source": "app_shell",
+      "target": "react_router_v6_rationale",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "64-66",
+      "weight": 1.0
+    },
+    {
+      "source": "react_router_v6_rationale",
+      "target": "app_shell_layout",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md",
+      "source_location": "64-66",
+      "weight": 1.0
+    },
+    {
+      "source": "developer_center",
+      "target": "writing_docs_guide",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\guides\\writing-docs.md",
+      "source_location": "1-169",
+      "weight": 1.0
+    },
+    {
+      "source": "TechForge",
+      "target": "Core",
+      "relation": "has_core"
+    },
+    {
+      "source": "Core",
+      "target": "ModuleRegistry",
+      "relation": "contains"
+    },
+    {
+      "source": "Core",
+      "target": "ModuleLoader",
+      "relation": "contains"
+    },
+    {
+      "source": "Core",
+      "target": "NavigationBuilder",
+      "relation": "contains"
+    },
+    {
+      "source": "Core",
+      "target": "PackageManager",
+      "relation": "contains"
+    },
+    {
+      "source": "Core",
+      "target": "SDK",
+      "relation": "contains"
+    },
+    {
+      "source": "Core",
+      "target": "DeveloperCenter",
+      "relation": "contains"
+    },
+    {
+      "source": "ModuleLoader",
+      "target": "manifest.yaml",
+      "relation": "validates"
+    },
+    {
+      "source": "ModuleLoader",
+      "target": "ModuleRegistry",
+      "relation": "registers_into"
+    },
+    {
+      "source": "ModuleRegistry",
+      "target": "NavigationBuilder",
+      "relation": "feeds"
+    },
+    {
+      "source": "NavigationBuilder",
+      "target": "AppShell",
+      "relation": "builds_sidebar_for"
+    },
+    {
+      "source": "PackageManager",
+      "target": "modules_installed",
+      "relation": "manages"
+    },
+    {
+      "source": "PackageManager",
+      "target": "modules_repository",
+      "relation": "manages"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "create_sdk",
+      "relation": "exports"
+    },
+    {
+      "source": "create_sdk",
+      "target": "Module",
+      "relation": "creates_scoped_instance_for"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "sdk.logger",
+      "relation": "provides"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "sdk.settings",
+      "relation": "provides"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "sdk.storage",
+      "relation": "provides"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "sdk.database",
+      "relation": "provides"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "sdk.notifications",
+      "relation": "provides"
+    },
+    {
+      "source": "sdk.settings",
+      "target": "settings.json",
+      "relation": "persists_in"
+    },
+    {
+      "source": "sdk.storage",
+      "target": "modules_installed",
+      "relation": "isolated_storage_root"
+    },
+    {
+      "source": "sdk.storage",
+      "target": "PermissionError",
+      "relation": "blocks_path_traversal_with"
+    },
+    {
+      "source": "sdk.database",
+      "target": "Module",
+      "relation": "isolated_per"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "ModulePage",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "PageHeader",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "Card",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "DataTable",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "Modal",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "Button",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "EmptyState",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "LoadingState",
+      "relation": "exports"
+    },
+    {
+      "source": "@techforge/sdk",
+      "target": "ModulePageConfig",
+      "relation": "defines_type"
+    },
+    {
+      "source": "ModulePage",
+      "target": "moduleConfig",
+      "relation": "requires"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "ModulePageConfig",
+      "relation": "typed_as"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "field_id",
+      "relation": "requires_field"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "field_icon",
+      "relation": "requires_field"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "field_category",
+      "relation": "requires_field"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "field_vendor",
+      "relation": "requires_field"
+    },
+    {
+      "source": "moduleConfig",
+      "target": "field_route",
+      "relation": "requires_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_id",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_name",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_version",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_category",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_vendor",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_author",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_description",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_entry_backend",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_entry_frontend",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_icon",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_order",
+      "relation": "defines_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_color",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_platform_min_version",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_platform_max_version",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_module_type",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_signature",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "field_checksum",
+      "relation": "defines_optional_field"
+    },
+    {
+      "source": "manifest.yaml",
+      "target": "manifest.example.yaml",
+      "relation": "example_template"
+    },
+    {
+      "source": "field_version",
+      "target": "semver",
+      "relation": "uses_format"
+    },
+    {
+      "source": "field_icon",
+      "target": "lucide-react",
+      "relation": "references"
+    },
+    {
+      "source": "field_icon",
+      "target": "kebab-case",
+      "relation": "uses_naming"
+    },
+    {
+      "source": "field_id",
+      "target": "snake_case",
+      "relation": "uses_naming"
+    },
+    {
+      "source": "create-module",
+      "target": "Module",
+      "relation": "scaffolds"
+    },
+    {
+      "source": "validate-module",
+      "target": "manifest.yaml",
+      "relation": "validates"
+    },
+    {
+      "source": "package-module",
+      "target": "Module",
+      "relation": "packages"
+    },
+    {
+      "source": "install_module_cmd",
+      "target": "modules_installed",
+      "relation": "copies_to"
+    },
+    {
+      "source": "Module",
+      "target": "modules_installed",
+      "relation": "installed_in"
+    },
+    {
+      "source": "Module",
+      "target": "modules_repository",
+      "relation": "available_as_package_in"
+    },
+    {
+      "source": "DeveloperCenter",
+      "target": "manifest.yaml",
+      "relation": "documents"
+    },
+    {
+      "source": "DeveloperCenter",
+      "target": "api.yaml",
+      "relation": "documents"
+    },
+    {
+      "source": "DeveloperCenter",
+      "target": "techforge_sdk",
+      "relation": "documents"
+    },
+    {
+      "source": "DeveloperCenter",
+      "target": "@techforge/sdk",
+      "relation": "documents"
+    },
+    {
+      "source": "ServiceModule",
+      "target": "field_module_type",
+      "relation": "declares_value_service"
+    },
+    {
+      "source": "ServiceModule",
+      "target": "api.yaml",
+      "relation": "publishes"
+    },
+    {
+      "source": "api.yaml",
+      "target": "field_service_id",
+      "relation": "contains_field"
+    },
+    {
+      "source": "api.yaml",
+      "target": "field_dependencies",
+      "relation": "contains_field"
+    },
+    {
+      "source": "api.yaml",
+      "target": "field_exports",
+      "relation": "contains_field"
+    },
+    {
+      "source": "sdk.notifications",
+      "target": "Module",
+      "relation": "scoped_to"
+    },
+    {
+      "source": "sdk.database",
+      "target": "Module",
+      "relation": "isolated_per"
+    },
+    {
+      "source": "Core",
+      "target": "Module",
+      "relation": "hosts"
+    },
+    {
+      "source": "field_order",
+      "target": "NavigationBuilder",
+      "relation": "used_by_to_sort"
+    },
+    {
+      "source": "field_category",
+      "target": "NavigationBuilder",
+      "relation": "used_by_to_group"
+    },
+    {
+      "source": "field_vendor",
+      "target": "NavigationBuilder",
+      "relation": "used_by_to_group"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "manifest_parser",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "module_validator",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "module_registry",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "module_loader",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "loader_journal",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "registry_api",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "developer_mode",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "techforge_sdk",
+      "type": "documents"
+    },
+    {
+      "source": "phase2_module_engine",
+      "target": "phase_extension_points",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "package_manager",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "repository_provider",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "operation_log",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "mod_format",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "hot_reload",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "marketplace_api",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "techforge_cli",
+      "type": "documents"
+    },
+    {
+      "source": "phase4_package_manager",
+      "target": "techforge_sdk",
+      "type": "documents"
+    },
+    {
+      "source": "module_loader",
+      "target": "module_registry",
+      "type": "registers_modules_to"
+    },
+    {
+      "source": "module_loader",
+      "target": "manifest_parser",
+      "type": "delegates_to"
+    },
+    {
+      "source": "module_loader",
+      "target": "module_validator",
+      "type": "delegates_to"
+    },
+    {
+      "source": "module_loader",
+      "target": "loader_journal",
+      "type": "stores_result_in"
+    },
+    {
+      "source": "package_manager",
+      "target": "module_loader",
+      "type": "triggers_hot_reload_via"
+    },
+    {
+      "source": "package_manager",
+      "target": "module_registry",
+      "type": "updates"
+    },
+    {
+      "source": "package_manager",
+      "target": "repository_provider",
+      "type": "uses"
+    },
+    {
+      "source": "package_manager",
+      "target": "operation_log",
+      "type": "logs_to"
+    },
+    {
+      "source": "package_manager",
+      "target": "hot_reload",
+      "type": "implements"
+    },
+    {
+      "source": "module_registry",
+      "target": "registry_api",
+      "type": "served_by"
+    },
+    {
+      "source": "loader_journal",
+      "target": "developer_mode",
+      "type": "serves"
+    },
+    {
+      "source": "marketplace_api",
+      "target": "package_manager",
+      "type": "delegates_to"
+    },
+    {
+      "source": "marketplace_api",
+      "target": "module_registry",
+      "type": "reads_from"
+    },
+    {
+      "source": "registry_api",
+      "target": "module_registry",
+      "type": "reads_from"
+    },
+    {
+      "source": "registry_api",
+      "target": "loader_journal",
+      "type": "reads_from"
+    },
+    {
+      "source": "techforge_cli",
+      "target": "techforge_sdk",
+      "type": "uses"
+    },
+    {
+      "source": "techforge_cli",
+      "target": "module_loader",
+      "type": "reuses_for_validation"
+    },
+    {
+      "source": "techforge_sdk",
+      "target": "module_registry",
+      "type": "interacts_with"
+    },
+    {
+      "source": "setup_windows",
+      "target": "windows_setup_prereq",
+      "type": "describes"
+    },
+    {
+      "source": "setup_windows",
+      "target": "registry_api",
+      "type": "documents"
+    },
+    {
+      "source": "hello_world",
+      "target": "hello_world_api_ping",
+      "type": "exposes"
+    },
+    {
+      "source": "hello_world",
+      "target": "hello_world_api_info",
+      "type": "exposes"
+    },
+    {
+      "source": "hello_world",
+      "target": "hello_world_advanced",
+      "type": "documented_in"
+    },
+    {
+      "source": "hello_world",
+      "target": "module_lifecycle",
+      "type": "implements"
+    },
+    {
+      "source": "hello_world",
+      "target": "module_registry",
+      "type": "registered_in"
+    },
+    {
+      "source": "hello_world",
+      "target": "module_loader",
+      "type": "loaded_by"
+    },
+    {
+      "source": "hello_world",
+      "target": "manifest_parser",
+      "type": "validated_by"
+    },
+    {
+      "source": "hello_world",
+      "target": "module_validator",
+      "type": "validated_by"
+    },
+    {
+      "source": "hello_world_api_ping",
+      "target": "hello_world",
+      "type": "belongs_to"
+    },
+    {
+      "source": "hello_world_api_info",
+      "target": "hello_world",
+      "type": "belongs_to"
+    },
+    {
+      "source": "hello_world_advanced",
+      "target": "hello_world",
+      "type": "describes"
+    },
+    {
+      "source": "hello_world_advanced",
+      "target": "techforge_sdk",
+      "type": "uses"
+    },
+    {
+      "source": "hello_world_advanced",
+      "target": "module_lifecycle",
+      "type": "demonstrates"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "category:Examples",
+      "rel": "category"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "endpoint:hello_world_ping",
+      "rel": "exposes"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "endpoint:hello_world_info",
+      "rel": "exposes"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "pattern:health_check",
+      "rel": "implements_pattern"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "concept:ModuleContract",
+      "rel": "implements"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "tool:PluginLoader",
+      "rel": "registered_in"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "sdk:techforge_sdk",
+      "rel": "uses"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "module:my_consumer_module",
+      "rel": "serves_as_template_for"
+    },
+    {
+      "from": "module:my_consumer_module",
+      "to": "module:hello_world",
+      "rel": "depends_on"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "endpoint:veeam_m365_ping",
+      "rel": "exposes"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "export:calculate_storage",
+      "rel": "exports"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "export:ping",
+      "rel": "exports"
+    },
+    {
+      "from": "export:calculate_storage",
+      "to": "type:StorageSizingResult",
+      "rel": "returns"
+    },
+    {
+      "from": "export:ping",
+      "to": "type:PingResult",
+      "rel": "returns"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "concept:backup_sizing",
+      "rel": "performs"
+    },
+    {
+      "from": "concept:backup_sizing",
+      "to": "product:Microsoft365",
+      "rel": "for"
+    },
+    {
+      "from": "sdk:techforge_sdk",
+      "to": "pattern:health_check",
+      "rel": "enables"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "tool:DocEngine",
+      "rel": "documented_by"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "tool:DocEngine",
+      "rel": "documented_by"
+    },
+    {
+      "from": "module:hello_world",
+      "to": "tool:PackageManager",
+      "rel": "managed_by"
+    },
+    {
+      "from": "module:veeam_m365",
+      "to": "tool:PackageManager",
+      "rel": "managed_by"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "function_calculate_storage",
+      "relation": "provides"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "param_users",
+      "relation": "requires"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "param_mailbox_quota_gb",
+      "relation": "requires"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "param_sharepoint_gb",
+      "relation": "optional"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "param_teams_gb",
+      "relation": "optional"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "param_retention_years",
+      "relation": "optional"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "output_total_gb",
+      "relation": "returns"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "output_recommended_repo_gb",
+      "relation": "returns"
+    },
+    {
+      "source": "function_calculate_storage",
+      "target": "output_growth_factor",
+      "relation": "returns"
+    },
+    {
+      "source": "module_sales_proposal_module",
+      "target": "service_generate_backup_proposal",
+      "relation": "exports"
+    },
+    {
+      "source": "service_generate_backup_proposal",
+      "target": "module_veeam_m365",
+      "relation": "depends_on"
+    },
+    {
+      "source": "service_generate_backup_proposal",
+      "target": "sdk_techforge_sdk",
+      "relation": "uses"
+    },
+    {
+      "source": "service_generate_backup_proposal",
+      "target": "tenant_profile",
+      "relation": "requires"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "file_overview_md",
+      "relation": "documents"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "file_basic_md",
+      "relation": "documents"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "file_advanced_md",
+      "relation": "documents"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "file_integration_md",
+      "relation": "documents"
+    },
+    {
+      "source": "technology_veeam",
+      "target": "module_veeam_m365",
+      "relation": "powers"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "technology_m365",
+      "relation": "targets"
+    },
+    {
+      "source": "concept_backup_sizing",
+      "target": "module_veeam_m365",
+      "relation": "implemented_by"
+    },
+    {
+      "source": "concept_compliance",
+      "target": "param_retention_years",
+      "relation": "drives"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "technology_m365",
+      "relation": "integrates_exchange"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "technology_m365",
+      "relation": "integrates_sharepoint"
+    },
+    {
+      "source": "module_veeam_m365",
+      "target": "technology_m365",
+      "relation": "integrates_teams"
+    },
+    {
+      "source": "file_basic_md",
+      "target": "output_recommended_repo_gb",
+      "relation": "demonstrates"
+    },
+    {
+      "source": "file_advanced_md",
+      "target": "output_growth_factor",
+      "relation": "demonstrates"
+    },
+    {
+      "source": "file_integration_md",
+      "target": "module_sales_proposal_module",
+      "relation": "describes"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "core_platform_stack",
+      "label": "TechForge Core Platform Stack",
+      "nodes": [
+        "techforge_platform",
+        "fastapi_backend",
+        "react_frontend",
+        "techforge_sdk",
+        "module_registry",
+        "module_loader",
+        "package_manager"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "D:\\Github\\Tech.Forge\\README.md"
+    },
+    {
+      "id": "documentation_first_governance",
+      "label": "Documentation First Governance Structure",
+      "nodes": [
+        "documentation_first_principle",
+        "validate_module_cmd",
+        "doc_completeness_checker",
+        "all_example_tiers",
+        "developer_center"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\governance\\documentation-first-principle.md"
+    },
+    {
+      "id": "module_lifecycle_flow",
+      "label": "Module Lifecycle State Flow",
+      "nodes": [
+        "module_lifecycle",
+        "module_lifecycle_contract",
+        "techforge_sdk",
+        "hello_world_example",
+        "package_manager",
+        "module_registry",
+        "module_status_system"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "D:\\Github\\Tech.Forge\\docs\\developer-center\\core\\module-lifecycle.md"
+    },
+    {
+      "id": "he_module_lifecycle",
+      "nodes": [
+        "create-module",
+        "validate-module",
+        "package-module",
+        "install_module_cmd",
+        "modules_installed"
+      ],
+      "relation": "module_lifecycle_flow"
+    },
+    {
+      "id": "he_module_registration",
+      "nodes": [
+        "ModuleLoader",
+        "manifest.yaml",
+        "ModuleRegistry",
+        "NavigationBuilder",
+        "AppShell"
+      ],
+      "relation": "module_registration_and_rendering_pipeline"
+    },
+    {
+      "id": "he_sdk_instantiation",
+      "nodes": [
+        "create_sdk",
+        "Module",
+        "techforge_sdk",
+        "sdk.logger",
+        "sdk.settings",
+        "sdk.storage",
+        "sdk.database",
+        "sdk.notifications"
+      ],
+      "relation": "scoped_backend_sdk_instantiation"
+    },
+    {
+      "id": "he_service_module_contract",
+      "nodes": [
+        "ServiceModule",
+        "field_module_type",
+        "api.yaml",
+        "field_service_id",
+        "field_dependencies",
+        "field_exports",
+        "upload_file",
+        "download_file"
+      ],
+      "relation": "service_module_contract_definition"
+    },
+    {
+      "id": "he_frontend_module_config",
+      "nodes": [
+        "moduleConfig",
+        "ModulePageConfig",
+        "field_id",
+        "field_icon",
+        "field_category",
+        "field_vendor",
+        "field_route",
+        "ModulePage",
+        "@techforge/sdk"
+      ],
+      "relation": "frontend_module_config_contract"
+    },
+    {
+      "id": "he_manifest_fields",
+      "nodes": [
+        "manifest.yaml",
+        "field_id",
+        "field_name",
+        "field_version",
+        "field_category",
+        "field_vendor",
+        "field_author",
+        "field_description",
+        "field_entry_backend",
+        "field_entry_frontend",
+        "field_icon",
+        "field_order"
+      ],
+      "relation": "manifest_required_fields_set"
+    },
+    {
+      "id": "hy-01",
+      "type": "module_validation",
+      "label": "Module Validation Pipeline",
+      "members": [
+        "module_loader",
+        "manifest_parser",
+        "module_validator",
+        "module_registry"
+      ],
+      "summary": "At startup, ModuleLoader orchestrates ManifestParser and ModuleValidator for each module directory. Results flow into ModuleRegistry and LoaderJournal."
+    },
+    {
+      "id": "hy-02",
+      "type": "package_management_flow",
+      "label": "Package Management Flow",
+      "members": [
+        "package_manager",
+        "module_loader",
+        "module_registry",
+        "operation_log",
+        "hot_reload"
+      ],
+      "summary": "Install/remove/update operations: PackageManager performs file operations, triggers ModuleLoader.scan_installed() for hot-reload, updates ModuleRegistry, and logs to OperationLog."
+    },
+    {
+      "id": "hy-03",
+      "type": "backend_architecture",
+      "label": "Backend Architecture",
+      "members": [
+        "backend",
+        "module_registry",
+        "marketplace_api",
+        "registry_api",
+        "loader_journal",
+        "operation_log",
+        "package_manager",
+        "module_loader",
+        "manifest_parser",
+        "module_validator",
+        "repository_provider"
+      ],
+      "summary": "Phase 2-4 backend core components: registry serves APIs, loader scans modules, package manager handles .mod operations, repository provider abstracts sources."
+    }
+  ],
+  "input_tokens": 7000,
+  "output_tokens": 4000
+}
