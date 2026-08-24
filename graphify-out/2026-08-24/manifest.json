@@ -595,8 +595,7 @@
   },
   "modules/installed/hello_world/data/settings.json": {
     "mtime": 1782403997.0,
-    "seen": 1787595660.3957465,
-    "ast_hash": "e39e7829f8a83cc9e88dde7dceed971c",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "modules/installed/hello_world/frontend/index.tsx": {
@@ -1029,12 +1028,6 @@
     "mtime": 1787594049.2565012,
     "seen": 1787595426.6366973,
     "ast_hash": "12e405f8438d3a17b794210600ff8079",
-    "semantic_hash": ""
-  },
-  ".claude/settings.json": {
-    "mtime": 1786469881.2912123,
-    "seen": 1787595660.3957465,
-    "ast_hash": "860dccf93992d59722d7fcf0732657d6",
     "semantic_hash": ""
   }
 }

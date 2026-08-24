@@ -1,6 +1,0 @@
-{
-  "$schema": "https://app.kilo.ai/config.json",
-  "plugin": [
-    "file:///D:/Github/Tech.Forge/.kilo/plugins/graphify.js"
-  ]
-}
