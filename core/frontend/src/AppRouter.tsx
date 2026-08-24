@@ -5,6 +5,7 @@ import { ModulesPage }         from '@/pages/ModulesPage'
 import { MarketplacePage }     from '@/pages/MarketplacePage'
 import { SettingsPage }        from '@/pages/SettingsPage'
 import { DeveloperCenterPage } from '@/pages/DeveloperCenterPage'
+import { ModuleHost }         from '@/pages/ModuleHost'
 
 /**
  * Application Router — Phase 5
@@ -23,7 +24,8 @@ export function AppRouter() {
           <Route path="marketplace"      element={<MarketplacePage />} />
           <Route path="developer-center" element={<DeveloperCenterPage />} />
           <Route path="settings"         element={<SettingsPage />} />
-          {/* Phase 2+: <Route path="modules/:moduleId/*" element={<ModuleHost />} /> */}
+          {/* Phase 2+ — Plugin Loader: host de páginas de módulos */}
+          <Route path="modules/:moduleId/*" element={<ModuleHost />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

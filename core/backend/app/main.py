@@ -8,6 +8,8 @@ from app.db.database import init_db
 from app.api import api_router
 from app.module_engine.loader import ModuleLoader
 from app.module_engine import journal as loader_journal
+from app.module_engine.plugin_loader import mount_module_routers
+from app.runtime import runtime
 from app.doc_engine import doc_indexer
 
 logging.basicConfig(
@@ -38,11 +40,24 @@ async def lifespan(app: FastAPI):
         result.installed, result.invalid, result.incompatible,
     )
 
+    # Phase 2+ — Plugin Loader: mount backend routers of INSTALLED modules
+    mounted = mount_module_routers(app)
+    logger.info(
+        "Plugin Loader: %d router(s) mounted, %d failed.",
+        len(mounted.mounted), len(mounted.failed),
+    )
+
     # Phase 5 — Documentation Engine
     count = doc_indexer.rebuild()
     logger.info("Documentation Engine: %d documents indexed.", count)
 
+    # Phase 6 — Runtime: platform is READY
+    await runtime.fire_startup("platform ready")
+
     yield
+
+    # Phase 6 — Runtime: coordinated shutdown
+    await runtime.fire_shutdown("backend stopped")
 
 
 def create_app() -> FastAPI:

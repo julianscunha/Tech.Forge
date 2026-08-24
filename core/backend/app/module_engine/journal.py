@@ -22,3 +22,14 @@ def store(result: LoaderResult) -> None:
 
 def get() -> Optional[LoaderResult]:
     return _last_result
+
+
+def add_event(
+    message: str,
+    level: str = "info",
+    module_id: Optional[str] = None,
+    details: Optional[dict] = None,
+) -> None:
+    """Append a single event to the stored result (used by the Plugin Loader)."""
+    if _last_result is not None:
+        _last_result.add_event(message, level=level, module_id=module_id, details=details)

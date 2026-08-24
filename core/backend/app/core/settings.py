@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     PORT: int = 8000
     RELOAD: bool = True
 
+    # Launcher (Phase 6)
+    FRONTEND_PORT: int = 5173
+    HEALTH_CHECK_TIMEOUT: int = 60      # seconds waiting for backend READY
+    FRONTEND_READY_TIMEOUT: int = 60    # seconds waiting for frontend READY
+
     # Database
     DATABASE_URL: str = f"sqlite+aiosqlite:///{BASE_DIR}/config/techforge.db"
 
