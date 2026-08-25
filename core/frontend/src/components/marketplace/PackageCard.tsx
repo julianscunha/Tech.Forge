@@ -116,7 +116,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
             variant="danger"
           />
         )}
-        {tab === 'installed' && pkg.is_enabled !== false && (
+        {tab === 'installed' && pkg.is_enabled !== false && !isIncompat && (
           <ActionBtn
             icon={Power}
             label="Desativar"
