@@ -1,5 +1,6 @@
-import { PanelLeft, Sun, Moon, Bell } from 'lucide-react'
+import { PanelLeft, Sun, Moon } from 'lucide-react'
 import { useAppStore } from '@/store/app'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 import { cn } from '@/lib/utils'
 
 export function Header() {
@@ -36,17 +37,8 @@ export function Header() {
 
       {/* Right: actions */}
       <div className="flex items-center gap-1">
-        {/* Notification bell — placeholder for Phase notifications */}
-        <button
-          aria-label="Notificações"
-          className={cn(
-            'flex items-center justify-center w-7 h-7 rounded',
-            'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
-            'hover:bg-[hsl(var(--bg-subtle))] transition-colors'
-          )}
-        >
-          <Bell size={14} />
-        </button>
+        {/* Notifications */}
+        <NotificationBell />
 
         {/* Theme toggle */}
         <button

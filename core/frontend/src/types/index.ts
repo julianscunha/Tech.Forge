@@ -1,5 +1,17 @@
 // ── Platform ──────────────────────────────────────────────────────────────────
 
+export type NotificationLevel = 'info' | 'warning' | 'error' | 'success'
+
+export interface Notification {
+  id: number
+  level: NotificationLevel
+  title: string
+  message?: string | null
+  module_id?: string | null
+  read: boolean
+  created_at: string
+}
+
 export interface PlatformStatus {
   platform_name: string
   platform_version: string
