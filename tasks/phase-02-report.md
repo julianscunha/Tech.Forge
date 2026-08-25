@@ -22,6 +22,14 @@ Sem alterações (já implementada).
 Novos: `tests/test_phase2_notifications.py` (5 testes — níveis, validação 422,
 unread count, mark read/read-all, filtro unread_only).
 
+## Browser E2E (validação real, 2026-08-25)
+Backend + frontend no ar; validado via navegador:
+- Badge "3" no bell com 3 notificações não lidas ✅
+- Dropdown lista as notificações com ícones por nível e "Marcar todas" ✅
+- Marcar uma como lida → badge 3→2 ✅
+- "Marcar todas" → badge some, unread-count=0 na API ✅
+- Sem erros de JS no console; polling a cada 30s confirmado nos logs do backend ✅
+
 ## Build
 Frontend build OK (`tsc -b && vite build`, gzip JS ~96 kB).
 
