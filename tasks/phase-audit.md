@@ -37,3 +37,14 @@ pois nenhuma fase atribui explicitamente esse canal. A Fase 4 é a primeira
 consumidora da Notification Foundation (spec §20: install/fail/incompatibility/
 activate/deactivate/remove devem notificar — "não criar um segundo sistema").
 Logs de módulo (contexto de log próprio) ficam cobertos pela Fase 9 §22.
+
+## Diretrizes do usuário para a Fase 4 (decisão 2026-08-25, confirmadas)
+
+1. Semântica do disable = POUPAR RECURSOS: módulo DISABLED não carrega entry_backend
+   no startup (lazy loading), não loga, não aparece na navegação, rotas não respondem.
+2. Hot-disable em runtime: decidir no plano se entra ou fica para depois
+   (desmontagem quente é mais complexa — imports já feitos).
+3. Activate/deactivate via API + UI (botões Marketplace/Modules) + notificações
+   via Notification Foundation (spec Fase 4 §20).
+4. Remove JÁ EXISTE (manager.remove + DELETE /marketplace/remove + hook uninstall);
+   não reimplementar.
