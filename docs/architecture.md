@@ -99,3 +99,24 @@ export default {
 O host (`ModuleHost.tsx`) importa dinamicamente e chama `render(el)` dentro de
 um ErrorBoundary — falha do módulo nunca derruba o Core (spec Fase 3 §15).
 Extensões servidas: whitelist (.js/.css/.svg/.png/...); path traversal bloqueado.
+
+## Module Lifecycle — Activate / Deactivate (Fase 4 §9/§10)
+
+Semântica (diretriz do produto): **desativar = poupar recursos**.
+
+```text
+INSTALLED ⇄ DISABLED   (activate / deactivate)
+DISABLED  → REMOVED    (remove — ação explícita, já existente)
+```
+
+- **Deactivate**: grava flag em `<module>/data/state.json` + `is_enabled=false`
+  no DB. O Loader **não monta** entry_backend de módulos DISABLED no boot; o
+  NavigationBuilder os exclui da navegação. Arquivos e metadados preservados.
+- **Activate**: limpa a flag, restaura INSTALLED e faz hot-mount das rotas.
+- Cada transição registra operation_log + notificação (Notification Foundation).
+- Limitação conhecida: desativação não descarrega um módulo já montado em
+  runtime (requer restart do backend para liberar memória). Hot-unload fica
+  documentado como evolução futura (Fase 9).
+
+APIs: `POST /api/v1/marketplace/activate/{id}` · `/deactivate/{id}`
+CLI: `techforge modules activate|deactivate|remove <id>`
