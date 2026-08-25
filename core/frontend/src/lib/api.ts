@@ -90,6 +90,13 @@ export const marketplaceApi = {
 
   log: (limit = 50) =>
     request<OperationLogEntry[]>(`/marketplace/log?limit=${limit}`),
+
+  // ── Lifecycle (Fase 4 §9/§10) ──────────────────────────────────────────────
+  activate: (moduleId: string) =>
+    request<OperationResponse>(`/marketplace/activate/${moduleId}`, { method: 'POST' }),
+
+  deactivate: (moduleId: string) =>
+    request<OperationResponse>(`/marketplace/deactivate/${moduleId}`, { method: 'POST' }),
 }
 
 // ── Navigation Tree (§7.1) ────────────────────────────────────────────────────

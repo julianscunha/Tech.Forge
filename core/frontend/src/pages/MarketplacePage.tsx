@@ -216,6 +216,8 @@ export function MarketplacePage() {
                 onInstall={p => handleOperation(p.module_id, () => marketplaceApi.install(p.module_id))}
                 onRemove={p  => handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id))}
                 onUpdate={p  => handleOperation(p.module_id, () => marketplaceApi.update(p.module_id))}
+                onActivate={p   => handleOperation(p.module_id, () => marketplaceApi.activate(p.module_id))}
+                onDeactivate={p => handleOperation(p.module_id, () => marketplaceApi.deactivate(p.module_id))}
               />
             ))}
           </div>

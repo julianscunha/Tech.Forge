@@ -391,6 +391,7 @@ class PackageManager:
                 color=entry.color,
                 order=entry.order,
                 is_installed=True,
+                is_enabled=(entry.status.value != "DISABLED"),
                 installed_version=entry.version,
                 install_date=entry.install_date,
             )

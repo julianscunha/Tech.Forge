@@ -149,6 +149,7 @@ export interface PackageInfo {
   platform_max_version: string
   compatibility: CompatibilityLevel
   is_installed: boolean
+  is_enabled?: boolean | null
   installed_version: string | null
   install_date: string | null
   trust_level: TrustLevel

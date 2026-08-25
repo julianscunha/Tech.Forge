@@ -41,6 +41,7 @@ class PackageInfoRead(BaseModel):
     platform_max_version: str
     compatibility: str
     is_installed:      bool
+    is_enabled:        Optional[bool] = None
     installed_version: Optional[str]
     install_date:      Optional[str]
     trust_level: str
@@ -68,6 +69,7 @@ class PackageInfoRead(BaseModel):
             platform_max_version=p.platform_max_version,
             compatibility=p.compatibility.value,
             is_installed=p.is_installed,
+            is_enabled=p.is_enabled,
             installed_version=p.installed_version,
             install_date=p.install_date.isoformat() if p.install_date else None,
             trust_level=p.trust_level.value,
@@ -279,8 +281,9 @@ async def get_operation_log(limit: int = Query(50, ge=1, le=500)):
 # ── Activate / Deactivate (Fase 4 §9/§10) ────────────────────────────────────
 
 class LifecycleResponse(BaseModel):
-    ok: bool
+    success: bool
     status: str
+    module_id: str
     message: str
 
 
@@ -294,7 +297,7 @@ async def activate_module_route(module_id: str):
         result = await activate_module(db, module_id)
     if not result["ok"]:
         raise HTTPException(status_code=result["status"], detail=result["detail"])
-    return LifecycleResponse(ok=True,
+    return LifecycleResponse(success=True, module_id=module_id,
                              status=result.get("status_value", "ok"),
                              message=result["message"])
 
@@ -310,6 +313,6 @@ async def deactivate_module_route(module_id: str):
         result = await deactivate_module(db, module_id)
     if not result["ok"]:
         raise HTTPException(status_code=result["status"], detail=result["detail"])
-    return LifecycleResponse(ok=True,
+    return LifecycleResponse(success=True, module_id=module_id,
                              status=result.get("status_value", "ok"),
                              message=result["message"])

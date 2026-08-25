@@ -52,6 +52,7 @@ class PackageInfo:
     is_installed:      bool = False
     installed_version: Optional[str] = None
     install_date:      Optional[datetime] = None
+    is_enabled:        Optional[bool] = None   # Fase 4: None = not installed
 
     # ── Links ─────────────────────────────────────────────────────────────────
     homepage:      Optional[str] = None

@@ -8,6 +8,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import json
+
 import click
 from rich.table import Table
 
@@ -123,4 +125,71 @@ def validate_cmd(module_path, platform_version):
         print_error(f"Module is INVALID ({result.status.value})")
         for err in result.errors:
             console.print(f"  [red]✗[/red] {err}")
+        raise SystemExit(1)
+
+
+# ── Lifecycle (Fase 4 §19) — delegates to Core API ───────────────────────────
+
+def _core_post(path: str) -> dict:
+    import urllib.request
+    req = urllib.request.Request(
+        f"http://127.0.0.1:8000/api/v1{path}", data=b"", method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        return {"ok": False, "detail": exc.read().decode("utf-8", errors="replace")}
+    except urllib.error.URLError as exc:
+        return {"ok": False, "detail": f"Plataforma não acessível ({exc.reason}). "
+                                       f"Use 'techforge platform start'."}
+
+
+def _lifecycle(action: str, module_id: str) -> None:
+    result = _core_post(f"/marketplace/{action}/{module_id}")
+    if result.get("ok"):
+        print_success(result.get("message", f"{action} ok"))
+    else:
+        print_error(result.get("detail", f"Falha ao {action} '{module_id}'."))
+        raise SystemExit(1)
+
+
+@modules_cmd.command("activate")
+@click.argument("module_id")
+def activate_cmd(module_id):
+    """Activate an installed (disabled) module via the Core API."""
+    _lifecycle("activate", module_id)
+
+
+@modules_cmd.command("deactivate")
+@click.argument("module_id")
+def deactivate_cmd(module_id):
+    """Deactivate a module — files kept, resources saved."""
+    _lifecycle("deactivate", module_id)
+
+
+@modules_cmd.command("remove")
+@click.argument("module_id")
+@click.option("--yes", is_flag=True, help="Skip confirmation")
+def remove_cmd(module_id, yes):
+    """Permanently remove a module (physical deletion) via the Core API."""
+    if not yes:
+        click.confirm(
+            f"Remover PERMANENTEMENTE o módulo '{module_id}' e seus arquivos?",
+            abort=True,
+        )
+    import urllib.request
+    req = urllib.request.Request(
+        f"http://127.0.0.1:8000/api/v1/marketplace/remove/{module_id}",
+        method="DELETE",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            print_success(f"Módulo '{module_id}' removido.")
+    except urllib.error.HTTPError as exc:
+        print_error(exc.read().decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    except urllib.error.URLError as exc:
+        print_error(f"Plataforma não acessível: {exc.reason}")
         raise SystemExit(1)

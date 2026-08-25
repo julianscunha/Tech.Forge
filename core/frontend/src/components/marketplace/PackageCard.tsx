@@ -1,4 +1,4 @@
-import { ArrowUpCircle, CheckCircle2, ChevronRight, Download, Trash2, RefreshCw } from 'lucide-react'
+import { ArrowUpCircle, CheckCircle2, ChevronRight, Download, Trash2, RefreshCw, Power, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CompatibilityBadge } from './CompatibilityBadge'
 import { TrustBadge } from './TrustBadge'
@@ -13,10 +13,12 @@ interface Props {
   onInstall?: (pkg: PackageInfo) => void
   onRemove?:  (pkg: PackageInfo) => void
   onUpdate?:  (pkg: PackageInfo) => void
+  onActivate?:   (pkg: PackageInfo) => void
+  onDeactivate?: (pkg: PackageInfo) => void
   onClick?:   (pkg: PackageInfo) => void
 }
 
-export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, onClick }: Props) {
+export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, onActivate, onDeactivate, onClick }: Props) {
   const isIncompat = pkg.compatibility === 'incompatible'
 
   return (
@@ -114,6 +116,26 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
             variant="danger"
           />
         )}
+        {tab === 'installed' && pkg.is_enabled !== false && (
+          <ActionBtn
+            icon={Power}
+            label="Deactivate"
+            disabled={loading}
+            loading={loading}
+            onClick={() => onDeactivate?.(pkg)}
+            variant="muted"
+          />
+        )}
+        {tab === 'installed' && pkg.is_enabled === false && (
+          <ActionBtn
+            icon={Play}
+            label="Activate"
+            disabled={loading}
+            loading={loading}
+            onClick={() => onActivate?.(pkg)}
+            variant="primary"
+          />
+        )}
         {tab === 'updates' && (
           <ActionBtn
             icon={ArrowUpCircle}
@@ -130,12 +152,13 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
 }
 
 // ── Small reusable action button ──────────────────────────────────────────────
-type Variant = 'primary' | 'danger' | 'accent'
+type Variant = 'primary' | 'danger' | 'accent' | 'muted'
 
 const variantCls: Record<Variant, string> = {
   primary: 'bg-[hsl(var(--accent-muted))] text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)/0.2)]',
   danger:  'bg-[hsl(var(--danger)/0.1)] text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.2)]',
   accent:  'bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))] hover:bg-[hsl(var(--warning)/0.2)]',
+  muted:   'bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--bg-subtle))]/70',
 }
 
 function ActionBtn({
