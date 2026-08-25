@@ -260,6 +260,17 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
+<summary><b>Notifications</b></summary>
+
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/notifications?unread_only=&limit=` | Lista notificações (mais recentes primeiro) |
+| POST | `/api/v1/notifications` | Cria `{level: info\|warning\|error\|success, title, message?}` |
+| GET | `/api/v1/notifications/unread-count` | Contador de não lidas (badge do bell) |
+| POST | `/api/v1/notifications/:id/read` · `/read-all` | Marcar como lida |
+</details>
+
+<details>
 <summary><b>Documentation Engine</b></summary>
 
 | Method | Path | Descrição |
