@@ -1,0 +1,126 @@
+"""techforge modules — list/show/validate installed modules (Fase 3 §19).
+
+Reuses the Core engine (app.module_engine ManifestParser + ModuleValidator).
+No validation logic is duplicated here, per spec §19.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import click
+from rich.table import Table
+
+from techforge_cli.console import (
+    console, print_header, print_error, print_success, print_info,
+)
+
+# Core engine — added to path so the CLI can run from any checkout
+_CORE = Path(__file__).resolve().parent.parent.parent.parent / "core" / "backend"
+if str(_CORE) not in sys.path:
+    sys.path.insert(0, str(_CORE))
+
+from app.module_engine.manifest import ManifestParser, ManifestError  # noqa: E402
+from app.module_engine.validator import ModuleValidator  # noqa: E402
+
+
+def _scan(modules_dir: Path):
+    """Scan a modules directory using the Core ManifestParser.
+
+    Returns a list of (dir_name, parsed_manifest | error_string).
+    Invalid modules are reported but never crash the scan.
+    """
+    results = []
+    if not modules_dir.is_dir():
+        return results
+    for entry in sorted(modules_dir.iterdir()):
+        if not entry.is_dir():
+            continue
+        try:
+            results.append((entry.name, ManifestParser.parse(entry)))
+        except ManifestError as exc:
+            results.append((entry.name, str(exc)))
+        except Exception as exc:  # defensive: keep scanning
+            results.append((entry.name, f"unexpected error: {exc}"))
+    return results
+
+
+@click.group("modules")
+def modules_cmd():
+    """Inspect and validate TechForge modules."""
+
+
+@modules_cmd.command("list")
+@click.option("--modules-dir", type=click.Path(exists=True, file_okay=False),
+              default=None, help="Modules directory (default: <repo>/modules/installed)")
+def list_cmd(modules_dir):
+    """List discovered modules and their status."""
+    base = Path(modules_dir) if modules_dir else (
+        Path(__file__).resolve().parent.parent.parent.parent / "modules" / "installed"
+    )
+    print_header("TechForge Modules")
+    rows = _scan(base)
+    if not rows:
+        print_info(f"No modules found in {base}")
+        return
+
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Version")
+    table.add_column("Type")
+    table.add_column("Status")
+
+    valid = 0
+    for name, item in rows:
+        if isinstance(item, Exception) or isinstance(item, str):
+            table.add_row(name, "-", "-", "-", "[red]INVALID[/red]")
+            console.print(f"[dim]  └ {name}: {item}[/dim]") if False else None
+        else:
+            valid += 1
+            module_type = item.raw.get("module_type", "application")
+            table.add_row(item.id, item.name, item.version, module_type,
+                          "[green]OK[/green]")
+    console.print(table)
+    print_info(f"{valid}/{len(rows)} valid")
+
+
+@modules_cmd.command("show")
+@click.argument("module_id")
+@click.option("--modules-dir", type=click.Path(exists=True, file_okay=False),
+              default=None)
+def show_cmd(module_id, modules_dir):
+    """Show details of a single module by id."""
+    base = Path(modules_dir) if modules_dir else (
+        Path(__file__).resolve().parent.parent.parent.parent / "modules" / "installed"
+    )
+    for name, item in _scan(base):
+        if not isinstance(item, (Exception, str)) and item.id == module_id:
+            print_header(f"Module: {item.name}")
+            module_type = item.raw.get("module_type", "application")
+            print_info(f"Id:            [cyan]{item.id}[/cyan]")
+            print_info(f"Name:          {item.name}")
+            print_info(f"Version:       [version]{item.version}[/version]")
+            print_info(f"Type:          {module_type}")
+            print_info(f"Category:      {item.category}")
+            print_info(f"Vendor:        {item.vendor}")
+            print_info(f"Entry backend: [path]{item.entry_backend}[/path]")
+            print_info(f"Entry frontend:[path]{item.entry_frontend}[/path]")
+            return
+    print_error(f"Module '{module_id}' not found in {base}")
+    raise SystemExit(1)
+
+
+@modules_cmd.command("validate")
+@click.argument("module_path", type=click.Path(exists=True, file_okay=False))
+@click.option("--platform-version", default="1.0.0", show_default=True)
+def validate_cmd(module_path, platform_version):
+    """Validate a module directory using the Core validator."""
+    result = ModuleValidator.validate(Path(module_path).resolve(), platform_version)
+    if result.is_valid:
+        print_success(f"Module is VALID ({result.status.value})")
+    else:
+        print_error(f"Module is INVALID ({result.status.value})")
+        for err in result.errors:
+            console.print(f"  [red]✗[/red] {err}")
+        raise SystemExit(1)
