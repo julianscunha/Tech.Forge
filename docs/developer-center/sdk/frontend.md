@@ -1,7 +1,9 @@
 ---
 title: SDK Frontend
-order: 2
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [sdk, react, typescript, components, design-system]
+order: 2
 ---
 
 # SDK Frontend (TypeScript / React)

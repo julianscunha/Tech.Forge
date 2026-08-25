@@ -1,7 +1,9 @@
 ---
 title: Ciclo de Vida dos Módulos
-order: 3
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [lifecycle, install, enable, disable, upgrade, uninstall, contract]
+order: 3
 ---
 
 # Ciclo de Vida dos Módulos

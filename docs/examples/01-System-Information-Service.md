@@ -1,3 +1,9 @@
+---
+title: TechForge — Exemplo 01
+category: fases
+domain: [fases, exemplos-faq]
+---
+
 # TechForge — Exemplo 01
 ## System Information Service
 

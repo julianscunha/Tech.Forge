@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 18
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 18
 ## Platform Finalization & Architecture Consolidation
 

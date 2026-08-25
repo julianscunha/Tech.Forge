@@ -1,5 +1,7 @@
 ---
 title: Runtime
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [core, runtime, phase-6, lifecycle]
 ---
 

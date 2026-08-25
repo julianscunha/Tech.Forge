@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 11
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 11
 ## Module Marketplace & Distribution
 

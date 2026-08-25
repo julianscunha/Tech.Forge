@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 12
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 12
 ## Configuration, Data & Persistence
 

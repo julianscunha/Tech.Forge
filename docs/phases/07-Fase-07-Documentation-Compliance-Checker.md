@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 7
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 7
 ## Documentation Compliance Checker
 

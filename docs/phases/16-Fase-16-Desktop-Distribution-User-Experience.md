@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 16
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 16
 ## Desktop Distribution & User Experience
 

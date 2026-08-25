@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 14
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 14
 ## Observability, Telemetry & Diagnostics
 

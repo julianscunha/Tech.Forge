@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 4: Package Manager & Marketplace
+category: arquitetura-core
+domain: [arquitetura-core]
+---
+
 # TechForge — Fase 4: Package Manager & Marketplace
 
 ## Documentação Técnica

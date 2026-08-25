@@ -1,7 +1,9 @@
 ---
 title: App Shell
-order: 1
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [core, app-shell, layout, sidebar, header]
+order: 1
 ---
 
 # App Shell

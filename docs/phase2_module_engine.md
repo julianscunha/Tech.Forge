@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 2: Module Engine
+category: arquitetura-core
+domain: [arquitetura-core]
+---
+
 # TechForge — Fase 2: Module Engine
 
 ## Documentação Técnica

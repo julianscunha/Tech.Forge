@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 20
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 20
 ## Long-Term Core Governance & Ecosystem Maintenance
 

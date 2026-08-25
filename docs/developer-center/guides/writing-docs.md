@@ -1,7 +1,9 @@
 ---
 title: Writing Documentation for TechForge Modules
-order: 2
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [documentation, markdown, api-yaml, best-practices, ai-context]
+order: 2
 ---
 
 # Writing Documentation for TechForge Modules

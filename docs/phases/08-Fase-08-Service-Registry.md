@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 8
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 8
 ## Service Registry
 

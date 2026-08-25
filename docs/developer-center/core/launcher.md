@@ -1,5 +1,7 @@
 ---
 title: Launcher
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [core, launcher, phase-6, startup]
 ---
 

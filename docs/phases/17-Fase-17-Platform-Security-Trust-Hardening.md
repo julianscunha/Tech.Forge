@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 17
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 17
 ## Platform Security & Trust Hardening
 

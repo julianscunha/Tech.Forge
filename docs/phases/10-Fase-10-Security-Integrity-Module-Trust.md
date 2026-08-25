@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 10
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 10
 ## Security, Integrity & Module Trust
 

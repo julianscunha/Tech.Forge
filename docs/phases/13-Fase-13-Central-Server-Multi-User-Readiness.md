@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 13
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 13
 ## Central Server & Multi-User Readiness
 

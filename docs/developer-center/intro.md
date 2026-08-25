@@ -1,7 +1,9 @@
 ---
 title: Introdução ao TechForge
-order: 1
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [intro, overview, getting-started]
+order: 1
 ---
 
 # Introdução ao TechForge

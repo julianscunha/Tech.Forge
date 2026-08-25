@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 2
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 2
 ## Core Architecture
 

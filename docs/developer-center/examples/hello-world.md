@@ -1,7 +1,9 @@
 ---
 title: Exemplos — Hello World
-order: 1
+category: exemplos-faq
+domain: [exemplos-faq]
 tags: [examples, hello-world, reference-module, walkthrough]
+order: 1
 ---
 
 # Módulo de Referência: Hello World

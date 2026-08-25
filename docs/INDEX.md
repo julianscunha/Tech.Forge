@@ -1,3 +1,9 @@
+---
+title: Índice da Documentação — TechForge.v2
+category: governanca-setup
+domain: [governanca-setup]
+---
+
 # Índice da Documentação — TechForge.v2
 
 > Organizado por categoria. Fonte: leitura dos cabeçalhos e objetivos de cada documento.

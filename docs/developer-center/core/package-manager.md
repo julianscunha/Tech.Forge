@@ -1,7 +1,9 @@
 ---
 title: Package Manager
-order: 4
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [package-manager, install, update, remove, hot-reload, mod-file]
+order: 4
 ---
 
 # Package Manager

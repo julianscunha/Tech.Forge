@@ -1,7 +1,9 @@
 ---
 title: SDK Backend
-order: 1
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [sdk, python, database, storage, logger, settings, notifications]
+order: 1
 ---
 
 # SDK Backend (Python)

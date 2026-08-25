@@ -1,3 +1,9 @@
+---
+title: TechForge — Guia de Setup (Windows)
+category: governanca-setup
+domain: [governanca-setup]
+---
+
 # TechForge — Guia de Setup (Windows)
 
 ## Pré-requisitos

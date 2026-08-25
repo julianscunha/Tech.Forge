@@ -1,7 +1,9 @@
 ---
 title: Guia Completo de Desenvolvimento
-order: 1
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [guide, tutorial, create-module, validate, package, install]
+order: 1
 ---
 
 # Guia Completo de Desenvolvimento de Módulos

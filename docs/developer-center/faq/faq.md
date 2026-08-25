@@ -1,7 +1,9 @@
 ---
 title: FAQ
-order: 1
+category: exemplos-faq
+domain: [exemplos-faq]
 tags: [faq, troubleshooting, common-questions]
+order: 1
 ---
 
 # Perguntas Frequentes (FAQ)

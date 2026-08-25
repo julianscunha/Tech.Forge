@@ -1,7 +1,9 @@
 ---
 title: Referência do Manifesto
-order: 1
+category: sdk-desenvolvimento
+domain: [sdk-desenvolvimento]
 tags: [manifest, yaml, reference, icon, order, color, required-fields]
+order: 1
 ---
 
 # Referência do Manifesto (manifest.yaml)

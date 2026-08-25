@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 1
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 1
 ## Foundation
 

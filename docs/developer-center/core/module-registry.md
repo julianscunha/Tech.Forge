@@ -1,7 +1,9 @@
 ---
 title: Module Registry
-order: 2
+category: arquitetura-core
+domain: [arquitetura-core]
 tags: [core, registry, module-engine, runtime]
+order: 2
 ---
 
 # Module Registry

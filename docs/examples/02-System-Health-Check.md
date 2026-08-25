@@ -1,3 +1,9 @@
+---
+title: TechForge — Exemplo 02
+category: fases
+domain: [fases, exemplos-faq]
+---
+
 # TechForge — Exemplo 02
 ## System Health Check
 

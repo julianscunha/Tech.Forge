@@ -1,7 +1,9 @@
 ---
 title: Documentation First Principle
-order: 1
+category: governanca-setup
+domain: [governanca-setup]
 tags: [governance, documentation, definition-of-done, contracts, examples, dod]
+order: 1
 ---
 
 # §16 — Documentation First Principle

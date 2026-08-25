@@ -1,3 +1,9 @@
+---
+title: TechForge — Fase 19
+category: fases
+domain: [fases]
+---
+
 # TechForge — Fase 19
 ## Public Release Readiness & Open Ecosystem
 

@@ -1,9 +1,9 @@
 ---
-title: Service Modules
-order: 1
+title: "Service Modules"
+category: "developer-center/service-modules"
 tags: [service-modules, api-yaml, contracts, exports]
+order: 1
 ---
-
 # Service Modules
 
 Service Modules são módulos que expõem funcionalidades para outros módulos consumirem. Eles publicam um **contrato de serviço** em `docs/contracts/api.yaml`.
