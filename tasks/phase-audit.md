@@ -28,3 +28,12 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 - `Header.tsx` bell placeholder — aguarda Notification Foundation (Fase 2)
 - `ModuleHost.tsx` — dynamic import de entry_frontend adiado (Fase 9)
 - Manifest sem campo `dependencies` (Fase 8.1)
+
+## Nota para o plano da Fase 4 (decisão 2026-08-25)
+
+Incluir no escopo da Fase 4 a integração `NotificationsSDK.push()` (sdk/python)
+→ `NotificationService` do Core (`POST /api/v1/notifications`, campo module_id),
+pois nenhuma fase atribui explicitamente esse canal. A Fase 4 é a primeira
+consumidora da Notification Foundation (spec §20: install/fail/incompatibility/
+activate/deactivate/remove devem notificar — "não criar um segundo sistema").
+Logs de módulo (contexto de log próprio) ficam cobertos pela Fase 9 §22.
