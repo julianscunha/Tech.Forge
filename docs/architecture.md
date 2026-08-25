@@ -83,3 +83,19 @@ Backend: `app/models/notifications.py` + `app/services/notifications.py` +
 `app/api/routes/notifications.py`. Frontend: store zustand com polling leve (30s)
 e `NotificationBell` no Header. Fases futuras (compatibilidade, integridade,
 eventos da plataforma) devem usar `NotificationService.create()`.
+
+## Module Frontend Contract (Fase 3 §11)
+
+`entry_frontend` aponta para um módulo JS (ESM) **compilado**, servido via
+`GET /api/v1/modules/{id}/assets/{path}`. Contrato micro-frontend:
+
+```js
+// frontend/main.js
+export default {
+  render(container) { /* desenha a UI dentro do container */ },
+};
+```
+
+O host (`ModuleHost.tsx`) importa dinamicamente e chama `render(el)` dentro de
+um ErrorBoundary — falha do módulo nunca derruba o Core (spec Fase 3 §15).
+Extensões servidas: whitelist (.js/.css/.svg/.png/...); path traversal bloqueado.

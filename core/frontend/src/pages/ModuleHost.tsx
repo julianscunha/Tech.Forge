@@ -4,25 +4,29 @@
  * Host page for dynamically loaded modules. Rendered at
  * /modules/:moduleId/* by the Plugin Loader route in AppRouter.
  *
- * Phase 3 (Fase 3 §11): if the module declares `entry_frontend`, the host
- * dynamically imports it from /modules/<id>/assets/<entry_frontend> and
- * renders the exported default component INSIDE the App Shell content area.
- * Failure to load falls back to the metadata view — never breaks the platform.
+ * Phase 3 (Fase 3 §11) — dynamic loading contract:
+ * The module's `entry_frontend` is a compiled JS module (ESM) served from
+ * /api/v1/modules/<id>/assets/<entry_frontend>. It must default-export a
+ * function `render(container: HTMLElement)` that draws its own UI into the
+ * given DOM node (micro-frontend style). This keeps the module decoupled from
+ * the host's React copy — the module may use any framework internally.
+ * Failure to load or render falls back to the metadata view — the platform
+ * never breaks (spec §15 isolation).
  */
-import { useEffect, useState, Suspense, type ComponentType } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Puzzle, ArrowLeft, ExternalLink, AlertTriangle } from 'lucide-react'
 import { registryApi } from '@/lib/api'
 import type { ModuleEntry } from '@/types'
 import { cn } from '@/lib/utils'
 
-const _loadedModules = new Map<string, ComponentType>()
+const _loadedModules = new Map<string, { render: (container: HTMLElement) => void }>()
 
-/** Dynamically import a module's entry_frontend as a React component. */
+/** Dynamically import a module's entry_frontend (micro-frontend contract: render(container)). */
 async function loadModuleComponent(
   moduleId: string,
   entryFrontend?: string | null,
-): Promise<ComponentType | null> {
+): Promise<{ render: (container: HTMLElement) => void } | null> {
   if (!entryFrontend) return null
   const cacheKey = `${moduleId}:${entryFrontend}`
   if (_loadedModules.has(cacheKey)) return _loadedModules.get(cacheKey)!
@@ -30,9 +34,20 @@ async function loadModuleComponent(
 
   const url = `/api/v1/modules/${moduleId}/assets/${entryFrontend.replace(/^\//, '')}`
   const mod = await import(/* @vite-ignore */ /* webpackIgnore: true */ url)
-  const Component = (mod.default ?? null) as ComponentType | null
-  if (Component) _loadedModules.set(cacheKey, Component)
-  return Component
+  const api = mod.default as { render?: (container: HTMLElement) => void } | undefined
+  if (!api || typeof api.render !== 'function') return null
+  const loaded = api as { render: (container: HTMLElement) => void }
+  _loadedModules.set(cacheKey, loaded)
+  return loaded
+}
+
+/** React wrapper that mounts the module into a container DOM node. */
+function ModuleMount({ api }: { api: { render: (c: HTMLElement) => void } }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    if (ref.current) api.render(ref.current)
+  }, [api])
+  return <div ref={ref} />
 }
 
 export function ModuleHost() {
@@ -40,14 +55,14 @@ export function ModuleHost() {
   const [entry, setEntry] = useState<ModuleEntry | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [ModuleComponent, setModuleComponent] = useState<ComponentType | null>(null)
+  const [ModuleApi, setModuleApi] = useState<{ render: (c: HTMLElement) => void } | null>(null)
   const [moduleLoadError, setModuleLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    setModuleComponent(null)
+    setModuleApi(null)
     setModuleLoadError(null)
 
     if (!moduleId) {
@@ -63,7 +78,7 @@ export function ModuleHost() {
         setEntry(e)
         try {
           const comp = await loadModuleComponent(moduleId, e.entry_frontend)
-          if (!cancelled) setModuleComponent(comp)
+          if (!cancelled) setModuleApi(comp)
         } catch (err) {
           if (!cancelled) {
             setModuleLoadError(
@@ -138,15 +153,11 @@ export function ModuleHost() {
         </Link>
       </div>
 
-      {/* Module UI — dynamic import of entry_frontend (Fase 3 §11) */}
-      {ModuleComponent ? (
-        <Suspense
-          fallback={
-            <p className="text-xs text-[hsl(var(--text-subtle))]">Carregando interface…</p>
-          }
-        >
-          <ModuleComponent />
-        </Suspense>
+      {/* Module UI — dynamic import of entry_frontend (Fase 3 §11, micro-frontend) */}
+      {ModuleApi ? (
+        <ErrorBoundary>
+          <ModuleMount api={ModuleApi} />
+        </ErrorBoundary>
       ) : (
         moduleLoadError && (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-2">
@@ -185,8 +196,31 @@ export function ModuleHost() {
   )
 }
 
-function BackendProbe({ moduleId }: { moduleId: string }) {
-  const [result, setResult] = useState<string | null>(null)
+/** Error boundary isolando a UI do módulo: falha no módulo nunca derruba o Core (spec §15). */
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-2">
+          <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-500">
+            O módulo encontrou um erro de execução. A plataforma continua operacional.
+          </p>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function BackendProbe({ moduleId }: { moduleId: string }) {  const [result, setResult] = useState<string | null>(null)
   const [ok, setOk] = useState<boolean | null>(null)
 
   const ping = () => {
