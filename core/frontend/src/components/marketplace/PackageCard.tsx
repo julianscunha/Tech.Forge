@@ -96,7 +96,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
         {tab === 'available' && !pkg.is_installed && (
           <ActionBtn
             icon={Download}
-            label="Install"
+            label="Instalar"
             disabled={isIncompat || loading}
             loading={loading}
             onClick={() => onInstall?.(pkg)}
@@ -104,12 +104,12 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
           />
         )}
         {tab === 'available' && pkg.is_installed && (
-          <span className="text-[10px] text-[hsl(var(--text-subtle))]">Already installed</span>
+          <span className="text-[10px] text-[hsl(var(--text-subtle))]">Já instalado</span>
         )}
         {tab === 'installed' && (
           <ActionBtn
             icon={Trash2}
-            label="Remove"
+            label="Remover"
             disabled={loading}
             loading={loading}
             onClick={() => onRemove?.(pkg)}
@@ -119,7 +119,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
         {tab === 'installed' && pkg.is_enabled !== false && (
           <ActionBtn
             icon={Power}
-            label="Deactivate"
+            label="Desativar"
             disabled={loading}
             loading={loading}
             onClick={() => onDeactivate?.(pkg)}
@@ -129,7 +129,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
         {tab === 'installed' && pkg.is_enabled === false && (
           <ActionBtn
             icon={Play}
-            label="Activate"
+            label="Ativar"
             disabled={loading}
             loading={loading}
             onClick={() => onActivate?.(pkg)}
@@ -139,7 +139,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
         {tab === 'updates' && (
           <ActionBtn
             icon={ArrowUpCircle}
-            label={`Update to v${pkg.version}`}
+            label={`Atualizar para v${pkg.version}`}
             disabled={isIncompat || loading}
             loading={loading}
             onClick={() => onUpdate?.(pkg)}
