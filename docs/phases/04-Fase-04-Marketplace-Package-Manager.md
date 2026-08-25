@@ -592,6 +592,13 @@ Não duplicar lógica de instalação.
 
 # 20. Notificações
 
+> **Nota de implementação (2026-08-25):** a Notification Foundation já está
+> implementada (Fase 2 fechada): tabela `notifications`, `NotificationService`
+> e API `/api/v1/notifications` com suporte a `module_id`. Incluir neste fase a
+> integração do canal dos módulos: `NotificationsSDK.push()` (sdk/python) deve
+> entregar as notificações no Core via `POST /api/v1/notifications`, para que os
+> eventos abaixo apareçam no bell da UI — sem criar um segundo sistema.
+
 Utilizar a Notification Foundation para informar:
 
 - instalação concluída;
