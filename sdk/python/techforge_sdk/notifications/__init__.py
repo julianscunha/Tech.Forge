@@ -49,13 +49,19 @@ class NotificationsSDK:
     """
     In-process notification queue for one module.
 
-    The Core API drains this queue via GET /api/v1/notifications
-    (Phase 4). For now, notifications are held in memory and logged.
+    Fase 4 (spec §20 + diretriz do usuário): push() entrega a notificação
+    diretamente na API do Core (POST /api/v1/notifications) para aparecer no
+    bell da UI. Sem plataforma no ar, mantém na fila local (fallback).
     """
+
+    DEFAULT_CORE_URL = "http://127.0.0.1:8000/api/v1"
 
     def __init__(self, module_id: str) -> None:
         self._module_id = module_id
         self._queue: list[Notification] = []
+        self.core_api_url: str = self.DEFAULT_CORE_URL
+        self.http_enabled: bool = True
+        self.http_timeout: float = 2.0
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -92,7 +98,35 @@ class NotificationsSDK:
             "error":   logger.error,
         }.get(level, logger.info)
         log_fn("[%s] notification [%s]: %s — %s", self._module_id, level, title, message)
+
+        # Fase 4 §20 — deliver to Core API so it shows in the UI bell
+        if self.http_enabled:
+            self._deliver_to_core(n)
         return n
+
+    def _deliver_to_core(self, notification: Notification) -> bool:
+        """POST the notification to the Core. Falls back silently to the local queue."""
+        import json as _json
+        import urllib.request
+
+        payload = _json.dumps({
+            "level": notification.level,
+            "title": notification.title,
+            "message": notification.message,
+            "module_id": notification.module_id,
+        }).encode("utf-8")
+        url = f"{self.core_api_url.rstrip('/')}/notifications"
+        try:
+            req = urllib.request.Request(
+                url, data=payload, method="POST",
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=self.http_timeout):
+                return True
+        except Exception as exc:
+            logger.debug("Core delivery failed for [%s], kept in local queue: %s",
+                         self._module_id, exc)
+            return False
 
     def pending(self) -> list[Notification]:
         """Return all unread notifications."""

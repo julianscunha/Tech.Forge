@@ -57,6 +57,10 @@ class Module(Base):
 
     # Lifecycle state
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Origin (Fase 4 §4): catalog | local | development
+    source_type: Mapped[str] = mapped_column(String(16), default="local", nullable=False)
+    source_location: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     installed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, onupdate=func.now(), nullable=True)
 

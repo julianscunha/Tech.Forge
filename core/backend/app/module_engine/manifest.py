@@ -63,7 +63,11 @@ class ParsedManifest:
     signature: Optional[str] = None
     checksum: Optional[str] = None
 
-    # ── Raw YAML — preserved for Developer Mode ───────────────────────────────
+    # ── Origin (Fase 4 §4): catalog | local | development ────────────────────
+    source_type: str = "local"
+    source_location: Optional[str] = None
+
+    # ── Raw YAML — preserved for Developer Mode ─────────────────────────────
     raw: dict = field(default_factory=dict, repr=False)
 
 
