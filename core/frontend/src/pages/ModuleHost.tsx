@@ -1,32 +1,54 @@
 /**
- * ModuleHost — Phase 2+
- * =====================
+ * ModuleHost — Phase 2+/3
+ * =======================
  * Host page for dynamically loaded modules. Rendered at
  * /modules/:moduleId/* by the Plugin Loader route in AppRouter.
  *
- * Phase 2 approach (static host): the module's frontend entry point is NOT
- * bundled at build time. Instead the host renders a standard module page
- * shell driven entirely by registry metadata, and surfaces the module's
- * backend API endpoints. When the runtime frontend loader arrives
- * (dynamic import of entry_frontend), only this file changes.
+ * Phase 3 (Fase 3 §11): if the module declares `entry_frontend`, the host
+ * dynamically imports it from /modules/<id>/assets/<entry_frontend> and
+ * renders the exported default component INSIDE the App Shell content area.
+ * Failure to load falls back to the metadata view — never breaks the platform.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense, type ComponentType } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Puzzle, ArrowLeft, ExternalLink } from 'lucide-react'
+import { Puzzle, ArrowLeft, ExternalLink, AlertTriangle } from 'lucide-react'
 import { registryApi } from '@/lib/api'
 import type { ModuleEntry } from '@/types'
 import { cn } from '@/lib/utils'
+
+const _loadedModules = new Map<string, ComponentType>()
+
+/** Dynamically import a module's entry_frontend as a React component. */
+async function loadModuleComponent(
+  moduleId: string,
+  entryFrontend?: string | null,
+): Promise<ComponentType | null> {
+  if (!entryFrontend) return null
+  const cacheKey = `${moduleId}:${entryFrontend}`
+  if (_loadedModules.has(cacheKey)) return _loadedModules.get(cacheKey)!
+  if (!/\.(js|mjs)$/i.test(entryFrontend)) return null // compiled JS only
+
+  const url = `/api/v1/modules/${moduleId}/assets/${entryFrontend.replace(/^\//, '')}`
+  const mod = await import(/* @vite-ignore */ /* webpackIgnore: true */ url)
+  const Component = (mod.default ?? null) as ComponentType | null
+  if (Component) _loadedModules.set(cacheKey, Component)
+  return Component
+}
 
 export function ModuleHost() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const [entry, setEntry] = useState<ModuleEntry | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [ModuleComponent, setModuleComponent] = useState<ComponentType | null>(null)
+  const [moduleLoadError, setModuleLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setModuleComponent(null)
+    setModuleLoadError(null)
 
     if (!moduleId) {
       setError('Módulo não especificado.')
@@ -36,8 +58,19 @@ export function ModuleHost() {
 
     registryApi
       .getModule(moduleId)
-      .then((e) => {
-        if (!cancelled) setEntry(e)
+      .then(async (e) => {
+        if (cancelled) return
+        setEntry(e)
+        try {
+          const comp = await loadModuleComponent(moduleId, e.entry_frontend)
+          if (!cancelled) setModuleComponent(comp)
+        } catch (err) {
+          if (!cancelled) {
+            setModuleLoadError(
+              err instanceof Error ? err.message : 'Falha ao carregar interface do módulo.',
+            )
+          }
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Falha ao carregar módulo.')
@@ -104,6 +137,27 @@ export function ModuleHost() {
           <ArrowLeft size={12} /> Módulos
         </Link>
       </div>
+
+      {/* Module UI — dynamic import of entry_frontend (Fase 3 §11) */}
+      {ModuleComponent ? (
+        <Suspense
+          fallback={
+            <p className="text-xs text-[hsl(var(--text-subtle))]">Carregando interface…</p>
+          }
+        >
+          <ModuleComponent />
+        </Suspense>
+      ) : (
+        moduleLoadError && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-2">
+            <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-amber-500">Interface do módulo indisponível</p>
+              <p className="text-[11px] text-[hsl(var(--text-muted))] mt-0.5">{moduleLoadError}</p>
+            </div>
+          </div>
+        )
+      )}
 
       {/* Metadata */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
