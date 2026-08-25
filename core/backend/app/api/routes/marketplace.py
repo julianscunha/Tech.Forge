@@ -274,3 +274,42 @@ async def get_operation_log(limit: int = Query(50, ge=1, le=500)):
         )
         for e in operation_log.recent(limit)
     ]
+
+
+# ── Activate / Deactivate (Fase 4 §9/§10) ────────────────────────────────────
+
+class LifecycleResponse(BaseModel):
+    ok: bool
+    status: str
+    message: str
+
+
+@router.post("/activate/{module_id}", response_model=LifecycleResponse)
+async def activate_module_route(module_id: str):
+    """DISABLED → INSTALLED. Hot-mounts the module's backend router."""
+    from app.package_manager.lifecycle import activate_module
+    from app.db.database import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as db:
+        result = await activate_module(db, module_id)
+    if not result["ok"]:
+        raise HTTPException(status_code=result["status"], detail=result["detail"])
+    return LifecycleResponse(ok=True,
+                             status=result.get("status_value", "ok"),
+                             message=result["message"])
+
+
+@router.post("/deactivate/{module_id}", response_model=LifecycleResponse)
+async def deactivate_module_route(module_id: str):
+    """INSTALLED → DISABLED. Files preserved; skipped at next boot."""
+    from app.package_manager.lifecycle import deactivate_module
+    from app.db.database import AsyncSessionLocal
+    import asyncio
+
+    async with AsyncSessionLocal() as db:
+        result = await deactivate_module(db, module_id)
+    if not result["ok"]:
+        raise HTTPException(status_code=result["status"], detail=result["detail"])
+    return LifecycleResponse(ok=True,
+                             status=result.get("status_value", "ok"),
+                             message=result["message"])

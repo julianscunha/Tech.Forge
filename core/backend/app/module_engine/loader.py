@@ -149,6 +149,19 @@ class ModuleLoader:
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
+    @staticmethod
+    def _is_disabled(module_path: Path) -> bool:
+        """Check the module's disable flag (data/state.json, written by deactivate)."""
+        import json
+        state_file = module_path / "data" / "state.json"
+        if not state_file.is_file():
+            return False
+        try:
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            return bool(state.get("disabled", False))
+        except (OSError, ValueError):
+            return False
+
     async def _load_one(self, module_path: Path, result: LoaderResult) -> None:
         """Validate and register a single module directory."""
         module_name = module_path.name
@@ -186,6 +199,27 @@ class ModuleLoader:
 
         # Happy path
         manifest = validation.manifest  # guaranteed non-None after is_valid=True
+
+        # Fase 4 §10 — user directive: disabled modules save resources.
+        # A module with a disable flag is registered as DISABLED: its entry_backend
+        # is NOT mounted by the plugin loader and it stays out of the navigation.
+        if self._is_disabled(module_path):
+            entry = ModuleEntry.from_manifest(
+                manifest=manifest,
+                status=ModuleStatus.DISABLED,
+                errors=[],
+                warnings=validation.warnings,
+            )
+            self._registry.register(entry)
+            result.disabled += 1
+            result.add_event(
+                f"Module '{manifest.id}' is disabled — skipping load.",
+                level="info",
+                module_id=manifest.id,
+            )
+            logger.info("Module disabled, not loaded: %s", manifest.id)
+            return
+
         entry = ModuleEntry.from_manifest(
             manifest=manifest,
             status=ModuleStatus.INSTALLED,
