@@ -3,6 +3,15 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
+# ── Platform health (Fase 1 spec §5) ─────────────────────────────────────────
+
+class PlatformHealthCheck(BaseModel):
+    status: str
+    platform: str
+    version: str
+    database: str
+
+
 # ── Category ─────────────────────────────────────────────────────────────────
 
 class CategoryBase(BaseModel):

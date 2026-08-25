@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from app.core.settings import settings
 from app.db.database import get_db
-from app.schemas.registry import PlatformStatus
+from app.schemas.registry import PlatformStatus, PlatformHealthCheck
 from app.services.registry import CategoryService, ModuleService
 
 router = APIRouter(prefix="/platform", tags=["platform"])
@@ -35,4 +35,24 @@ async def get_platform_status(db: AsyncSession = Depends(get_db)) -> PlatformSta
         modules_installed=modules_installed,
         modules_enabled=modules_enabled,
         categories_registered=categories,
+    )
+
+
+@router.get("/health", response_model=PlatformHealthCheck, summary="Spec Phase 1 health check")
+async def get_platform_health_check(db: AsyncSession = Depends(get_db)) -> PlatformHealthCheck:
+    """
+    Health check mínimo da Fase 1 (docs/phases/01 §5):
+    status + nome da plataforma + versão. Usado pelo Launcher.
+    """
+    try:
+        await db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception:
+        db_status = "error"
+
+    return PlatformHealthCheck(
+        status="ok",
+        platform=settings.PLATFORM_NAME,
+        version=settings.PLATFORM_VERSION,
+        database=db_status,
     )
