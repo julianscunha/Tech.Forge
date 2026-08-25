@@ -408,11 +408,16 @@ class PackageManager:
     async def _hot_reload(self) -> None:
         """
         Rebuild the in-memory registry from modules/installed/ without
-        restarting the FastAPI process.
+        restarting the FastAPI process. Also syncs the DB module table
+        (dashboard counters).
         """
         loader = ModuleLoader()
         result = await loader.scan_installed()
         loader_journal.store(result)
+
+        from app.services.registry_sync import sync_from_request
+        await sync_from_request()
+
         logger.info(
             "Hot reload: %d installed, %d invalid.",
             result.installed, result.invalid,

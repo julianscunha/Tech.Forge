@@ -214,7 +214,14 @@ export function MarketplacePage() {
                 loading={loadingPkg === pkg.module_id}
                 onClick={setSelected}
                 onInstall={p => handleOperation(p.module_id, () => marketplaceApi.install(p.module_id))}
-                onRemove={p  => handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id))}
+                onRemove={p  => {
+                  if (window.confirm(
+                    `Remover PERMANENTEMENTE o módulo "${p.name}"?\n` +
+                    'Os arquivos do módulo serão apagados. Esta ação não pode ser desfeita.'
+                  )) {
+                    handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id));
+                  }
+                }}
                 onUpdate={p  => handleOperation(p.module_id, () => marketplaceApi.update(p.module_id))}
                 onActivate={p   => handleOperation(p.module_id, () => marketplaceApi.activate(p.module_id))}
                 onDeactivate={p => handleOperation(p.module_id, () => marketplaceApi.deactivate(p.module_id))}

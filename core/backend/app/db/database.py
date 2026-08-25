@@ -34,6 +34,28 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db() -> None:
-    """Create all tables on startup."""
+    """Create all tables on startup, then add columns missing from older DBs."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await _migrate()
+
+
+async def _migrate() -> None:
+    """Lightweight column migration (SQLite) — create_all won't alter existing tables."""
+    from sqlalchemy import text
+    additions = {
+        "modules": [
+            ("source_type", "VARCHAR(16) NOT NULL DEFAULT 'local'"),
+            ("source_location", "VARCHAR(512)"),
+        ],
+    }
+    async with engine.begin() as conn:
+        for table, cols in additions.items():
+            existing = {
+                row[1] for row in await conn.execute(text(f"PRAGMA table_info({table})"))
+            }
+            if not existing:
+                continue
+            for name, ddl in cols:
+                if name not in existing:
+                    await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))

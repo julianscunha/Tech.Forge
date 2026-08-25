@@ -51,6 +51,12 @@ async def lifespan(app: FastAPI):
     count = doc_indexer.rebuild()
     logger.info("Documentation Engine: %d documents indexed.", count)
 
+    # Fase 4 §21 — sync registry in-memory → DB (dashboard counters)
+    from app.services.registry_sync import sync_registry_to_db
+    from app.db.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as db:
+        await sync_registry_to_db(db)
+
     # Phase 6 — Runtime: platform is READY
     await runtime.fire_startup("platform ready")
 
