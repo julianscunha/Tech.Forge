@@ -7,7 +7,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | Fase | Tema | Status | Lacunas principais |
 |---|---|---|---|
 | 1 | Foundation | ✅ 14/14 | health `/api/v1/platform/health` implementado (spec §5); docs/architecture.md e docs/development.md criados |
-| 2 | Core Architecture | ✅ 13/14 | **Notification Foundation ausente** (sem serviço/API info/warning/error/success; bell é placeholder) |
+| 2 | Core Architecture | ✅ 14/14 | Notification Foundation implementada (modelo/serviço/API/bell UI) — ver tasks/phase-02-report.md |
 | 3 | Module System | ⚠️ 11/16 | CLI `modules list/show/validate` inexistente; validador da CLI duplica lógica do Core; entry_frontend não carregado dinamicamente (ModuleHost estático); estados do registry divergem da spec (INSTALLED/DISABLED/INVALID/INCOMPATIBLE) |
 | 4 | Marketplace & Package Manager | ⚠️ ~70% | **activate/deactivate ausente** ("Desativar ≠ Remover"); modelo de origem (catalog/local/dev); dependências no manifest; CLI de módulos |
 | 5 | Developer Center & Doc Engine | ✅ ~85% | CLI `docs list/search/export-context`; help contextual (context_id); versionamento documental |

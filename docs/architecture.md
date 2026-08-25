@@ -62,7 +62,24 @@ Plugin Loader: mount_module_routers() injeta entry_backend; ModuleHost serve o s
 
 ## Pontos de extensão pendentes (auditoria 2026-08)
 
-- Notification Foundation (bell placeholder no Header)
 - activate/deactivate no ciclo de módulos
 - RemoteRepositoryProvider (NotImplementedError)
 - dynamic import de entry_frontend no ModuleHost
+
+## Notification Foundation (Fase 2, spec §10/§13)
+
+Notificações são **dado legítimo do Core** (data ownership §13) — nunca dados de
+negócio de módulos. Contrato:
+
+```text
+GET  /api/v1/notifications?unread_only=&limit=   lista (mais recentes primeiro)
+POST /api/v1/notifications                        cria {level: info|warning|error|success, title, message?, module_id?}
+GET  /api/v1/notifications/unread-count           {count}
+POST /api/v1/notifications/{id}/read              marca uma
+POST /api/v1/notifications/read-all               marca todas
+```
+
+Backend: `app/models/notifications.py` + `app/services/notifications.py` +
+`app/api/routes/notifications.py`. Frontend: store zustand com polling leve (30s)
+e `NotificationBell` no Header. Fases futuras (compatibilidade, integridade,
+eventos da plataforma) devem usar `NotificationService.create()`.
