@@ -10,7 +10,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 2 | Core Architecture | ✅ 14/14 | Notification Foundation implementada (modelo/serviço/API/bell UI) — ver tasks/phase-02-report.md |
 | 3 | Module System | ✅ 16/16 | CLI modules list/show/validate reutiliza o Core; dynamic entry_frontend (contrato micro-frontend render(container)); ver tasks/phase-03-report.md |
 | 4 | Marketplace & Package Manager | ✅ fechada | ciclo activate/deactivate com lazy loading, source model, SDK notifications→Core; ver tasks/phase-04-report.md |
-| 5 | Developer Center & Doc Engine | ✅ ~85% | CLI `docs list/search/export-context`; help contextual (context_id); versionamento documental |
+| 5 | Developer Center & Doc Engine | ✅ fechada | CLI `docs list/search/get/export-context`; help contextual (context_id + UI); versionamento documental — ver tasks/phase-05-report.md |
 | 6 | Launcher & Runtime | ⚠️ ~75% | **modo Desktop com frontend estático** (launcher roda `npm run dev` sempre); comando `techforge logs`; supervisão contínua (DEGRADED proativo) |
 | 7 | Documentation Compliance Checker | ✅ implementada | CLI de compliance dedicada (acessível via API `/docs/completeness`) |
 | 8 | Service Registry | ❌ | `app/services/registry.py` é CRUD de Category/Module, não Service Registry |

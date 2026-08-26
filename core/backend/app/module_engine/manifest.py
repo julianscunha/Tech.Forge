@@ -59,6 +59,10 @@ class ParsedManifest:
     homepage: Optional[str] = None
     documentation: Optional[str] = None
 
+    # ── Documentation versioning (Fase 5 §17) ─────────────────────────────────
+    documentation_version: Optional[str] = None
+    documentation_applies_to: Optional[dict] = None
+
     # ── Security fields — Phase 5 ─────────────────────────────────────────────
     signature: Optional[str] = None
     checksum: Optional[str] = None
@@ -90,6 +94,21 @@ def _assert_semver(value: str, field_name: str) -> None:
         raise ManifestError(
             f"Field '{field_name}' must follow semver format (X.Y.Z), got: {value!r}"
         )
+
+
+def _parse_documentation_versioning(raw: dict) -> dict:
+    """Parse optional documentation.version/applies_to block (Fase 5 §17)."""
+    doc = raw.get("documentation")
+    if not isinstance(doc, dict):
+        return {"documentation_version": None, "documentation_applies_to": None}
+    version = doc.get("version")
+    if version is not None:
+        _assert_semver(str(version), "documentation.version")
+    applies = doc.get("applies_to") or None
+    return {
+        "documentation_version": str(version) if version else None,
+        "documentation_applies_to": applies,
+    }
 
 
 def _version_tuple(v: str) -> tuple[int, ...]:
@@ -232,6 +251,7 @@ class ManifestParser:
             platform_max_version=platform_max,
             homepage=raw.get("homepage") or None,
             documentation=raw.get("documentation") or None,
+            **_parse_documentation_versioning(raw),
             signature=raw.get("signature") or None,
             checksum=raw.get("checksum") or None,
             raw=raw,

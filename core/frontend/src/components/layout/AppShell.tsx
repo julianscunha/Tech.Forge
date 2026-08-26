@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 
 // context_id por rota — help contextual (Fase 5 §13); mapping em docs/context-map.yaml
 const CONTEXT_BY_PATH: [RegExp, string][] = [
+  [/^\/$/, 'dashboard'],
   [/^\/dashboard/, 'dashboard'],
   [/^\/modules\/?$/, 'modules'],
   [/^\/marketplace/, 'marketplace'],
