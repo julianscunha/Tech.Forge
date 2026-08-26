@@ -93,6 +93,7 @@ def make_package_manager(tmp: Path):
         installed_path=installed,
         cache_path=cache,
         repository=provider,
+        use_global_registry=False,  # testes isolados: registry próprio
     )
 
 

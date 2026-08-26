@@ -22,6 +22,7 @@ Hot reload strategy (Phase 4):
 from __future__ import annotations
 
 import hashlib
+import asyncio
 import json
 import logging
 import shutil
@@ -36,6 +37,7 @@ from app.core.settings import settings
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.registry import registry
 from app.module_engine import journal as loader_journal
+from app.module_engine.enums import ModuleStatus
 from app.package_manager.enums import (
     InstallStatus, RemoveStatus, UpdateStatus, CompatibilityLevel,
 )
@@ -92,12 +94,38 @@ class PackageManager:
         installed_path: Optional[Path]       = None,
         cache_path:     Optional[Path]       = None,
         repository:     Optional[RepositoryProvider] = None,
+        use_global_registry: bool = True,   # Fase 4: fonte única de verdade
     ) -> None:
         self._installed = installed_path or settings.MODULES_INSTALLED_PATH
         self._cache     = cache_path or (self._installed.parent / "cache")
         self._installed.mkdir(parents=True, exist_ok=True)
         self._cache.mkdir(parents=True, exist_ok=True)
         self._repo = repository or LocalRepositoryProvider()
+        # Fonte única de verdade (decisão 2026-08-25): listagens leem o registry
+        # global; PMs isolados (testes com tmp_path) usam registry próprio.
+        self._use_global_registry = use_global_registry
+
+    @property
+    def _read_registry(self):
+        """Registry para leitura das listagens — global (singleton) ou local persistente."""
+        if self._use_global_registry:
+            from app.module_engine.registry import registry
+            return registry
+        if not hasattr(self, "_isolated_registry"):
+            from app.module_engine.registry import ModuleRegistry
+            from app.module_engine.loader import ModuleLoader
+            self._isolated_registry = ModuleRegistry()
+            loader = ModuleLoader(installed_path=self._installed,
+                                  target_registry=self._isolated_registry)
+            # pode rodar dentro de event loop existente (rotas async) ou fora (testes)
+            try:
+                asyncio.get_running_loop()
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(1) as pool:
+                    pool.submit(asyncio.run, loader.scan_installed()).result()
+            except RuntimeError:
+                asyncio.run(loader.scan_installed())
+        return self._isolated_registry
 
     # ── Install ───────────────────────────────────────────────────────────────
 
@@ -350,28 +378,22 @@ class PackageManager:
     async def list_available(self) -> list[PackageInfo]:
         """List all packages available in repository/."""
         packages = await self._repo.list_available(settings.PLATFORM_VERSION)
-        # Annotate with installed state from local installed path
-        from app.module_engine.registry import ModuleRegistry
-        from app.module_engine.loader import ModuleLoader
-        local_reg = ModuleRegistry()
-        await ModuleLoader(installed_path=self._installed, target_registry=local_reg).scan_installed()
+        # Annotate with installed state from the read registry (fonte única)
         for pkg in packages:
-            entry = local_reg.get(pkg.module_id)
+            entry = self._read_registry.get(pkg.module_id)
             if entry:
                 pkg.is_installed      = True
                 pkg.installed_version = entry.version
                 pkg.install_date      = entry.install_date
+                pkg.is_enabled        = (entry.status != ModuleStatus.DISABLED)
         return packages
 
     async def list_installed(self) -> list[PackageInfo]:
-        """Return PackageInfo for every module in this manager's installed path."""
-        from app.module_engine.loader import ModuleLoader
-        from app.module_engine.registry import ModuleRegistry
-        local_registry = ModuleRegistry()
-        loader = ModuleLoader(installed_path=self._installed, target_registry=local_registry)
-        await loader.scan_installed()
+        """Return PackageInfo for every module in the read registry (fonte única)."""
         result = []
-        for entry in local_registry.all():
+        for entry in self._read_registry.all():
+            if entry.status == ModuleStatus.INVALID:
+                continue  # invalid modules have no package to show
             pkg = PackageInfo(
                 module_id   = entry.module_id,
                 name        = entry.name,
@@ -411,12 +433,13 @@ class PackageManager:
         restarting the FastAPI process. Also syncs the DB module table
         (dashboard counters).
         """
-        loader = ModuleLoader()
+        loader = ModuleLoader(installed_path=self._installed)
         result = await loader.scan_installed()
         loader_journal.store(result)
 
-        from app.services.registry_sync import sync_from_request
-        await sync_from_request()
+        if self._use_global_registry:
+            from app.services.registry_sync import sync_from_request
+            await sync_from_request()
 
         logger.info(
             "Hot reload: %d installed, %d invalid.",
