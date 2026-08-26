@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import asyncio
 import json
+import sys
 import logging
 import shutil
 import zipfile
@@ -243,6 +244,7 @@ class PackageManager:
           4. Hot-reload registry
         """
         target_dir = self._installed / module_id
+        entry = registry.get(module_id)
 
         if not target_dir.exists():
             msg = f"Module '{module_id}' is not installed."
@@ -256,11 +258,19 @@ class PackageManager:
             if mf.exists():
                 raw = yaml.safe_load(mf.read_text(encoding="utf-8")) or {}
                 version = str(raw.get("version", "unknown"))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to read version before remove %s: %s", module_id, exc)
+
+        # Call the module's uninstall() hook if its backend exports a contract
+        # instance — gives the module a chance to clean up its own data (§11).
+        self._call_uninstall_hook(module_id, entry)
 
         # Deregister first so the registry is consistent during file deletion
         registry.deregister(module_id)
+        # Drop from the plugin loader's mounted set so a future reinstall
+        # can be mounted again (idempotency guard would otherwise skip it).
+        from app.module_engine.plugin_loader import _mounted_module_ids
+        _mounted_module_ids.discard(module_id)
 
         try:
             shutil.rmtree(target_dir)
@@ -457,6 +467,41 @@ class PackageManager:
             "Hot reload: %d installed, %d invalid.",
             result.installed, result.invalid,
         )
+
+    def _call_uninstall_hook(self, module_id: str, entry) -> None:
+        """
+        Invoke the module's uninstall() contract hook before physical deletion,
+        giving the module a chance to clean up its own data (spec Fase 4 §11).
+        Failures are logged and tolerated — removal must proceed.
+        """
+        if entry is None:
+            return
+        try:
+            import importlib.util
+            manifest_path = self._installed / module_id / "manifest.yaml"
+            if not manifest_path.is_file():
+                return
+            raw = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+            entry_backend = raw.get("entry_backend")
+            if not entry_backend:
+                return
+            backend_file = self._installed / module_id / str(entry_backend)
+            if not backend_file.is_file():
+                return
+            spec = importlib.util.spec_from_file_location(
+                f"techforge_modules.{module_id}.uninstall_hook", backend_file)
+            py_module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = py_module
+            spec.loader.exec_module(py_module)
+            instance = getattr(py_module, "module", None)
+            uninstall = getattr(instance, "uninstall", None)
+            if callable(uninstall):
+                asyncio.run(uninstall())
+                logger.info("uninstall() hook executed for %s", module_id)
+        except Exception as exc:
+            logger.warning(
+                "uninstall() hook failed for %s (removal continues): %s",
+                module_id, exc)
 
     # ── Error helpers ─────────────────────────────────────────────────────────
 
