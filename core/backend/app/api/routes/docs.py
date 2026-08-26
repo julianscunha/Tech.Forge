@@ -12,6 +12,7 @@ from typing import Optional
 
 from app.doc_engine import doc_index, doc_search, doc_indexer
 from app.doc_engine.models import DocCategory
+from app.models.notifications import Notification
 
 router = APIRouter(prefix="/docs", tags=["developer-center"])
 
@@ -269,6 +270,53 @@ async def get_module_completeness(module_id: str) -> CompletenessReportRead:
     module_type = _get_module_type(module_id)
     report = DocCompletenessChecker.check(module_dir, module_type)
     return _completeness_to_read(report)
+
+
+@router.post("/compliance/check/{module_id}",
+             summary="Run compliance check and notify on failures (Fase 7 §15)")
+async def run_compliance_check(module_id: str) -> dict:
+    """
+    Runs the DoD compliance check for one installed module. If the module is
+    INCOMPLETE, creates (deduped) a warning notification — spec §15: notify
+    only on issues that impact publication/consumption/maintenance.
+    """
+    module_dir = _settings.MODULES_INSTALLED_PATH / module_id
+    if not module_dir.exists():
+        raise HTTPException(404, f"Module not found: {module_id!r}")
+    module_type = _get_module_type(module_id)
+    report = DocCompletenessChecker.check(module_dir, module_type)
+
+    notified = False
+    if not report.is_complete:
+        from app.db.database import AsyncSessionLocal
+        from app.services.notifications import NotificationService
+        from sqlalchemy import select, func
+
+        title = "Documentation compliance"
+        async with AsyncSessionLocal() as db:
+            existing = await db.execute(
+                select(func.count(Notification.id)).where(
+                    Notification.title == title,
+                    Notification.module_id == module_id))
+            if existing.scalar() == 0:
+                await NotificationService.create(
+                    db,
+                    level="warning",
+                    title=title,
+                    message=(f"Módulo '{module_id}' está com documentação "
+                             f"incompleta ({report.score:.0%}). Faltando: "
+                             + ", ".join(report.missing[:5])),
+                    module_id=module_id,
+                )
+                notified = True
+
+    return {
+        "module_id": module_id,
+        "is_complete": report.is_complete,
+        "score": report.score,
+        "missing": report.missing,
+        "notified": notified,
+    }
 
 
 def _completeness_to_read(report) -> CompletenessReportRead:
