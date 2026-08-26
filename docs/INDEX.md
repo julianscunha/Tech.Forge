@@ -16,7 +16,7 @@ domain: [governanca-setup]
 |---|---|
 | [README](../README.md) | Visão geral da plataforma, quick start, badges |
 | [developer-center/intro](developer-center/intro.md) | Introdução ao Developer Center |
-| [development](development.md) | Guia de desenvolvimento (setup, testes, build) |
+| [core-development-setup](developer-center/guides/core-development-setup.md) | Setup do Core (requisitos, testes, build) |
 | [developer-center/guides/setup-windows](developer-center/guides/setup-windows.md) | Setup detalhado no Windows |
 | [architecture](architecture.md) | Arquitetura: modos de execução, fonte única de verdade, lifecycle |
 

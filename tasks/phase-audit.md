@@ -6,7 +6,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 
 | Fase | Tema | Status | Lacunas principais |
 |---|---|---|---|
-| 1 | Foundation | ✅ 14/14 | health `/api/v1/platform/health` implementado (spec §5); docs/architecture.md e docs/development.md criados |
+| 1 | Foundation | ✅ 14/14 | health `/api/v1/platform/health` implementado (spec §5); docs/architecture.md criado; setup em docs/developer-center/guides/core-development-setup.md |
 | 2 | Core Architecture | ✅ 14/14 | Notification Foundation implementada (modelo/serviço/API/bell UI) — ver tasks/phase-02-report.md |
 | 3 | Module System | ✅ 16/16 | CLI modules list/show/validate reutiliza o Core; dynamic entry_frontend (contrato micro-frontend render(container)); ver tasks/phase-03-report.md |
 | 4 | Marketplace & Package Manager | ✅ fechada | ciclo activate/deactivate com lazy loading, source model, SDK notifications→Core; ver tasks/phase-04-report.md |

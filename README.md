@@ -336,7 +336,7 @@ cd core/frontend && npm run lint && npm run build
 |---|---|
 | [`docs/INDEX.md`](docs/INDEX.md) | Índice categorizado de toda a documentação |
 | [`docs/architecture.md`](docs/architecture.md) | Arquitetura do Core |
-| [`docs/development.md`](docs/development.md) | Guia de desenvolvimento |
+| [`docs/developer-center/guides/core-development-setup.md`](docs/developer-center/guides/core-development-setup.md) | Setup do Core |
 | [`docs/phases/`](docs/phases/) | Specs das 22 fases (escopo + critérios de aceitação) |
 | [`docs/developer-center/`](docs/developer-center/) | Guias, referência do manifest, exemplos |
 
