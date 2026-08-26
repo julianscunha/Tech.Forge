@@ -64,3 +64,15 @@ def test_documentation_invalid_type_rejected(tmp_path):
     })
     with pytest.raises(Exception):
         ManifestParser.parse(mod)
+
+
+def test_documentation_applies_to_must_be_mapping(tmp_path):
+    """applies_to como string (não dict) deve ser rejeitado."""
+    mod = _write_module(tmp_path, {
+        "documentation": {
+            "version": "1.0.0",
+            "applies_to": "not-a-mapping",
+        },
+    })
+    with pytest.raises(Exception):
+        ManifestParser.parse(mod)

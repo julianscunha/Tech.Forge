@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 NotificationLevel = Literal["info", "warning", "error", "success"]
 
 
 class NotificationCreate(BaseModel):
     level: NotificationLevel
-    title: str
+    title: str = Field(min_length=1, max_length=256)
     message: Optional[str] = None
     module_id: Optional[str] = None
 

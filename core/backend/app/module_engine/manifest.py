@@ -105,6 +105,11 @@ def _parse_documentation_versioning(raw: dict) -> dict:
     if version is not None:
         _assert_semver(str(version), "documentation.version")
     applies = doc.get("applies_to") or None
+    if applies is not None and not isinstance(applies, dict):
+        raise ManifestError(
+            "Field 'documentation.applies_to' must be a mapping "
+            '(e.g. techforge: ">=1.0.0,<2.0.0"), got: ' + repr(applies)
+        )
     return {
         "documentation_version": str(version) if version else None,
         "documentation_applies_to": applies,

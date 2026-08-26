@@ -6,8 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notifications import Notification
 
-VALID_LEVELS = ("info", "warning", "error", "success")
-
 
 class NotificationService:
     """Simple Core notification store (Fase 2, spec §10)."""

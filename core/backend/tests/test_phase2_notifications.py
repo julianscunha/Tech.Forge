@@ -85,3 +85,10 @@ def test_unread_only_filter(client):
     client.post(f"/api/v1/notifications/{a['id']}/read")
     unread = client.get("/api/v1/notifications", params={"unread_only": True}).json()
     assert [n["title"] for n in unread] == ["b"]
+
+
+def test_notification_title_min_length(client):
+    """Quality pass Fase 2: title vazio deve ser rejeitado (422)."""
+    resp = client.post("/api/v1/notifications",
+                       json={"level": "info", "title": "", "message": "m"})
+    assert resp.status_code == 422

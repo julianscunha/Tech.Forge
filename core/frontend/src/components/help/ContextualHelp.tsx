@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { X, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { MarkdownRenderer } from '@/components/developer-center/MarkdownRenderer'
 
 interface ContextDoc {
   context_id: string
@@ -70,8 +71,8 @@ export function HelpDrawer({ contextId }: { contextId?: string }) {
                 <X size={16} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 prose prose-sm dark:prose-invert max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-sm">{content}</pre>
+            <div className="flex-1 overflow-y-auto p-4 max-w-none">
+              <MarkdownRenderer content={content} />
             </div>
           </aside>
         </div>
