@@ -66,29 +66,6 @@ async def lifespan(app: FastAPI):
     await runtime.fire_shutdown("backend stopped")
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(
-        title=settings.PLATFORM_NAME,
-        version=settings.PLATFORM_VERSION,
-        description="TechForge Core API — modular platform backend",
-        docs_url="/api/docs",
-        redoc_url="/api/redoc",
-        lifespan=lifespan,
-    )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    app.include_router(api_router)
-    return app
-
-
-app = create_app()
-
-
 def _mount_static_frontend(app: FastAPI) -> bool:
     """
     Desktop mode (Fase 6 §10): serve the compiled frontend from dist/.
@@ -128,3 +105,28 @@ def _mount_static_frontend(app: FastAPI) -> bool:
 
     logger.info("Desktop mode: serving static frontend from %s", dist)
     return True
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.PLATFORM_NAME,
+        version=settings.PLATFORM_VERSION,
+        description="TechForge Core API — modular platform backend",
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
+        lifespan=lifespan,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.include_router(api_router)
+    # Fase 6 §10 — Desktop mode (no-op se SERVE_STATIC_FRONTEND=false)
+    _mount_static_frontend(app)
+    return app
+
+
+app = create_app()

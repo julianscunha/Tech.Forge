@@ -51,6 +51,18 @@ launcher/  cli/  sdk/  config/  logs/
 - **Configuração centralizada**: `app/core/settings.py`; nada de URLs/portas/caminhos hardcoded.
 - **Local First, Server Ready**: single-process hoje; sem decisões que impeçam servidor multiusuário no futuro.
 
+## Modos de Execução (Fase 6, spec §3/§10)
+
+| Modo | Comando | Backend | Frontend |
+|---|---|---|---|
+| **Desktop** (default c/ build) | `techforge start` | uvicorn sem reload, `SERVE_STATIC_FRONTEND=true` | backend serve `core/frontend/dist` (SPA fallback) — nenhum processo node |
+| **Dev** | `techforge dev` | uvicorn com reload | vite dev server (:5173) |
+
+Decisão §10 documentada: o próprio backend serve os assets estáticos (menor nº
+de processos, menor consumo — diretriz "extremamente leve"). O launcher escolhe
+o modo automaticamente: desktop se `dist/index.html` existir; `--dev` força
+desenvolvimento. CLI: `techforge logs [--backend|--frontend|--launcher]`.
+
 ## Fonte Única de Verdade — Registry de Módulos
 
 Regra (2026-08-25, decisão do usuário): o registry in-memory

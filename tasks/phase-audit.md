@@ -11,7 +11,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 3 | Module System | ✅ 16/16 | CLI modules list/show/validate reutiliza o Core; dynamic entry_frontend (contrato micro-frontend render(container)); ver tasks/phase-03-report.md |
 | 4 | Marketplace & Package Manager | ✅ fechada | ciclo activate/deactivate com lazy loading, source model, SDK notifications→Core; ver tasks/phase-04-report.md |
 | 5 | Developer Center & Doc Engine | ✅ fechada | CLI `docs list/search/get/export-context`; help contextual (context_id + UI); versionamento documental — ver tasks/phase-05-report.md |
-| 6 | Launcher & Runtime | ⚠️ ~75% | **modo Desktop com frontend estático** (launcher roda `npm run dev` sempre); comando `techforge logs`; supervisão contínua (DEGRADED proativo) |
+| 6 | Launcher & Runtime | ✅ fechada | modo Desktop (backend serve dist/, zero node); `techforge logs`/`dev`; runtime status c/ uptime+DEGRADED — ver tasks/phase-06-report.md |
 | 7 | Documentation Compliance Checker | ✅ implementada | CLI de compliance dedicada (acessível via API `/docs/completeness`) |
 | 8 | Service Registry | ❌ | `app/services/registry.py` é CRUD de Category/Module, não Service Registry |
 | 8.1 | Dependency Governance | ❌ | sem dependency graph/resolução; manifest não valida dependências |
