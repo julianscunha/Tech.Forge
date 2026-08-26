@@ -1,0 +1,10 @@
+# Context Map — Help contextual (Fase 5 §13)
+# Mapeia context_id → doc_id do Documentation Engine.
+# Páginas do Core usam estes IDs para o botão "?" (help contextual).
+# Módulos podem adicionar suas próprias entradas via manifest (futuro).
+
+dashboard: core/app-shell
+modules: core/module-lifecycle
+marketplace: core/package-manager
+developer-center: intro
+settings: guides/development-guide
