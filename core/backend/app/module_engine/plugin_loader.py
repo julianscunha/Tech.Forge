@@ -33,6 +33,10 @@ from app.module_engine.registry import registry
 
 logger = logging.getLogger("techforge.plugin_loader")
 
+# Módulos já montados nesta instância do app — garante idempotência de
+# mount_module_routers (sem rotas duplicadas em re-ativação).
+_mounted_module_ids: set[str] = set()
+
 
 @dataclass
 class MountResult:
@@ -78,14 +82,20 @@ def mount_module_routers(app: FastAPI) -> MountResult:
 
     Called from the FastAPI lifespan AFTER ModuleLoader.scan_installed(),
     so the registry is already populated.
+
+    Idempotent: modules already mounted (tracked by module_id) are skipped,
+    so calling this again (e.g. after activate_module) only mounts the delta
+    and never registers duplicate routes.
     """
     result = MountResult()
 
     for entry in registry.by_status(ModuleStatus.INSTALLED):
+        if entry.module_id in _mounted_module_ids:
+            continue
         try:
             router = _import_router(entry.module_id, entry.entry_backend)
             app.include_router(router, prefix="/api/v1")
-            result.mounted.append(entry.module_id)
+            _mounted_module_ids.add(entry.module_id)
             logger.info(
                 "Plugin Loader: mounted router for '%s' at /api/v1%s",
                 entry.module_id,

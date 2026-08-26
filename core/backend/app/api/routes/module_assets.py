@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse
 
 from app.core.settings import settings
 
@@ -48,7 +48,6 @@ def _module_base(module_id: str) -> Path:
 
 
 @router.get("/modules/{module_id}/assets/{asset_path:path}",
-            response_class=PlainTextResponse,
             summary="Serve a static frontend asset of an installed module")
 async def get_module_asset(module_id: str, asset_path: str) -> FileResponse:
     """Serve one file from the module's directory (Fase 3 §11).
