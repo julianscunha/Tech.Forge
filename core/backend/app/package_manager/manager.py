@@ -316,8 +316,10 @@ class PackageManager:
             if old_mf.exists():
                 old_raw = yaml.safe_load(old_mf.read_text(encoding="utf-8")) or {}
                 from_version = str(old_raw.get("version", "unknown"))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(
+                "Failed to read current version before update %s: %s",
+                module_id, exc)
 
         # Read new manifest
         if not zipfile.is_zipfile(mod_path):

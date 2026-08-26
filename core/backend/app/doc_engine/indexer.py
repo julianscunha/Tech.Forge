@@ -188,8 +188,9 @@ class DocIndexer:
                 entry.id = f"{module_id}/{entry.id}"
                 self._index.add(entry)
                 count += 1
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(
+                    "Failed to index doc for module %s: %s", module_id, exc)
 
         # Parse contracts/api.yaml
         api_yaml = docs_dir / "contracts" / "api.yaml"
