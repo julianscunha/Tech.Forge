@@ -46,7 +46,7 @@ ASK BEFORE EVERY CHANGE:
 Simplification means making code more consistent with the codebase, not imposing external preferences. Before simplifying:
 
 ```
-1. Read the project's conventions docs (AGENTS.md or equivalent)
+1. Read the project's documented conventions
 2. Study how neighboring code handles similar patterns
 3. Match the project's style for:
    - Import ordering and module system
