@@ -1,91 +1,98 @@
 ---
-title: Índice da Documentação — TechForge.v2
+title: Índice da Documentação — TechForge
 category: governanca-setup
 domain: [governanca-setup]
 ---
 
-# Índice da Documentação — TechForge.v2
+# Índice da Documentação — TechForge
 
-> Organizado por categoria. Fonte: leitura dos cabeçalhos e objetivos de cada documento.
-> Docs em português; cada fase define escopo, "o que não implementar" e critérios de aceitação.
+> Organizado por audiência. Docs em português; cada fase define escopo,
+> "o que não implementar" e critérios de aceitação. Status de implementação:
+> [`tasks/phase-audit.md`](../tasks/phase-audit.md).
 
-## 1. Fundação & Arquitetura Core
-
-| Doc | Tema |
-|---|---|
-| [phases/01](phases/01-Fase-01-Foundation.md) | Foundation: fundação inicial (FastAPI + React/TS + SQLite), sem módulos de negócio — **✅ implementada** |
-| [phases/02](phases/02-Fase-02-Core-Architecture.md) | Core Architecture: responsabilidades, contratos e componentes do Core |
-
-> Documentação técnica do Core já implementado: [`system/00-indice.md`](system/00-indice.md).
-
-## 2. Sistema de Módulos
+## 1. Comece por aqui
 
 | Doc | Tema |
 |---|---|
-| [phases/03](phases/03-Fase-03-Module-System.md) | Module System: descoberta, validação, carregamento de módulos |
-| [phases/09](phases/09-Fase-09-Module-Runtime-Execution.md) | Module Runtime: ciclo de execução dos módulos ativos |
+| [README](../README.md) | Visão geral da plataforma, quick start, badges |
+| [developer-center/intro](developer-center/intro.md) | Introdução ao Developer Center |
+| [development](development.md) | Guia de desenvolvimento (setup, testes, build) |
+| [developer-center/guides/setup-windows](developer-center/guides/setup-windows.md) | Setup detalhado no Windows |
+| [architecture](architecture.md) | Arquitetura: modos de execução, fonte única de verdade, lifecycle |
 
-## 3. Marketplace, Distribuição & Dependências
-
-| Doc | Tema |
-|---|---|
-| [phases/04](phases/04-Fase-04-Marketplace-Package-Manager.md) | Marketplace & Package Manager: catálogo, instalação, ativação/remoção |
-| [phases/08.1](phases/08.1-Fase-08.1-Dependency-Governance.md) | Dependency Governance: resolução, compatibilidade, conflitos e ciclos |
-| [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace & Distribution: fontes locais/internas |
-| [phases/18.1](phases/18.1-Fase-18.1-External-Module-Sources-Module-Declaration.md) | Módulos externos por URL/arquivo local |
-
-## 4. Serviços & Contratos
+## 2. Referência para desenvolvedores de módulos (Developer Center)
 
 | Doc | Tema |
 |---|---|
-| [phases/08](phases/08-Fase-08-Service-Registry.md) | Service Registry: descoberta de capacidades via contratos públicos |
+| [reference/manifest](developer-center/reference/manifest.md) | Referência completa do manifest.yaml |
+| [manifest.example.yaml](manifest.example.yaml) | Exemplo comentado de manifest |
+| [guides/writing-docs](developer-center/guides/writing-docs.md) | Como escrever docs de módulos (padrão frontmatter) |
+| [guides/development-guide](developer-center/guides/development-guide.md) | Guia de desenvolvimento de módulos |
+| [sdk/backend](developer-center/sdk/backend.md) | SDK backend (contrato, router, notificações) |
+| [sdk/frontend](developer-center/sdk/frontend.md) | SDK frontend (micro-frontend render) |
+| [service-modules/overview](developer-center/service-modules/overview.md) | Service Modules e contratos públicos |
+| [examples/hello-world](developer-center/examples/hello-world.md) | Exemplo passo a passo de módulo |
 
-## 5. Documentação & Developer Experience
-
-| Doc | Tema |
-|---|---|
-| [phases/05](phases/05-Fase-05-Developer-Center.md) | Developer Center & Documentation Engine |
-| [phases/07](phases/07-Fase-07-Documentation-Compliance-Checker.md) | Compliance Checker: validação automática de docs dos módulos |
-
-## 6. Execução & Experiência do Usuário
-
-| Doc | Tema |
-|---|---|
-| [phases/06](phases/06-Fase-06-Launcher-Runtime.md) | Launcher: execução sem terminais manuais |
-| [phases/16](phases/16-Fase-16-Desktop-Distribution-User-Experience.md) | Distribuição Desktop e UX corporativa |
-
-## 7. Configuração, Persistência & Infra
+## 3. Arquitetura do Core
 
 | Doc | Tema |
 |---|---|
-| [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration, Data & Persistence |
-| [phases/13](phases/13-Fase-13-Central-Server-Multi-User-Readiness.md) | Central Server & Multi-User Readiness (Linux) |
+| [core/app-shell](developer-center/core/app-shell.md) | App Shell (estrutura visual permanente) |
+| [core/module-registry](developer-center/core/module-registry.md) | Registry in-memory (fonte única de verdade) |
+| [core/module-lifecycle](developer-center/core/module-lifecycle.md) | Ciclo de vida: install → activate → deactivate → remove |
+| [core/module-engine](developer-center/core/module-engine.md) | Module Engine: loader, validação, plugin router (detalhado) |
+| [core/package-manager](developer-center/core/package-manager.md) | Package Manager (visão canônica) |
+| [core/package-manager-internals](developer-center/core/package-manager-internals.md) | Package Manager: instalação .mod, cache, update (detalhado) |
+| [core/launcher](developer-center/core/launcher.md) | Launcher: modos Desktop/Dev, single-instance, shutdown |
+| [core/runtime](developer-center/core/runtime.md) | Runtime status, uptime, DEGRADED |
 
-## 8. Segurança & Confiança
-
-| Doc | Tema |
-|---|---|
-| [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust: integridade, origem, assinatura |
-| [phases/17](phases/17-Fase-17-Platform-Security-Trust-Hardening.md) | Security Hardening: endurecimento do Core/Runtime/pacotes/secrets |
-
-## 9. Qualidade & Observabilidade
-
-| Doc | Tema |
-|---|---|
-| [phases/14](phases/14-Fase-14-Observability-Telemetry-Diagnostics.md) | Observability, Telemetry & Diagnostics |
-| [phases/15](phases/15-Fase-15-Platform-Quality-Testing-Release-Engineering.md) | Quality, Testing & Release Engineering |
-
-## 10. Governança & Ciclo de Vida da Plataforma
+## 4. Governança
 
 | Doc | Tema |
 |---|---|
-| [phases/18](phases/18-Fase-18-Platform-Finalization-Architecture-Consolidation.md) | Finalização: revisão transversal antes dos módulos reais |
-| [phases/19](phases/19-Fase-19-Public-Release-Readiness-Open-Ecosystem.md) | Public Release Readiness & Open Ecosystem |
-| [phases/20](phases/20-Fase-20-Long-Term-Core-Governance-Ecosystem-Maintenance.md) | Governança de longo prazo pós-publicação |
+| [governance/documentation-first-principle](developer-center/governance/documentation-first-principle.md) | Documentation First + Definition of Done documental |
+| [context-map.yaml](context-map.yaml) | Help contextual: context_id → doc_id |
 
-## Exemplos de Módulos (referência)
+## 5. Fases do projeto (specs)
+
+Status real em [`tasks/phase-audit.md`](../tasks/phase-audit.md). Relatórios e
+planos por fase em [`tasks/`](../tasks/).
+
+### Implementadas ✅
+
+| Fase | Spec | Tema |
+|---|---|---|
+| 1 | [phases/01](phases/01-Fase-01-Foundation.md) | Foundation (FastAPI + React/TS + SQLite) |
+| 2 | [phases/02](phases/02-Fase-02-Core-Architecture.md) | Core Architecture + Notification Foundation |
+| 3 | [phases/03](phases/03-Fase-03-Module-System.md) | Module System (loader, validação, navegação) |
+| 4 | [phases/04](phases/04-Fase-04-Marketplace-Package-Manager.md) | Marketplace & Package Manager (activate/deactivate) |
+| 5 | [phases/05](phases/05-Fase-05-Developer-Center.md) | Developer Center & Doc Engine |
+| 6 | [phases/06](phases/06-Fase-06-Launcher-Runtime.md) | Launcher & Runtime (modo Desktop) |
+| 7 | [phases/07](phases/07-Fase-07-Documentation-Compliance-Checker.md) | Documentation Compliance Checker |
+
+### Pendentes
+
+| Fase | Spec | Tema |
+|---|---|---|
+| 8 | [phases/08](phases/08-Fase-08-Service-Registry.md) | Service Registry: descoberta via contratos |
+| 8.1 | [phases/08.1](phases/08.1-Fase-08.1-Dependency-Governance.md) | Dependency Governance |
+| 9 | [phases/09](phases/09-Fase-09-Module-Runtime-Execution.md) | Module Runtime Execution (hot-unload) |
+| 10 | [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust |
+| 11 | [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace Distribution |
+| 12 | [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration & Persistence |
+| 13 | [phases/13](phases/13-Fase-13-Central-Server-Multi-User-Readiness.md) | Central Server Readiness (Linux) |
+| 14 | [phases/14](phases/14-Fase-14-Observability-Telemetry-Diagnostics.md) | Observability & Diagnostics |
+| 15 | [phases/15](phases/15-Fase-15-Platform-Quality-Testing-Release-Engineering.md) | Quality, Testing & Release |
+| 16 | [phases/16](phases/16-Fase-16-Desktop-Distribution-User-Experience.md) | Desktop Distribution & UX |
+| 17 | [phases/17](phases/17-Fase-17-Platform-Security-Trust-Hardening.md) | Security Hardening |
+| 18 | [phases/18](phases/18-Fase-18-Platform-Finalization-Architecture-Consolidation.md) | Finalização & Consolidação |
+| 18.1 | [phases/18.1](phases/18.1-Fase-18.1-External-Module-Sources-Module-Declaration.md) | External Module Sources |
+| 19 | [phases/19](phases/19-Fase-19-Public-Release-Readiness-Open-Ecosystem.md) | Public Release Readiness |
+| 20 | [phases/20](phases/20-Fase-20-Long-Term-Core-Governance-Ecosystem-Maintenance.md) | Governança de longo prazo |
+
+## 6. Exemplos de módulos (referência)
 
 | Doc | Tema |
 |---|---|
-| [examples/01](examples/01-System-Information-Service.md) | System Information Service (Service Module exemplo) |
-| [examples/02](examples/02-System-Health-Check.md) | System Health Check (exemplo com dependência entre módulos) |
+| [examples/01](examples/01-System-Information-Service.md) | System Information Service (Service Module) |
+| [examples/02](examples/02-System-Health-Check.md) | System Health Check (dependência entre módulos) |
