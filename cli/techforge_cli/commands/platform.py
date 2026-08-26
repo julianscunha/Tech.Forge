@@ -44,3 +44,36 @@ def stop_cmd() -> None:
 def status_cmd() -> None:
     """Show the current state of every TechForge component."""
     raise SystemExit(_run_launcher("status"))
+
+
+def _log_path(source: str) -> Path:
+    """Caminho do arquivo de log do launcher (fonte única de paths)."""
+    logs = _LAUNCHER_DIR / "techforge_launcher"
+    # derive repo root: launcher/../logs
+    repo_root = _LAUNCHER_DIR.parent
+    return repo_root / "logs" / f"{source}.log"
+
+
+@click.command(name="logs")
+@click.option("--backend", "source", flag_value="backend", help="Log do backend.")
+@click.option("--frontend", "source", flag_value="frontend", help="Log do frontend.")
+@click.option("--launcher", "source", flag_value="launcher", help="Log do launcher.")
+@click.option("-n", "--lines", default=50, show_default=True, help="Últimas N linhas.")
+def logs_cmd(source: str | None, lines: int) -> None:
+    """Mostrar as últimas linhas dos logs da plataforma (§16)."""
+    if not source:
+        raise click.UsageError("Escolha uma origem: --backend, --frontend ou --launcher.")
+    path = _log_path(source)
+    if not path.is_file():
+        click.echo(f"Nenhum log encontrado em {path}. A plataforma já foi executada?")
+        raise SystemExit(1)
+    content = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    for line in content[-lines:]:
+        click.echo(line)
+
+
+@click.command(name="dev")
+@click.pass_context
+def dev_cmd(ctx: click.Context) -> None:
+    """Modo desenvolvimento: backend com reload + frontend dev server (§17)."""
+    raise SystemExit(_run_launcher("start", "--dev"))

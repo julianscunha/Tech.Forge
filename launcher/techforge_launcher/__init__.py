@@ -59,6 +59,7 @@ FRONTEND_DIR = REPO_ROOT / "core" / "frontend"
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 FRONTEND_URL = f"http://{BACKEND_HOST}:{FRONTEND_PORT}"
+FRONTEND_DIST = (REPO_ROOT / "core" / "frontend" / "dist")
 HEALTH_URL = f"{BACKEND_URL}/api/v1/platform/status"
 STATE_FILE = PIDS_PATH / "state.json"
 
@@ -179,7 +180,7 @@ def _terminate(pid: int) -> bool:
     return not _pid_alive(pid)
 
 
-def _spawn(cmd: list[str], cwd: Path, log_file: Path) -> int:
+def _spawn(cmd: list[str], cwd: Path, log_file: Path, env: dict | None = None) -> int:
     """Spawn a detached child whose output goes to its own log file."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     kwargs: dict = {}
@@ -189,7 +190,8 @@ def _spawn(cmd: list[str], cwd: Path, log_file: Path) -> int:
         kwargs["start_new_session"] = True
     with open(log_file, "ab") as fh:
         proc = subprocess.Popen(
-            cmd, cwd=str(cwd), stdout=fh, stderr=subprocess.STDOUT, **kwargs
+            cmd, cwd=str(cwd), stdout=fh, stderr=subprocess.STDOUT,
+            env=env or os.environ.copy(), **kwargs
         )
     logger.info("Spawned %s (cwd=%s) → PID %s, log=%s", " ".join(cmd), cwd, proc.pid, log_file.name)
     return proc.pid
@@ -276,10 +278,14 @@ def _npm_exe() -> str:
     raise FileNotFoundError("npm not found on PATH")
 
 
-def start(splash: bool = True) -> tuple[bool, str]:
+def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
     """
     Full startup sequence (§3). Returns (success, user_message).
     Technical details go to logs/launcher.log only (§6).
+
+    dev_mode=True (§17): força backend com reload + vite dev server.
+    Default (desktop): backend sem reload servindo dist/ quando existir;
+    vite dev server apenas como fallback se não houver build.
     """
     _setup_logging()
     t0 = time.time()
@@ -300,10 +306,12 @@ def start(splash: bool = True) -> tuple[bool, str]:
 
         # ── 2. Backend ─────────────────────────────────────────────────────
         splash_ui.step("Backend")
+        desktop = (not dev_mode) and (FRONTEND_DIST / "index.html").is_file()
+        env = dict(os.environ, SERVE_STATIC_FRONTEND="true") if desktop else dict(os.environ)
         backend_pid = _spawn(
             [python_exe, "-m", "uvicorn", "app.main:app",
              "--host", BACKEND_HOST, "--port", str(BACKEND_PORT)],
-            cwd=BACKEND_DIR, log_file=LOGS_PATH / "backend.log",
+            cwd=BACKEND_DIR, log_file=LOGS_PATH / "backend.log", env=env,
         )
         state["backend_pid"] = backend_pid
         _write_state(state)
@@ -318,30 +326,39 @@ def start(splash: bool = True) -> tuple[bool, str]:
         state["backend_ready"] = True
 
         # ── 3. Frontend ────────────────────────────────────────────────────
-        splash_ui.step("Frontend")
-        frontend_pid = _spawn([_npm_exe(), "run", "dev"], cwd=FRONTEND_DIR,
-                              log_file=LOGS_PATH / "frontend.log")
-        state["frontend_pid"] = frontend_pid
-        _write_state(state)
+        state["frontend_mode"] = "dev" if not desktop else "static"
 
-        if not wait_frontend():
-            msg = "TechForge não conseguiu iniciar a interface."
-            logger.error(msg + " (frontend not responding after %ss)", FRONTEND_TIMEOUT)
-            _stop_children(state)
-            _clear_state()
-            splash_ui.fail(msg)
-            return False, msg
+        if desktop:
+            # §10 — backend serve o build estático; nenhum processo node.
+            splash_ui.step("Interface (estática)")
+            state["frontend_pid"] = None
+            ui_url = BACKEND_URL
+        else:
+            splash_ui.step("Frontend")
+            frontend_pid = _spawn([_npm_exe(), "run", "dev"], cwd=FRONTEND_DIR,
+                                  log_file=LOGS_PATH / "frontend.log")
+            state["frontend_pid"] = frontend_pid
+            _write_state(state)
+
+            if not wait_frontend():
+                msg = "TechForge não conseguiu iniciar a interface."
+                logger.error(msg + " (frontend not responding after %ss)", FRONTEND_TIMEOUT)
+                _stop_children(state)
+                _clear_state()
+                splash_ui.fail(msg)
+                return False, msg
+            ui_url = FRONTEND_URL
 
         # ── 4. Browser ─────────────────────────────────────────────────────
         splash_ui.step("Plataforma")
-        webbrowser.open(FRONTEND_URL)
+        webbrowser.open(ui_url)
 
         elapsed = time.time() - t0
         state["ready_at"] = elapsed
         _write_state(state)
-        logger.info("Startup complete in %.1fs — %s", elapsed, FRONTEND_URL)
+        logger.info("Startup complete in %.1fs — %s", elapsed, ui_url)
         splash_ui.done(elapsed)
-        return True, f"TechForge operacional em {FRONTEND_URL}"
+        return True, f"TechForge operacional em {ui_url}"
 
     except Exception as exc:
         msg = "TechForge não conseguiu iniciar."

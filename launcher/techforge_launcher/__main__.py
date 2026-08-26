@@ -22,12 +22,14 @@ def main(argv: list[str] | None = None) -> int:
                         help="start: iniciar plataforma · stop: encerrar · status: estado atual")
     parser.add_argument("--no-splash", action="store_true",
                         help="disable the console startup screen")
+    parser.add_argument("--dev", action="store_true",
+                        help="development mode: backend reload + vite dev server (§17)")
     args = parser.parse_args(argv)
 
     from techforge_launcher import start, stop, status
 
     if args.command == "start":
-        ok, message = start(splash=not args.no_splash)
+        ok, message = start(splash=not args.no_splash, dev_mode=args.dev)
         if not ok and "--quiet" not in (argv or []):
             print(message)
         elif not message.startswith("TechForge já"):

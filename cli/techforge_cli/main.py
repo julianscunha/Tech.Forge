@@ -19,7 +19,7 @@ from techforge_cli.commands.validate_module import validate_module_cmd
 from techforge_cli.commands.package_module  import package_module_cmd
 from techforge_cli.commands.modules        import modules_cmd
 from techforge_cli.commands.docs           import docs_cmd
-from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd
+from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd, logs_cmd, dev_cmd
 
 
 @click.group()
@@ -56,6 +56,8 @@ cli.add_command(docs_cmd)       # Phase 5 — docs list/search/get/export-contex
 cli.add_command(start_cmd)     # Phase 6
 cli.add_command(stop_cmd)      # Phase 6
 cli.add_command(status_cmd)    # Phase 6
+cli.add_command(logs_cmd)      # Fase 6 §16 — techforge logs
+cli.add_command(dev_cmd)       # Fase 6 §17 — techforge dev
 
 
 def main():
