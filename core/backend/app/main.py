@@ -87,3 +87,44 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+def _mount_static_frontend(app: FastAPI) -> bool:
+    """
+    Desktop mode (Fase 6 §10): serve the compiled frontend from dist/.
+    Enabled via SERVE_STATIC_FRONTEND=true + existing dist directory.
+    API routes (/api/v1/*) take precedence; unknown non-API paths fall
+    back to index.html for SPA routing. Returns True if mounted.
+    """
+    if not settings.SERVE_STATIC_FRONTEND:
+        return False
+    dist = settings.FRONTEND_DIST_PATH
+    index_html = dist / "index.html"
+    if not (dist / "index.html").is_file():
+        logger.warning(
+            "SERVE_STATIC_FRONTEND is on but %s not found — static UI not served.",
+            index_html,
+        )
+        return False
+
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount(
+        "/assets",
+        StaticFiles(directory=dist / "assets") if (dist / "assets").is_dir() else StaticFiles(directory=dist),
+        name="frontend-assets",
+    )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        """SPA fallback: any non-API path serves index.html."""
+        if full_path.startswith("api/"):
+            raise FileNotFoundError(full_path)
+        candidate = dist / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(index_html)
+
+    logger.info("Desktop mode: serving static frontend from %s", dist)
+    return True

@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = f"sqlite+aiosqlite:///{BASE_DIR}/config/techforge.db"
 
+    # Frontend static serving — Desktop mode (Fase 6 §10)
+    SERVE_STATIC_FRONTEND: bool = False
+    FRONTEND_DIST_PATH: Path = BASE_DIR / "core" / "frontend" / "dist"
+
     # CORS — frontend dev server
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
