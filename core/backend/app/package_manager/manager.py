@@ -182,6 +182,18 @@ class PackageManager:
             operation_log.record("install", module_id, version, "incompatible", msg)
             return InstallResult(InstallStatus.INCOMPATIBLE, module_id, version, msg)
 
+        # ── 3.5 Guard: mesmo ID em estado inválido/incompatível no registry ──
+        existing_entry = registry.get(module_id)
+        if existing_entry and existing_entry.status in (
+            ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE,
+        ):
+            msg = (f"Module '{module_id}' cannot be installed: it is registered as "
+                   f"{existing_entry.status.value}. Remove it first to retry.")
+            operation_log.record("install", module_id, version,
+                                 f"blocked_{existing_entry.status.value.lower()}", msg)
+            logger.warning(msg)
+            return InstallResult(InstallStatus.FAILED, module_id, version, msg)
+
         # ── 4. Duplicate check ────────────────────────────────────────────────
         target_dir = self._installed / module_id
         if target_dir.exists():
