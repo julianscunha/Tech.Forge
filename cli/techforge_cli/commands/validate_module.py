@@ -51,6 +51,42 @@ def validate_module_cmd(module_path, platform_version, strict):
 
     report = ModuleCLIValidator.validate(path, platform_version)
 
+    # ── Documentation Compliance (Fase 7 §12) ────────────────────────────────
+    compliance_result = None
+    try:
+        from app.doc_engine import DocCompletenessChecker
+        manifest = path / "manifest.yaml"
+        module_type = "application"
+        if manifest.is_file():
+            import yaml
+            raw = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
+            module_type = str(raw.get("module_type", "application"))
+        compliance_result = DocCompletenessChecker.check(path, module_type)
+    except Exception as exc:
+        print_warning(f"Documentation compliance check unavailable: {exc}")
+    console.print()
+
+    if compliance_result is not None:
+        print_section("Documentation Compliance")
+        ct = Table(show_header=True, header_style="bold white",
+                   border_style="dim", show_lines=False, pad_edge=True)
+        ct.add_column("Check", style="white", no_wrap=True)
+        ct.add_column("Status", justify="center", width=10)
+        for c in compliance_result.checks:
+            if c.passed:
+                st = "[pass]✓ PASS[/pass]"
+            elif c.required:
+                st = "[fail]✗ FAIL[/fail]"
+            else:
+                st = "[warn]⚠ WARN[/warn]"
+            ct.add_row(c.name, st)
+        console.print(ct)
+        verdict = "COMPLETE" if compliance_result.is_complete else "INCOMPLETE"
+        style = "pass" if compliance_result.is_complete else "fail"
+        console.print(f"  Result: [{style}]{verdict}[/{style}] "
+                      f"(score {compliance_result.score:.0%})")
+        console.print()
+
     # ── Results table ─────────────────────────────────────────────────────────
     table = Table(
         show_header=True,
