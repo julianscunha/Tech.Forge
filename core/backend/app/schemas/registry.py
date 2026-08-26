@@ -1,6 +1,23 @@
+import re
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
+_MODULE_ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def _check_module_id(v: str) -> str:
+    if not _MODULE_ID_RE.match(v):
+        raise ValueError("module_id must be snake_case (lowercase letters, digits, underscores)")
+    return v
+
+
+def _check_semver(v: str) -> str:
+    if not _SEMVER_RE.match(v):
+        raise ValueError("version must follow semver format X.Y.Z")
+    return v
 
 
 # ── Platform health (Fase 1 spec §5) ─────────────────────────────────────────
@@ -15,8 +32,8 @@ class PlatformHealthCheck(BaseModel):
 # ── Category ─────────────────────────────────────────────────────────────────
 
 class CategoryBase(BaseModel):
-    slug: str
-    name: str
+    slug: str = Field(min_length=1)
+    name: str = Field(min_length=1)
     description: Optional[str] = None
     icon: Optional[str] = None
 
@@ -35,9 +52,9 @@ class CategoryRead(CategoryBase):
 # ── Module ────────────────────────────────────────────────────────────────────
 
 class ModuleBase(BaseModel):
-    module_id: str
-    name: str
-    version: str
+    module_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    name: str = Field(min_length=1)
+    version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     description: Optional[str] = None
     vendor: Optional[str] = None
     author: Optional[str] = None

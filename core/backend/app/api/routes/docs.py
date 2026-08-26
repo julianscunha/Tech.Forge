@@ -232,7 +232,9 @@ def _get_module_type(module_id: str) -> str:
     try:
         raw = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         return str(raw.get("module_type", "application"))
-    except Exception:
+    except Exception as exc:
+        logging.getLogger("techforge.docs.api").warning(
+            "Failed to read module_type from %s: %s", manifest_path, exc)
         return "application"
 
 

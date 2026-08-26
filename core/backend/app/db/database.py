@@ -43,14 +43,18 @@ async def init_db() -> None:
 async def _migrate() -> None:
     """Lightweight column migration (SQLite) — create_all won't alter existing tables."""
     from sqlalchemy import text
+    # Whitelist literal — never interpolate table names from external input.
     additions = {
         "modules": [
             ("source_type", "VARCHAR(16) NOT NULL DEFAULT 'local'"),
             ("source_location", "VARCHAR(512)"),
         ],
     }
+    allowed_tables = {"modules"}
     async with engine.begin() as conn:
         for table, cols in additions.items():
+            if table not in allowed_tables:
+                continue
             existing = {
                 row[1] for row in await conn.execute(text(f"PRAGMA table_info({table})"))
             }

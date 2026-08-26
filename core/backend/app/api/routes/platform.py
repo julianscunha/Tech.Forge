@@ -2,10 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
+import logging
+
 from app.core.settings import settings
 from app.db.database import get_db
 from app.schemas.registry import PlatformStatus, PlatformHealthCheck
 from app.services.registry import CategoryService, ModuleService
+
+logger = logging.getLogger("techforge.platform.api")
 
 router = APIRouter(prefix="/platform", tags=["platform"])
 
@@ -20,7 +24,8 @@ async def get_platform_status(db: AsyncSession = Depends(get_db)) -> PlatformSta
     try:
         await db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception:
+    except Exception as exc:
+        logger.error("Database connectivity probe failed: %s", exc)
         db_status = "error"
 
     modules_installed = await ModuleService.count_installed(db)
@@ -47,7 +52,8 @@ async def get_platform_health_check(db: AsyncSession = Depends(get_db)) -> Platf
     try:
         await db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception:
+    except Exception as exc:
+        logger.error("Database connectivity probe failed: %s", exc)
         db_status = "error"
 
     return PlatformHealthCheck(

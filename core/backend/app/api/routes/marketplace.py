@@ -221,8 +221,8 @@ async def import_module(file: UploadFile = File(...)):
     # Clean up cache after install attempt
     try:
         stored_path.unlink(missing_ok=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Cache cleanup failed for %s: %s", stored_path, exc)
 
     return OperationResponse(
         success=result.success,
