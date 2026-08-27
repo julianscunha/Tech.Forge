@@ -445,10 +445,19 @@ class TestConflictNotification:
         monkeypatch.setattr(registry_mod, "service_registry", reg)
 
         async def _run():
+            from sqlalchemy import delete
             from app.db.database import AsyncSessionLocal
+            from app.models.notifications import Notification
             from app.service_registry.registry import sync_with_notifications
 
             async with AsyncSessionLocal() as db:
+                # Leftover from a previous run would make dedupe skip this
+                # run's notification too — clean the exact row first.
+                await db.execute(delete(Notification).where(
+                    Notification.title == "Capability conflict",
+                    Notification.message == "Capability 'shared.read' provided by: a, b"))
+                await db.commit()
+
                 await sync_with_notifications([e1, e2], fake_indexer, db)
                 await sync_with_notifications([e1, e2], fake_indexer, db)  # repeat — must dedupe
 
@@ -524,3 +533,75 @@ class TestFullLifecycleIntegration:
         assert set(conflicts["disputed.read"]) == {"x", "y"}
         # Both providers remain independently discoverable — no silent pick
         assert {d.service_id for d in reg.find_capability("disputed.read")} == {"x", "y"}
+
+
+# ── Follow-up — busca por capability/export (discovery em escala) ────────────
+
+class TestServiceRegistrySearch:
+
+    def _registry_with_aws_and_veeam(self):
+        e1 = _module_entry("aws_cost_service")
+        e2 = _module_entry("other_service")
+        c1 = ServiceContract(
+            service_id="aws.costs", module_id="aws_cost_service", description="d",
+            version="1.0.0", capabilities=["aws.cost.read"],
+            exports=[ServiceExport(name="get_cost_summary",
+                                   description="Returns cloud cost summary.")],
+        )
+        c2 = ServiceContract(
+            service_id="other", module_id="other_service", description="d", version="1.0.0",
+            capabilities=["other.thing"],
+            exports=[ServiceExport(name="do_other_thing", description="Unrelated.")],
+        )
+        reg = ServiceRegistry()
+        reg.rebuild([e1, e2], _FakeIndexer({"aws_cost_service": c1, "other_service": c2}))
+        return reg
+
+    def test_search_matches_capability(self):
+        reg = self._registry_with_aws_and_veeam()
+        results = reg.search("cost")
+        assert [d.service_id for d in results] == ["aws.costs"]
+
+    def test_search_matches_export_name(self):
+        reg = self._registry_with_aws_and_veeam()
+        results = reg.search("get_cost_summary")
+        assert [d.service_id for d in results] == ["aws.costs"]
+
+    def test_search_matches_export_description(self):
+        reg = self._registry_with_aws_and_veeam()
+        results = reg.search("cloud")
+        assert [d.service_id for d in results] == ["aws.costs"]
+
+    def test_search_is_case_insensitive(self):
+        reg = self._registry_with_aws_and_veeam()
+        results = reg.search("AWS")
+        assert [d.service_id for d in results] == ["aws.costs"]
+
+    def test_search_no_match_returns_empty_list(self):
+        reg = self._registry_with_aws_and_veeam()
+        assert reg.search("nonexistent_term_xyz") == []
+
+    def test_search_matches_service_id(self):
+        reg = self._registry_with_aws_and_veeam()
+        results = reg.search("aws.costs")
+        assert [d.service_id for d in results] == ["aws.costs"]
+
+
+class TestServicesAPISearch:
+
+    def test_list_services_with_query_filters(self, client):
+        resp = client.get("/api/v1/services?q=hello_world")
+        assert resp.status_code == 200
+        ids = [s["service_id"] for s in resp.json()]
+        assert ids == ["hello_world"]
+
+    def test_list_services_without_query_returns_all(self, client):
+        resp = client.get("/api/v1/services")
+        assert resp.status_code == 200
+        ids = [s["service_id"] for s in resp.json()]
+        assert "hello_world" in ids and "veeam_m365" in ids
+
+    def test_list_services_query_no_match_returns_empty(self, client):
+        resp = client.get("/api/v1/services?q=nonexistent_term_xyz")
+        assert resp.status_code == 200
+        assert resp.json() == []

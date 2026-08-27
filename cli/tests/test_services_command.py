@@ -102,6 +102,31 @@ def test_services_contract_prints_exports(runner, monkeypatch):
     assert "ping" in result.output
 
 
+def test_services_search_prints_matches(runner, monkeypatch):
+    payload = [{"service_id": "aws.costs", "module_id": "aws_cost_service",
+                "status": "ACTIVE", "capabilities": ["aws.cost.read"]}]
+    captured = {}
+
+    def fake_urlopen(url, **kw):
+        captured["url"] = url if isinstance(url, str) else url.full_url
+        return FakeResp(payload)
+
+    import urllib.request
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    result = runner.invoke(services_cmd, ["search", "cost"])
+    assert result.exit_code == 0, result.output
+    assert "q=cost" in captured["url"]
+    assert "aws.costs" in result.output
+
+
+def test_services_search_no_match_prints_message(runner, monkeypatch):
+    import urllib.request
+    monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp([]))
+    result = runner.invoke(services_cmd, ["search", "nonexistent"])
+    assert result.exit_code == 0, result.output
+    assert "nonexistent" in result.output.lower() or "nenhum" in result.output.lower()
+
+
 def test_services_status_prints_summary(runner, monkeypatch):
     payload = [
         {"service_id": "a", "module_id": "a", "status": "ACTIVE", "capabilities": []},

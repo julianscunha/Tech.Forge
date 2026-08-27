@@ -87,6 +87,27 @@ class ServiceRegistry:
                 out.setdefault(cap, []).append(d.service_id)
         return out
 
+    # ── Search (discovery em escala, category-agnóstico) ─────────────────────
+
+    def search(self, query: str) -> list[ServiceDescriptor]:
+        """
+        Busca por substring (case-insensitive) em service_id, capabilities,
+        e nome/descrição de cada export do contrato — atravessa todos os
+        serviços independente de categoria de módulo, para responder
+        "essa capacidade já existe?" sem depender de onde foi classificada.
+        """
+        q = query.lower()
+        results = []
+        for d in self._services.values():
+            haystack = [d.service_id, *d.capabilities]
+            if d.contract:
+                for exp in d.contract.exports:
+                    haystack.append(exp.name)
+                    haystack.append(exp.description)
+            if any(q in h.lower() for h in haystack if h):
+                results.append(d)
+        return results
+
     # ── Conflicts (§17) ──────────────────────────────────────────────────────
 
     def list_conflicts(self) -> dict[str, list[str]]:

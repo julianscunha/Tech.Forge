@@ -1,9 +1,9 @@
 # Follow-up da Fase 8 — Busca por capability/export (discovery em escala)
 
-> Não é uma fase nova nem parte da Fase 8.1 (Dependency Governance, já
-> reservada pela spec). É um gap identificado depois do fechamento da Fase 8
-> ao pensar no cenário de uso real: muitos módulos instalados, alguém
-> precisa saber se uma capacidade já existe antes de reimplementá-la.
+> **Status: implementado.** `ServiceRegistry.search()` +
+> `GET /api/v1/services?q=` + `techforge services search` — ver
+> `tasks/phase-08-report.md`. Não é uma fase nova nem parte da Fase 8.1
+> (Dependency Governance, já reservada pela spec).
 
 ## Problema
 

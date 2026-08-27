@@ -75,7 +75,18 @@ service_registry.find_capability("veeam.m365.calculate")  # list[ServiceDescript
 service_registry.list_services()
 service_registry.list_capabilities()                    # dict[capability, [service_id]]
 service_registry.list_conflicts()                       # capabilities com >1 provider ACTIVE
+service_registry.search("cost")                          # busca por keyword, todas as categorias
 ```
+
+### Busca (discovery em escala)
+
+Com muitos módulos instalados, listar tudo não escala. `search()` casa a
+palavra-chave (case-insensitive, substring) contra `service_id`,
+`capabilities` e nome/descrição de cada export — **atravessa todas as
+categorias de módulo**, porque filtrar por categoria não responde "essa
+capacidade já existe?" (a capacidade pode estar categorizada em qualquer
+lugar). Exposto via `GET /api/v1/services?q=<termo>` e
+`techforge services search <termo>`.
 
 ## Invocação (§12/§13/§14)
 
@@ -117,6 +128,7 @@ com dedupe) é criada a cada novo conflito detectado.
 
 ```
 GET /api/v1/services                              → lista todos os serviços
+GET /api/v1/services?q=<termo>                    → busca por keyword (§ Busca acima)
 GET /api/v1/services/{service_id}                 → um descriptor
 GET /api/v1/services/{service_id}/contract         → contrato completo
 GET /api/v1/services/capabilities                  → mapa capability → [service_id]
@@ -129,6 +141,7 @@ Somente consulta — nenhuma rota genérica de invocação pública (spec §23).
 
 ```bash
 techforge services list
+techforge services search <termo>
 techforge services show <service_id>
 techforge services capabilities
 techforge services contract <service_id>

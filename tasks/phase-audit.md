@@ -22,12 +22,6 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 13 | Central Server Multi-User | ❌ | nada além de settings básicos |
 | 14–20 | Observability / Quality / Desktop dist / Security hardening / Finalization / Public release / Governance | ❌ não iniciadas | fragmentos herdados: logging básico, single-instance launcher, PLATFORM_VERSION única |
 
-## Follow-ups pendentes (não são fases)
-
-- Busca por capability/export em `/services` — ver
-  `tasks/phase8-followup-capability-search.md` (gap de discovery em escala,
-  achado após o fechamento da Fase 8).
-
 ## Hooks/stubs ativos (próximos alvos naturais)
 
 - `RemoteRepositoryProvider.{list_available,get_package,fetch_mod_path}` — NotImplementedError (Fase 11)

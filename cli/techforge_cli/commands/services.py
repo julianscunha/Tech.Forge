@@ -60,6 +60,26 @@ def show_cmd(service_id):
     console.print(f"  Capabilities: {', '.join(s.get('capabilities', [])) or '(none)'}")
 
 
+@services_cmd.command("search")
+@click.argument("query")
+def search_cmd(query):
+    """Search services by keyword (service_id, capabilities, export name/description)."""
+    import urllib.parse
+    services = _get(f"/services?q={urllib.parse.quote(query)}")
+    if not services:
+        print_info(f"Nenhum serviço encontrado para '{query}'.")
+        return
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("Service ID", style="cyan")
+    table.add_column("Module")
+    table.add_column("Status")
+    table.add_column("Capabilities")
+    for s in services:
+        table.add_row(s.get("service_id", ""), s.get("module_id", ""),
+                      s.get("status", ""), ", ".join(s.get("capabilities", [])))
+    console.print(table)
+
+
 @services_cmd.command("capabilities")
 def capabilities_cmd():
     """List every discovered capability and its provider(s)."""

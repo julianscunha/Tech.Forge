@@ -7,7 +7,7 @@ permitir execução arbitrária de serviços por API genérica).
 from __future__ import annotations
 
 from dataclasses import asdict
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.service_registry.registry import service_registry
@@ -49,9 +49,13 @@ def _to_read(descriptor) -> ServiceDescriptorRead:
 
 
 @router.get("", response_model=list[ServiceDescriptorRead],
-            summary="List all registered services (§9)")
-async def list_services() -> list[ServiceDescriptorRead]:
-    return [_to_read(d) for d in service_registry.list_services()]
+            summary="List services, optionally filtered by keyword (§9)")
+async def list_services(
+    q: str | None = Query(None, description="Keyword match against service_id, "
+                                              "capabilities, and export name/description"),
+) -> list[ServiceDescriptorRead]:
+    services = service_registry.search(q) if q else service_registry.list_services()
+    return [_to_read(d) for d in services]
 
 
 @router.get("/capabilities", response_model=dict[str, list[str]],
