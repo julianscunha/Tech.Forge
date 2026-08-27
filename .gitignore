@@ -30,6 +30,10 @@ logs/pids/
 # Runtime state (gerado, não versionar)
 modules/installed/*/data/settings.json
 
+# Artefato acidental de rodar scripts/pytest com cwd=core/backend
+# (settings.MODULES_INSTALLED_PATH resolve relativo ao CWD)
+/core/backend/modules/
+
 # IDE
 .vscode/
 .idea/

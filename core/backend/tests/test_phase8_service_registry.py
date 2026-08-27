@@ -460,3 +460,67 @@ class TestConflictNotification:
         notifs = client.get("/api/v1/notifications?limit=5").json()
         assert any("shared.read" in (n.get("message") or "") for n in notifs)
         client.post("/api/v1/notifications/read-all")
+
+
+# ── Slice 7 — Regra final (spec §28/"Regra final") ────────────────────────────
+
+class TestFullLifecycleIntegration:
+    """
+    Install → Activate → Registry discovers service → Capability available →
+    Application resolves capability → Invoke → Result → Deactivate →
+    Capability unavailable → Reactivate → Remove → Registry cleanup.
+
+    Usa hello_world (já instalado) como Service Module real de teste — não é
+    necessário criar um módulo novo (spec §29 / decisão do plano).
+    """
+
+    def test_full_lifecycle_hello_world(self, client):
+        from app.service_registry.registry import service_registry
+        from app.service_registry.invoker import invoke
+
+        client.post("/api/v1/marketplace/activate/hello_world")  # clean baseline
+
+        # 1. Registry discovers the service (boot already did this) + capability available
+        descriptor = service_registry.find_by_module("hello_world")
+        assert descriptor is not None and descriptor.status.value == "ACTIVE"
+        providers = service_registry.find_capability("hello_world.ping")
+        assert [d.service_id for d in providers] == ["hello_world"]
+
+        # 2. "Application Module" resolves the capability and invokes it
+        result = invoke("hello_world", "ping")
+        assert result == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
+
+        # 3. Invalid arguments are rejected before reaching the function
+        from app.service_registry.errors import InvalidArgumentsError
+        with pytest.raises(InvalidArgumentsError):
+            invoke("hello_world", "ping", bogus_arg=1)
+
+        # 4. Deactivate → capability unavailable for invocation
+        r = client.post("/api/v1/marketplace/deactivate/hello_world")
+        assert r.status_code == 200, r.text
+        assert service_registry.find_by_module("hello_world").status.value == "DISABLED"
+        from app.service_registry.errors import ServiceDisabledError
+        with pytest.raises(ServiceDisabledError):
+            invoke("hello_world", "ping")
+
+        # 5. Reactivate → capability available again
+        r = client.post("/api/v1/marketplace/activate/hello_world")
+        assert r.status_code == 200, r.text
+        assert service_registry.find_by_module("hello_world").status.value == "ACTIVE"
+        assert invoke("hello_world", "ping")["status"] == "ok"
+
+    def test_capability_conflict_reported_not_silently_resolved(self):
+        """Dois serviços disputando a mesma capability — Registry reporta, não escolhe."""
+        e1 = _module_entry("svc_x")
+        e2 = _module_entry("svc_y")
+        c1 = ServiceContract(service_id="x", module_id="svc_x", description="d",
+                             version="1.0.0", capabilities=["disputed.read"])
+        c2 = ServiceContract(service_id="y", module_id="svc_y", description="d",
+                             version="1.0.0", capabilities=["disputed.read"])
+        reg = ServiceRegistry()
+        reg.rebuild([e1, e2], _FakeIndexer({"svc_x": c1, "svc_y": c2}))
+
+        conflicts = reg.list_conflicts()
+        assert set(conflicts["disputed.read"]) == {"x", "y"}
+        # Both providers remain independently discoverable — no silent pick
+        assert {d.service_id for d in reg.find_capability("disputed.read")} == {"x", "y"}
