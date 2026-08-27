@@ -425,3 +425,195 @@ class TestDependencyGraph:
         mermaid = graph.export_mermaid()
         assert "classDef cycle" in mermaid
         assert "class a,b cycle" in mermaid
+
+
+# ── DependencyResolver (§7/§8/§15/§23) ─────────────────────────────────────────
+
+class _FakeDescriptor:
+    def __init__(self, module_id: str, service_version: str = "1.0.0", status=None):
+        from app.service_registry.descriptor import ServiceStatus
+        self.module_id = module_id
+        self.service_version = service_version
+        self.status = status or ServiceStatus.ACTIVE
+
+
+class _FakeServiceRegistryFull:
+    def __init__(self, capability_providers: dict | None = None, conflicts: dict | None = None):
+        self._capability_providers = capability_providers or {}
+        self._conflicts = conflicts or {}
+
+    def find_capability(self, capability: str):
+        return self._capability_providers.get(capability, [])
+
+    def list_conflicts(self):
+        return self._conflicts
+
+
+class TestDependencyResolver:
+
+    def test_module_dependency_satisfied(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "version_range": ">=1.0.0"},
+        ])
+        provider = _entry_with_deps("provider", [])
+        provider.version = "1.5.0"
+        registry = _AllEntriesRegistry([consumer, provider])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.SATISFIED
+
+    def test_module_dependency_missing_when_not_installed(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "nowhere"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.MISSING
+
+    def test_module_dependency_optional_unavailable_when_not_installed(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "nowhere"}, "required": False},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.OPTIONAL_UNAVAILABLE
+
+    def test_module_dependency_disabled(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        provider = _entry_with_deps("provider", [], )
+        provider.status = ModuleStatus.DISABLED
+        registry = _AllEntriesRegistry([consumer, provider])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.DISABLED
+
+    def test_module_dependency_incompatible_version(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "version_range": ">=2.0.0"},
+        ])
+        provider = _entry_with_deps("provider", [])
+        provider.version = "1.0.0"
+        registry = _AllEntriesRegistry([consumer, provider])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.INCOMPATIBLE_VERSION
+
+    def test_module_dependency_cyclic(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [{"target": {"type": "module", "id": "a"}}])
+        registry = _AllEntriesRegistry([a, b])
+
+        deps = DependencyResolver.resolve("a", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.CYCLIC
+
+    def test_capability_dependency_satisfied(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "version_range": ">=1.0.0"},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+        services = _FakeServiceRegistryFull({"aws.cost.read": [_FakeDescriptor("aws_cost_service")]})
+
+        deps = DependencyResolver.resolve("consumer", registry, services)
+        assert deps[0].status == DependencyStatus.SATISFIED
+
+    def test_capability_dependency_missing_when_no_provider(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.MISSING
+
+    def test_capability_dependency_disabled_when_provider_inactive(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+        from app.service_registry.descriptor import ServiceStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+        services = _FakeServiceRegistryFull({
+            "aws.cost.read": [_FakeDescriptor("aws_cost_service", status=ServiceStatus.DISABLED)],
+        })
+
+        deps = DependencyResolver.resolve("consumer", registry, services)
+        assert deps[0].status == DependencyStatus.DISABLED
+
+    def test_capability_dependency_conflict_when_multiple_active_providers(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "shared.read"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+        services = _FakeServiceRegistryFull(
+            capability_providers={"shared.read": [_FakeDescriptor("a"), _FakeDescriptor("b")]},
+            conflicts={"shared.read": ["a", "b"]},
+        )
+
+        deps = DependencyResolver.resolve("consumer", registry, services)
+        assert deps[0].status == DependencyStatus.CONFLICT
+
+    def test_capability_dependency_incompatible_version(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "version_range": ">=2.0.0"},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+        services = _FakeServiceRegistryFull(
+            {"aws.cost.read": [_FakeDescriptor("aws_cost_service", service_version="1.0.0")]})
+
+        deps = DependencyResolver.resolve("consumer", registry, services)
+        assert deps[0].status == DependencyStatus.INCOMPATIBLE_VERSION
+
+    def test_capability_dependency_optional_unavailable_when_no_provider(self):
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "required": False},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        deps = DependencyResolver.resolve("consumer", registry, _FakeServiceRegistryFull())
+        assert deps[0].status == DependencyStatus.OPTIONAL_UNAVAILABLE
+
+    def test_unknown_module_returns_empty_list(self):
+        from app.dependency_engine.resolver import DependencyResolver
+
+        registry = _AllEntriesRegistry([])
+        deps = DependencyResolver.resolve("ghost", registry, _FakeServiceRegistryFull())
+        assert deps == []

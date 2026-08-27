@@ -9,10 +9,12 @@ from app.dependency_engine.models import Dependency, DependencyStatus, TargetTyp
 from app.dependency_engine.parser import DependencyParser, DependencyParseError
 from app.dependency_engine.validator import DependencyCheck, DependencyValidator
 from app.dependency_engine.graph import DependencyGraph, Edge
+from app.dependency_engine.resolver import DependencyResolver
 
 __all__ = [
     "Dependency", "DependencyStatus", "TargetType",
     "DependencyParser", "DependencyParseError",
     "DependencyCheck", "DependencyValidator",
     "DependencyGraph", "Edge",
+    "DependencyResolver",
 ]
