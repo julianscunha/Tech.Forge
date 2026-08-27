@@ -396,3 +396,14 @@ class TestServicesAPI:
         resp = client.get("/api/v1/services/capabilities/ghost.capability")
         assert resp.status_code == 200
         assert resp.json() == []
+
+
+class TestDocsContractsExposeCapabilities:
+    """Fase 7's /docs/contracts route (consumida pelo Developer Center) deve
+    carregar o campo capabilities novo da Fase 8 — sem isso o frontend nao
+    consegue exibir capabilities no ServiceContractPanel."""
+
+    def test_docs_contracts_include_capabilities(self, client):
+        resp = client.get("/api/v1/docs/contracts/hello_world")
+        assert resp.status_code == 200
+        assert resp.json()["capabilities"] == ["hello_world.ping", "hello_world.info"]

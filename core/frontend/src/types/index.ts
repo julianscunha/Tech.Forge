@@ -250,6 +250,21 @@ export interface ServiceContract {
   version:      string
   exports:      ServiceExport[]
   dependencies: string[]
+  capabilities: string[]
+}
+
+// ── Fase 8 — Service Registry ───────────────────────────────────────────────
+
+export type ServiceStatus = 'REGISTERED' | 'ACTIVE' | 'UNAVAILABLE' | 'DISABLED' | 'FAILED' | 'REMOVED'
+
+export interface ServiceDescriptor {
+  service_id:      string
+  module_id:       string
+  module_version:  string
+  service_version: string
+  capabilities:    string[]
+  status:          ServiceStatus
+  contract:        ServiceContract | null
 }
 
 export interface DocSummary {

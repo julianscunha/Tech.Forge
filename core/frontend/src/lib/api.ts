@@ -141,3 +141,13 @@ export const completenessApi = {
   all:  () => request<CompletenessReport[]>('/docs/completeness'),
   byModule: (moduleId: string) => request<CompletenessReport>(`/docs/completeness/${moduleId}`),
 }
+
+// ── Fase 8 — Service Registry ───────────────────────────────────────────────
+
+import type { ServiceDescriptor } from '@/types'
+
+export const servicesApi = {
+  list:         () => request<ServiceDescriptor[]>('/services'),
+  get:          (serviceId: string) => request<ServiceDescriptor>(`/services/${serviceId}`),
+  capabilities: () => request<Record<string, string[]>>('/services/capabilities'),
+}

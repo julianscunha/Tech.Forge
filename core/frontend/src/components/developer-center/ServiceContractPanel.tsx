@@ -1,13 +1,36 @@
-import { ChevronDown, ChevronRight, Code2, ArrowRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Code2, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { ServiceContract } from '@/types'
+import type { ServiceContract, ServiceStatus } from '@/types'
 
 interface Props {
   contract: ServiceContract
+  status?: ServiceStatus
 }
 
-export function ServiceContractPanel({ contract }: Props) {
+const STATUS_STYLE: Record<ServiceStatus, { icon: typeof CheckCircle2; className: string }> = {
+  ACTIVE:      { icon: CheckCircle2,  className: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]' },
+  REGISTERED:  { icon: CheckCircle2,  className: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]' },
+  DISABLED:    { icon: AlertTriangle, className: 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]' },
+  UNAVAILABLE: { icon: AlertTriangle, className: 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]' },
+  FAILED:      { icon: XCircle,       className: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]' },
+  REMOVED:     { icon: XCircle,       className: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]' },
+}
+
+function ServiceStatusBadge({ status }: { status: ServiceStatus }) {
+  const { icon: Icon, className } = STATUS_STYLE[status]
+  return (
+    <span className={cn(
+      'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium',
+      className,
+    )}>
+      <Icon size={10} />
+      {status}
+    </span>
+  )
+}
+
+export function ServiceContractPanel({ contract, status }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -17,11 +40,26 @@ export function ServiceContractPanel({ contract }: Props) {
           <span className="text-sm font-semibold text-[hsl(var(--text))]">
             {contract.service_id}
           </span>
+          {status && <ServiceStatusBadge status={status} />}
           <span className="text-xs font-mono text-[hsl(var(--text-subtle))] ml-auto">
             v{contract.version}
           </span>
         </div>
         <p className="text-xs text-[hsl(var(--text-muted))] mb-3">{contract.description}</p>
+
+        {contract.capabilities.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-[10px] text-[hsl(var(--text-subtle))] uppercase tracking-wide font-medium">
+              Capabilities:
+            </span>
+            {contract.capabilities.map(cap => (
+              <span key={cap} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono
+                bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]">
+                {cap}
+              </span>
+            ))}
+          </div>
+        )}
 
         {contract.dependencies.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Boxes, LayoutGrid, Server, Database, RefreshCw, AlertCircle } from 'lucide-react'
-import { platformApi } from '@/lib/api'
+import { Boxes, LayoutGrid, Server, Database, RefreshCw, AlertCircle, Plug } from 'lucide-react'
+import { platformApi, servicesApi } from '@/lib/api'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import type { PlatformStatus } from '@/types'
@@ -12,6 +12,7 @@ export function DashboardPage() {
   const [status, setStatus] = useState<PlatformStatus | null>(null)
   const [loadState, setLoadState] = useState<LoadState>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [serviceCounts, setServiceCounts] = useState<{ active: number; unavailable: number } | null>(null)
 
   const fetchStatus = async () => {
     setLoadState('loading')
@@ -24,6 +25,13 @@ export function DashboardPage() {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
       setLoadState('error')
     }
+    try {
+      const services = await servicesApi.list()
+      setServiceCounts({
+        active: services.filter(s => s.status === 'ACTIVE').length,
+        unavailable: services.filter(s => s.status !== 'ACTIVE').length,
+      })
+    } catch { setServiceCounts(null) }
   }
 
   useEffect(() => {
@@ -132,6 +140,15 @@ export function DashboardPage() {
               icon={LayoutGrid}
               description="Registradas no core"
             />
+            {serviceCounts && (
+              <StatCard
+                label="Serviços Ativos"
+                value={serviceCounts.active}
+                icon={Plug}
+                description={serviceCounts.unavailable > 0
+                  ? `${serviceCounts.unavailable} indisponível(is)` : undefined}
+              />
+            )}
           </div>
         </>
       )}

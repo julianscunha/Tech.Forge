@@ -4,12 +4,12 @@ import {
   Package, Zap, ChevronRight, Download, RefreshCw,
   Store, LayoutGrid, ShieldCheck,
 } from 'lucide-react'
-import { docsApi } from '@/lib/api'
+import { docsApi, servicesApi } from '@/lib/api'
 import { MarkdownRenderer } from '@/components/developer-center/MarkdownRenderer'
 import { DocSearch } from '@/components/developer-center/DocSearch'
 import { ServiceContractPanel } from '@/components/developer-center/ServiceContractPanel'
 import { cn } from '@/lib/utils'
-import type { DocEntryMeta, DocEntryFull, ServiceContract } from '@/types'
+import type { DocEntryMeta, DocEntryFull, ServiceContract, ServiceStatus } from '@/types'
 
 // ── Sidebar config ────────────────────────────────────────────────────────────
 
@@ -41,6 +41,7 @@ export function DeveloperCenterPage() {
   const [articles,        setArticles]        = useState<DocEntryMeta[]>([])
   const [selectedArticle, setSelectedArticle] = useState<DocEntryFull | null>(null)
   const [contracts,       setContracts]       = useState<ServiceContract[]>([])
+  const [serviceStatus,   setServiceStatus]   = useState<Record<string, ServiceStatus>>({})
   const [loading,         setLoading]         = useState(false)
   const [exporting,       setExporting]       = useState(false)
   const [reindexing,      setReindexing]      = useState(false)
@@ -53,18 +54,21 @@ export function DeveloperCenterPage() {
     setSelectedArticle(null)
     try {
       if (sectionId === 'service-module') {
-        const [arts, conts] = await Promise.all([
+        const [arts, conts, services] = await Promise.all([
           docsApi.list(section.category),
           docsApi.contracts(),
+          servicesApi.list().catch(() => []),
         ])
         setArticles(arts)
         setContracts(conts)
+        setServiceStatus(Object.fromEntries(services.map(s => [s.service_id, s.status])))
       } else {
         const arts = await docsApi.list(section.category)
         setArticles(arts)
         setContracts([])
+        setServiceStatus({})
       }
-    } catch { setArticles([]); setContracts([]) }
+    } catch { setArticles([]); setContracts([]); setServiceStatus({}) }
     finally { setLoading(false) }
   }, [])
 
@@ -296,7 +300,7 @@ export function DeveloperCenterPage() {
                       <p className="text-xs text-[hsl(var(--text-muted))] mb-6">
                         Módulo: <code className="font-mono text-[hsl(var(--accent))]">{selectedArticle.module_id}</code>
                       </p>
-                      <ServiceContractPanel contract={contract} />
+                      <ServiceContractPanel contract={contract} status={serviceStatus[contract.service_id]} />
                     </>
                   ) : null
                 })()

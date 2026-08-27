@@ -57,6 +57,7 @@ class ServiceContractRead(BaseModel):
     version:      str
     exports:      list[ServiceExportRead]
     dependencies: list[str]
+    capabilities: list[str]
 
 
 class DocSummary(BaseModel):
@@ -191,6 +192,7 @@ def _contract_to_read(c) -> ServiceContractRead:
         description=c.description,
         version=c.version,
         dependencies=c.dependencies,
+        capabilities=c.capabilities,
         exports=[
             ServiceExportRead(
                 name=e.name, description=e.description,
