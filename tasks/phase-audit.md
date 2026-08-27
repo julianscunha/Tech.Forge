@@ -12,7 +12,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 4 | Marketplace & Package Manager | ✅ fechada | ciclo activate/deactivate com lazy loading, source model, SDK notifications→Core; ver tasks/phase-04-report.md |
 | 5 | Developer Center & Doc Engine | ✅ fechada | CLI `docs list/search/get/export-context`; help contextual (context_id + UI); versionamento documental — ver tasks/phase-05-report.md |
 | 6 | Launcher & Runtime | ✅ fechada | modo Desktop (backend serve dist/, zero node); `techforge logs`/`dev`; runtime status c/ uptime+DEGRADED — ver tasks/phase-06-report.md |
-| 7 | Documentation Compliance Checker | ✅ fechada | CLI validate-module c/ compliance (§12), notificações (§15), DoD no ai-context (§17) — docs reorganizados (e782f0f) |
+| 7 | Documentation Compliance Checker | ✅ fechada | CLI validate-module c/ compliance (§12), notificações (§15), DoD no ai-context (§17), quality gate §9 (TODO/conteúdo vazio) e exemplo verificável §10 (hello_world+veeam_m365) — ver tasks/phase-07-report.md |
 | 8 | Service Registry | ❌ | `app/services/registry.py` é CRUD de Category/Module, não Service Registry |
 | 8.1 | Dependency Governance | ❌ | sem dependency graph/resolução; manifest não valida dependências |
 | 9 | Module Runtime Execution | ⚠️ mínimo | só runtime status + eventos startup/shutdown (fundação Fase 6) |

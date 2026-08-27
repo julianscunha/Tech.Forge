@@ -23,12 +23,45 @@ Service modules additionally require all three example tiers:
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 from app.doc_engine.api_yaml_parser import APIYamlParser
+from app.doc_engine.markdown_parser import _parse_frontmatter
 from app.doc_engine.models import ServiceContract, ServiceExport
+
+_HEADING_RE = re.compile(r"^#{1,6}[^\n]*$", re.MULTILINE)
+_TODO_RE = re.compile(r"\bTODO\b", re.IGNORECASE)
+
+
+def _quality_checks(path: Path, label: str, min_body_chars: int) -> list[DoDCheck]:
+    """
+    §9 content-quality checks for one markdown doc: a required check that the
+    body (frontmatter and headings stripped) has substantive content, plus a
+    non-blocking warning if it still contains an unresolved TODO.
+    """
+    if not path.exists():
+        return []
+
+    raw = path.read_text(encoding="utf-8")
+    _, body = _parse_frontmatter(raw)
+    body = _HEADING_RE.sub("", body).strip()
+
+    checks = [DoDCheck(
+        f"{label}: has content", len(body) >= min_body_chars, True,
+        f"{len(body)} char(s) of body content" if len(body) >= min_body_chars
+        else f"only a heading/placeholder — needs at least {min_body_chars} char(s) of real content",
+    )]
+
+    if _TODO_RE.search(raw):
+        checks.append(DoDCheck(
+            f"{label}: no unresolved TODO", False, False,
+            "contains an unresolved TODO — should be resolved before publishing",
+        ))
+
+    return checks
 
 
 # ── Result model ──────────────────────────────────────────────────────────────
@@ -183,12 +216,13 @@ class DocCompletenessChecker:
         # ── 2. Documentation ──────────────────────────────────────────────────
         docs_dir = module_path / "docs"
         overview = docs_dir / "overview.md"
-        overview_ok = overview.exists() and len(overview.read_text(encoding="utf-8").strip()) > 40
+        overview_ok = overview.exists()
         report.checks.append(DoDCheck(
             "Documentation: overview.md", overview_ok, True,
-            "docs/overview.md present and non-trivial" if overview_ok
-            else "docs/overview.md missing or too short (<40 chars)",
+            "docs/overview.md present" if overview_ok
+            else "docs/overview.md missing",
         ))
+        report.checks.extend(_quality_checks(overview, "Documentation: overview.md", min_body_chars=40))
 
         # ── 3. Contract — required for service modules, recommended otherwise ─
         contract_path = docs_dir / "contracts" / "api.yaml"
@@ -214,6 +248,8 @@ class DocCompletenessChecker:
             "docs/examples/basic.md present" if basic_exists
             else "docs/examples/basic.md missing — at least one example is required",
         ))
+        report.checks.extend(_quality_checks(
+            examples_dir / "basic.md", "Example: basic.md", min_body_chars=1))
 
         # Service modules require all three tiers
         for tier in ("advanced.md", "integration.md"):
@@ -224,5 +260,7 @@ class DocCompletenessChecker:
                 else f"docs/examples/{tier} missing"
                      + (" — required for service modules" if is_service else " (recommended)"),
             ))
+            report.checks.extend(_quality_checks(
+                examples_dir / tier, f"Example: {tier}", min_body_chars=1))
 
         return report

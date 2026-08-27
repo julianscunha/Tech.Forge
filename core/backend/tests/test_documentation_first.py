@@ -218,6 +218,49 @@ class TestCompletenessServiceModules:
         assert advanced_check.required is False
 
 
+# ── Content quality (§9 — presence isn't enough) ──────────────────────────────
+
+class TestContentQuality:
+
+    def test_empty_overview_fails(self, tmp_path):
+        mod = make_module(tmp_path, "app_mod")
+        (mod / "docs" / "overview.md").write_text("", encoding="utf-8")
+        report = DocCompletenessChecker.check(mod, "application")
+        assert not report.is_complete
+
+    def test_overview_with_only_heading_fails(self, tmp_path):
+        mod = make_module(tmp_path, "app_mod")
+        (mod / "docs" / "overview.md").write_text("# Test Module\n", encoding="utf-8")
+        report = DocCompletenessChecker.check(mod, "application")
+        assert not report.is_complete
+
+    def test_overview_with_frontmatter_and_real_content_passes(self, tmp_path):
+        mod = make_module(tmp_path, "app_mod")
+        (mod / "docs" / "overview.md").write_text(
+            "---\ntitle: Test\n---\n\n# Test Module\n\n"
+            "This module does a real thing and here is how to use it in practice.",
+            encoding="utf-8",
+        )
+        report = DocCompletenessChecker.check(mod, "application")
+        assert report.is_complete, report.missing
+
+    def test_overview_with_unresolved_todo_does_not_block_completeness(self, tmp_path):
+        mod = make_module(tmp_path, "app_mod")
+        (mod / "docs" / "overview.md").write_text(
+            "# Test Module\n\nThis is a sufficiently long overview.\n\nTODO: finish this section.",
+            encoding="utf-8",
+        )
+        report = DocCompletenessChecker.check(mod, "application")
+        assert report.is_complete
+        assert any("TODO" in c.detail for c in report.checks if not c.passed)
+
+    def test_empty_basic_example_fails(self, tmp_path):
+        mod = make_module(tmp_path, "app_mod")
+        (mod / "docs" / "examples" / "basic.md").write_text("## Objetivo\n", encoding="utf-8")
+        report = DocCompletenessChecker.check(mod, "application")
+        assert not report.is_complete
+
+
 # ── Contract completeness validation ──────────────────────────────────────────
 
 class TestContractCompleteness:
@@ -415,6 +458,19 @@ class TestRealModulesCompliance:
         checks = validate_contract_completeness(contract)
         failures = [c for c in checks if not c.passed]
         assert not failures, [c.detail for c in failures]
+
+    def test_hello_world_ping_matches_documented_example(self):
+        """The basic.md example output must match what the real endpoint returns."""
+        import asyncio, importlib.util
+
+        backend_path = ROOT / "modules" / "installed" / "hello_world" / "backend" / "main.py"
+        spec = importlib.util.spec_from_file_location("hello_world_main", backend_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        result = asyncio.run(mod.ping())
+        # As documented in docs/examples/basic.md
+        assert result == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
 
     def test_veeam_m365_calculate_storage_matches_documented_example(self):
         """The basic.md example output must match what the real function returns."""
