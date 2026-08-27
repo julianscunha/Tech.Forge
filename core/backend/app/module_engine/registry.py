@@ -47,6 +47,9 @@ class ModuleEntry:
     errors:       list[str]  = field(default_factory=list)
     warnings:     list[str]  = field(default_factory=list)
 
+    # Module type (Fase 8 §5) — "application" | "service"
+    module_type: str = "application"
+
     # Compatibility window
     platform_min_version: str = "0.0.0"
     platform_max_version: str = "999.999.999"
@@ -87,6 +90,7 @@ class ModuleEntry:
             install_date=datetime.utcnow(),
             errors=errors,
             warnings=warnings,
+            module_type=manifest.module_type,
             platform_min_version=manifest.platform_min_version,
             platform_max_version=manifest.platform_max_version,
             entry_backend=manifest.entry_backend,

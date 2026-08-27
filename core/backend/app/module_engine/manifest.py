@@ -48,6 +48,9 @@ class ParsedManifest:
     icon: str          # lucide-react icon name — e.g. "shield-check", "database"
     order: int         # display order within category/vendor group (lower = first)
 
+    # ── Module type (Fase 8 §5) — "application" | "service" ──────────────────
+    module_type: str = "application"
+
     # ── Version constraints ───────────────────────────────────────────────────
     platform_min_version: str = "0.0.0"
     platform_max_version: str = "999.999.999"
@@ -251,6 +254,7 @@ class ManifestParser:
             entry_frontend=str(raw["entry_frontend"]).strip(),
             icon=icon_value,
             order=order_value,
+            module_type=str(raw.get("module_type", "application")).strip().lower(),
             color=color_value,
             platform_min_version=platform_min,
             platform_max_version=platform_max,

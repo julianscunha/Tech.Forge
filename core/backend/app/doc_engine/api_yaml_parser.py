@@ -8,6 +8,7 @@ Expected api.yaml format:
     description: What this service does
     version: 1.0.0
     dependencies: [other_service]
+    capabilities: [my_service.read, my_service.summary]
     exports:
       - name: my_function
         description: What it does
@@ -85,6 +86,7 @@ class APIYamlParser:
         description = str(raw.get("description", "")).strip()
         version = str(raw.get("version", "1.0.0")).strip()
         dependencies = list(raw.get("dependencies", []))
+        capabilities = [str(c) for c in raw.get("capabilities", [])]
 
         exports: list[ServiceExport] = []
         for exp in raw.get("exports", []):
@@ -114,5 +116,6 @@ class APIYamlParser:
             version=version,
             exports=exports,
             dependencies=dependencies,
+            capabilities=capabilities,
             raw=raw,
         )

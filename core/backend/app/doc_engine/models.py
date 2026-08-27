@@ -91,4 +91,5 @@ class ServiceContract:
     version:     str = "1.0.0"
     exports:     list[ServiceExport] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
+    capabilities: list[str] = field(default_factory=list)
     raw:         dict = field(default_factory=dict)
