@@ -101,9 +101,15 @@ duplicidade rejeitada; `techforge validate-module` mostra os checks novos.
   `service_registry.find_capability()`).
 - `detect_cycles() -> list[list[str]]` (DFS, caminho completo do ciclo).
 - `topological_order()` pra ordem de ativação (§10).
+- `export_mermaid() -> str`: serializa as mesmas arestas em memória como
+  `flowchart TD` (nó por módulo, aresta rotulada module/capability,
+  destaque visual pra arestas em ciclo) — decisão do usuário: preferir isso
+  a texto puro (§22 permite; a spec só *exige* o mínimo textual/hierárquico).
 
 **Aceite:** grafo sem ciclo retorna ordem válida; grafo com A→B→C→A detecta
-o ciclo e devolve o caminho.
+o ciclo e devolve o caminho; `export_mermaid()` produz sintaxe válida
+(testar com módulos reais em `tmp_path`, incluir teste que o ciclo aparece
+destacado no output).
 
 ### Slice 4 — Resolver (TDD) — §7/§8/§15/§23
 - `dependency_engine/resolver.py::DependencyResolver.resolve(module_id) ->
@@ -144,21 +150,30 @@ obrigatória ativa normalmente; tentar desativar Provider com Consumer ativo
 ### Slice 6 — API + CLI (TDD) — §25/§26
 - Rotas: `GET /api/v1/modules/{id}/dependencies`,
   `/api/v1/modules/{id}/dependents`, `GET /api/v1/dependencies/validate`,
-  `GET /api/v1/dependencies/graph`.
+  `GET /api/v1/dependencies/graph` (retorna `{"mermaid": "flowchart TD\n..."}`
+  — texto Mermaid pronto pra renderizar, não uma estrutura genérica de nós).
 - CLI: `techforge modules dependencies <id>`, `dependents <id>`,
-  `validate-dependencies`, `graph` — mesmo padrão HTTP-only de `services.py`.
+  `validate-dependencies`, `graph` (imprime o Mermaid bruto — útil pra colar
+  num artifact/gist/README) — mesmo padrão HTTP-only de `services.py`.
 
-**Aceite:** rotas e comandos testados (schema Pydantic próprio, CliRunner).
+**Aceite:** rotas e comandos testados (schema Pydantic próprio, CliRunner);
+o Mermaid retornado é válido (mesmo teste de sintaxe do Slice 3).
 
 ### Slice 7 — Frontend + Developer Center + AI Context + regra final
 - `ModuleDetailPanel.tsx`: seções Dependencies (com resolução) / Dependents
   / Status (badge `BLOCKED` novo, mesmo padrão de `ModuleStatusBadge.tsx`).
-- Visualização hierárquica textual do grafo (§22) — sem lib de grafo nova.
+- **Grafo visual**: renderizar o Mermaid de `/dependencies/graph` na UI
+  (Developer Center, seção nova "Dependency Graph"). Confirmado: o
+  frontend hoje **não tem** nenhuma lib de Mermaid — será a única
+  dependência nova do frontend nesta fase (`npm install mermaid`, padrão
+  de mercado, renderiza texto→SVG, sem canvas/D3/grafo pesado).
 - `docs/developer-center/core/dependency-governance.md` (novo): como
   declarar, module vs capability dependency, direção, required/optional,
-  ranges, conflitos, ciclos, impacto no lifecycle.
+  ranges, conflitos, ciclos, impacto no lifecycle — inclui um diagrama
+  Mermaid de exemplo gerado a partir de módulos reais de teste.
 - `AIContextExporter`: seção "Dependency Governance" (mesmo padrão de
-  "Service Contracts").
+  "Service Contracts"), incluindo o Mermaid do grafo real da instalação —
+  uma IA lendo o AI Context já visualiza a topologia real, não só texto.
 - Teste integrado completo do §30 (Provider + Consumer em `tmp_path`):
   install → resolve → activate (ordem correta) → tentar desativar Provider
   → bloqueado → desativar Consumer → desativar Provider → permitido →
