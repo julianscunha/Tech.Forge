@@ -20,7 +20,7 @@ from app.main import app
 from app.module_engine.manifest import ManifestParser
 from app.module_engine.registry import ModuleEntry, ModuleStatus
 from app.doc_engine.api_yaml_parser import APIYamlParser
-from app.doc_engine.models import ServiceContract
+from app.doc_engine.models import ServiceContract, ServiceExport
 from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
 from app.service_registry.registry import ServiceRegistry
 
@@ -274,3 +274,83 @@ class TestServiceRegistryRealModules:
         r2 = client.post("/api/v1/marketplace/activate/hello_world")
         assert r2.status_code == 200, r2.text
         assert service_registry.find_by_module("hello_world").status == ServiceStatus.ACTIVE
+
+
+# ── Slice 3 — Invocação + validação de argumentos + erros ────────────────────
+
+class TestInvoke:
+
+    def test_invoke_hello_world_ping_returns_documented_result(self, client):
+        from app.service_registry.invoker import invoke
+        result = invoke("hello_world", "ping")
+        assert result == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
+
+    def test_invoke_veeam_calculate_storage_matches_documented_example(self, client):
+        from app.service_registry.invoker import invoke
+        result = invoke("veeam_m365", "calculate_storage", users=500, mailbox_quota_gb=50)
+        assert result["total_gb"] == 25000.0
+        assert result["recommended_repo_gb"] == 27500.0
+
+    def test_invoke_unknown_service_raises_service_not_found(self, client):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import ServiceNotFoundError
+        with pytest.raises(ServiceNotFoundError):
+            invoke("ghost_service", "ping")
+
+    def test_invoke_unknown_export_raises_capability_not_found(self, client):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import CapabilityNotFoundError
+        with pytest.raises(CapabilityNotFoundError):
+            invoke("hello_world", "does_not_exist")
+
+    def test_invoke_missing_required_argument_raises_invalid_arguments(self, client):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import InvalidArgumentsError
+        with pytest.raises(InvalidArgumentsError):
+            invoke("veeam_m365", "calculate_storage", mailbox_quota_gb=50)  # missing users
+
+    def test_invoke_unknown_argument_raises_invalid_arguments(self, client):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import InvalidArgumentsError
+        with pytest.raises(InvalidArgumentsError):
+            invoke("veeam_m365", "calculate_storage", users=1, mailbox_quota_gb=1, bogus=1)
+
+    def test_invoke_disabled_service_raises_service_disabled(self, client):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import ServiceDisabledError
+
+        client.post("/api/v1/marketplace/activate/hello_world")  # clean baseline
+        client.post("/api/v1/marketplace/deactivate/hello_world")
+        try:
+            with pytest.raises(ServiceDisabledError):
+                invoke("hello_world", "ping")
+        finally:
+            client.post("/api/v1/marketplace/activate/hello_world")
+
+    def test_invoke_execution_failure_does_not_leak_internal_traceback(self, tmp_path, monkeypatch):
+        """A função invocada explode — o chamador só vê o erro tipado, sem stack trace interno."""
+        from app.service_registry.registry import ServiceRegistry
+        from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
+        from app.service_registry.errors import ServiceExecutionFailedError
+        import app.service_registry.invoker as invoker_mod
+
+        contract = ServiceContract(
+            service_id="broken", module_id="broken_mod", description="d", version="1.0.0",
+            exports=[ServiceExport(name="explode", description="d", parameters=[])],
+        )
+        descriptor = ServiceDescriptor(
+            service_id="broken", module_id="broken_mod", module_version="1.0.0",
+            service_version="1.0.0", contract=contract, status=ServiceStatus.ACTIVE,
+        )
+        fake_registry = ServiceRegistry()
+        fake_registry._services["broken"] = descriptor
+        monkeypatch.setattr(invoker_mod, "service_registry", fake_registry)
+
+        def _boom(**kwargs):
+            raise RuntimeError("some internal secret detail")
+
+        monkeypatch.setattr(invoker_mod, "_load_export_callable", lambda *a, **k: _boom)
+
+        with pytest.raises(ServiceExecutionFailedError) as exc_info:
+            invoker_mod.invoke("broken", "explode")
+        assert "some internal secret detail" not in str(exc_info.value)
