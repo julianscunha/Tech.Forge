@@ -311,3 +311,117 @@ class TestCLIDependencyGovernance:
         report = ModuleCLIValidator.validate(mod)
         dep_checks = [c for c in report.checks if c.name.startswith("§8.1")]
         assert dep_checks == []
+
+
+# ── DependencyGraph (§6/§27) ───────────────────────────────────────────────────
+
+class _FakeServiceRegistry:
+    def __init__(self, capability_providers: dict | None = None):
+        self._capability_providers = capability_providers or {}
+
+    def find_capability(self, capability: str):
+        return self._capability_providers.get(capability, [])
+
+
+class _FakeProvider:
+    def __init__(self, module_id: str):
+        self.module_id = module_id
+
+
+def _entry_with_deps(module_id: str, dependencies: list[dict],
+                     module_type: str = "application"):
+    entry = _entry(module_id, module_type)
+    entry.manifest_raw = {"dependencies": dependencies}
+    return entry
+
+
+class _AllEntriesRegistry:
+    def __init__(self, entries: list):
+        self._entries = {e.module_id: e for e in entries}
+
+    def all(self):
+        return list(self._entries.values())
+
+    def get(self, module_id):
+        return self._entries.get(module_id)
+
+
+class TestDependencyGraph:
+
+    def test_module_dependency_becomes_edge(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a, b]), _FakeServiceRegistry())
+
+        assert any(e.source == "a" and e.target == "b" and e.kind == "module"
+                  for e in graph.edges)
+
+    def test_capability_dependency_resolves_to_provider_module(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+        services = _FakeServiceRegistry({"aws.cost.read": [_FakeProvider("aws_cost_service")]})
+        graph = DependencyGraph.build(registry, services)
+
+        assert any(e.source == "consumer" and e.target == "aws_cost_service"
+                  and e.kind == "capability" for e in graph.edges)
+
+    def test_no_dependencies_produces_no_edges(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a]), _FakeServiceRegistry())
+        assert graph.edges == []
+
+    def test_acyclic_graph_has_valid_topological_order(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [{"target": {"type": "module", "id": "c"}}])
+        c = _entry_with_deps("c", [])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a, b, c]), _FakeServiceRegistry())
+
+        order = graph.topological_order()
+        assert order.index("c") < order.index("b") < order.index("a")
+        assert graph.detect_cycles() == []
+
+    def test_cyclic_graph_detects_full_cycle_path(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [{"target": {"type": "module", "id": "c"}}])
+        c = _entry_with_deps("c", [{"target": {"type": "module", "id": "a"}}])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a, b, c]), _FakeServiceRegistry())
+
+        cycles = graph.detect_cycles()
+        assert len(cycles) == 1
+        cycle = cycles[0]
+        assert cycle[0] == cycle[-1]
+        assert {"a", "b", "c"} <= set(cycle)
+
+    def test_export_mermaid_produces_flowchart_syntax(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a, b]), _FakeServiceRegistry())
+
+        mermaid = graph.export_mermaid()
+        assert mermaid.startswith("flowchart TD")
+        assert "a -->|module| b" in mermaid
+
+    def test_export_mermaid_highlights_cycle_nodes(self):
+        from app.dependency_engine.graph import DependencyGraph
+
+        a = _entry_with_deps("a", [{"target": {"type": "module", "id": "b"}}])
+        b = _entry_with_deps("b", [{"target": {"type": "module", "id": "a"}}])
+        graph = DependencyGraph.build(_AllEntriesRegistry([a, b]), _FakeServiceRegistry())
+
+        mermaid = graph.export_mermaid()
+        assert "classDef cycle" in mermaid
+        assert "class a,b cycle" in mermaid
