@@ -13,6 +13,7 @@ import yaml
 
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
+sys.path.insert(0, str(ROOT / "cli"))
 
 from app.module_engine.manifest import ManifestParser
 from app.module_engine.enums import ModuleStatus
@@ -162,3 +163,151 @@ class TestDependencyVersionSatisfaction:
                          version_range=">=1.0.0,<2.0.0", required=True)
         assert not dep.satisfies_version("2.0.0")
         assert not dep.satisfies_version("0.9.0")
+
+
+# ── DependencyValidator (§17) ──────────────────────────────────────────────────
+
+def _entry(module_id: str, module_type: str, status: ModuleStatus = None):
+    from datetime import datetime
+    from app.module_engine.registry import ModuleEntry
+    return ModuleEntry(
+        module_id=module_id, name=module_id, version="1.0.0",
+        category="C", vendor="V", author="A", description="D",
+        status=status or ModuleStatus.INSTALLED, install_date=datetime.now(),
+        module_type=module_type,
+    )
+
+
+class _FakeModuleRegistry:
+    def __init__(self, entries: dict):
+        self._entries = entries
+
+    def get(self, module_id: str):
+        return self._entries.get(module_id)
+
+
+class TestDependencyValidator:
+
+    def test_valid_dependencies_all_pass(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "module", "id": "aws_sdk_service"},
+               "version_range": ">=1.0.0", "required": True}]
+        checks = DependencyValidator.validate("application", raw)
+        assert all(c.passed for c in checks)
+
+    def test_structurally_invalid_dependency_fails(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "bogus", "id": "x"}}]
+        checks = DependencyValidator.validate("application", raw)
+        assert any(not c.passed for c in checks)
+
+    def test_duplicate_target_fails(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [
+            {"target": {"type": "module", "id": "x"}, "required": True},
+            {"target": {"type": "module", "id": "x"}, "required": False},
+        ]
+        checks = DependencyValidator.validate("application", raw)
+        dup_checks = [c for c in checks if "duplicate" in c.name.lower()]
+        assert dup_checks and not dup_checks[0].passed
+
+    def test_no_duplicate_when_targets_differ(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [
+            {"target": {"type": "module", "id": "x"}},
+            {"target": {"type": "capability", "id": "x"}},  # same id, different type — not a dup
+        ]
+        checks = DependencyValidator.validate("application", raw)
+        dup_checks = [c for c in checks if "duplicate" in c.name.lower()]
+        assert not dup_checks
+
+    def test_service_depending_on_known_application_module_fails_direction(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "module", "id": "some_app"}}]
+        registry = _FakeModuleRegistry({"some_app": _entry("some_app", "application")})
+        checks = DependencyValidator.validate("service", raw, module_registry=registry)
+        dir_checks = [c for c in checks if "direction" in c.name.lower()]
+        assert dir_checks and not dir_checks[0].passed
+
+    def test_service_depending_on_known_service_module_passes_direction(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "module", "id": "other_service"}}]
+        registry = _FakeModuleRegistry({"other_service": _entry("other_service", "service")})
+        checks = DependencyValidator.validate("service", raw, module_registry=registry)
+        dir_checks = [c for c in checks if "direction" in c.name.lower()]
+        assert dir_checks and dir_checks[0].passed
+
+    def test_application_depending_on_application_does_not_fail_direction(self):
+        """Application -> Application nao e a regra proibida (so Service -> Application)."""
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "module", "id": "other_app"}}]
+        registry = _FakeModuleRegistry({"other_app": _entry("other_app", "application")})
+        checks = DependencyValidator.validate("application", raw, module_registry=registry)
+        dir_checks = [c for c in checks if "direction" in c.name.lower() and not c.passed]
+        assert not dir_checks
+
+    def test_direction_skipped_when_target_unknown(self):
+        """Sem registry ou alvo nao encontrado — nao da pra validar, nao falha."""
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "module", "id": "not_installed_yet"}}]
+        checks = DependencyValidator.validate("service", raw, module_registry=None)
+        dir_checks = [c for c in checks if "direction" in c.name.lower() and not c.passed]
+        assert not dir_checks
+
+    def test_capability_dependency_never_triggers_direction_check(self):
+        from app.dependency_engine.validator import DependencyValidator
+
+        raw = [{"target": {"type": "capability", "id": "aws.cost.read"}}]
+        checks = DependencyValidator.validate("service", raw)
+        dir_checks = [c for c in checks if "direction" in c.name.lower() and not c.passed]
+        assert not dir_checks
+
+
+# ── CLI integration — techforge validate-module ──────────────────────────────
+
+def _make_full_module(tmp: Path, module_id: str, module_type: str = "application",
+                      dependencies: list[dict] | None = None) -> Path:
+    mod = tmp / module_id
+    (mod / "backend").mkdir(parents=True)
+    (mod / "frontend").mkdir(parents=True)
+    (mod / "backend" / "main.py").write_text("router = None", encoding="utf-8")
+    (mod / "frontend" / "index.tsx").write_text(
+        "export const moduleConfig = {}\nexport default function() {}", encoding="utf-8")
+    write_manifest(mod, module_id, module_type, dependencies)
+    return mod
+
+
+class TestCLIDependencyGovernance:
+
+    def test_valid_dependency_passes_validation(self, tmp_path):
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        mod = _make_full_module(tmp_path, "app_mod", dependencies=[
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "required": False},
+        ])
+        report = ModuleCLIValidator.validate(mod)
+        dep_checks = [c for c in report.checks if c.name.startswith("§8.1")]
+        assert dep_checks
+        assert all(c.passed for c in dep_checks)
+
+    def test_structurally_invalid_dependency_fails_validation(self, tmp_path):
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        mod = _make_full_module(tmp_path, "app_mod", dependencies=[
+            {"target": {"type": "bogus", "id": "x"}},
+        ])
+        report = ModuleCLIValidator.validate(mod)
+        assert not report.passed
+
+    def test_no_dependencies_declared_does_not_add_checks(self, tmp_path):
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        mod = _make_full_module(tmp_path, "app_mod")
+        report = ModuleCLIValidator.validate(mod)
+        dep_checks = [c for c in report.checks if c.name.startswith("§8.1")]
+        assert dep_checks == []

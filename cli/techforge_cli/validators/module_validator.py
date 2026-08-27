@@ -227,6 +227,9 @@ class ModuleCLIValidator:
         # ── 12. §16 Documentation First Principle ──────────────────────────────
         ModuleCLIValidator._check_documentation_first(report, module_path, raw)
 
+        # ── 13. §8.1 Dependency Governance ──────────────────────────────────────
+        ModuleCLIValidator._check_dependency_governance(report, raw)
+
         return report
 
     @staticmethod
@@ -274,6 +277,31 @@ class ModuleCLIValidator:
             report.add(f"§16 Example: {tier}", exists,
                        f"docs/examples/{tier} present" if exists
                        else f"docs/examples/{tier} missing — required for service modules (module_type: service)")
+
+    @staticmethod
+    def _check_dependency_governance(report: ValidationReport, raw: dict) -> None:
+        """
+        §8.1 — Dependency Governance: estrutura, duplicidade e direção
+        (Service Module não pode depender de Application Module). Reusa
+        DependencyValidator — sem duplicar a lógica aqui.
+        """
+        dependencies = raw.get("dependencies") or []
+        if not dependencies:
+            return
+
+        module_type = str(raw.get("module_type", "application")).strip().lower()
+
+        module_registry = None
+        try:
+            from app.module_engine.registry import registry as module_registry
+        except Exception:
+            module_registry = None
+
+        from app.dependency_engine.validator import DependencyValidator
+        checks = DependencyValidator.validate(module_type, dependencies, module_registry=module_registry)
+        for c in checks:
+            report.add(f"§8.1 {c.name}", c.passed, c.detail,
+                       level="error" if c.required else "warning")
 
     @staticmethod
     def _check_contract_completeness(report: ValidationReport, contract_path: Path) -> None:
