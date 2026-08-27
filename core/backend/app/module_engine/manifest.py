@@ -74,6 +74,9 @@ class ParsedManifest:
     source_type: str = "local"
     source_location: Optional[str] = None
 
+    # ── Dependency Governance (Fase 8.1 §16) — raw, typed by DependencyParser ─
+    dependencies: list[dict] = field(default_factory=list)
+
     # ── Raw YAML — preserved for Developer Mode ─────────────────────────────
     raw: dict = field(default_factory=dict, repr=False)
 
@@ -263,5 +266,6 @@ class ManifestParser:
             **_parse_documentation_versioning(raw),
             signature=raw.get("signature") or None,
             checksum=raw.get("checksum") or None,
+            dependencies=list(raw.get("dependencies") or []),
             raw=raw,
         )
