@@ -113,3 +113,7 @@ do build já faz o type-check estrito.
   a suíte — a limpeza do registry na remoção está coberta unitariamente
   (`test_rebuild_clears_previous_state`, Slice 2) e pelo hook em
   `manager.py::remove()` → `_hot_reload()` → `sync_service_registry()`.
+- **Discovery em escala**: `/services` e `techforge services list` não têm
+  busca/filtro — com muitos módulos instalados, achar se uma capability já
+  existe exige ler a listagem inteira. Ver
+  `tasks/phase8-followup-capability-search.md`.
