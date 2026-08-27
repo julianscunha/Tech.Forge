@@ -14,11 +14,21 @@ import yaml
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
+from fastapi.testclient import TestClient
+
+from app.main import app
 from app.module_engine.manifest import ManifestParser
 from app.module_engine.registry import ModuleEntry, ModuleStatus
 from app.doc_engine.api_yaml_parser import APIYamlParser
 from app.doc_engine.models import ServiceContract
 from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
+from app.service_registry.registry import ServiceRegistry
+
+
+@pytest.fixture()
+def client():
+    with TestClient(app) as c:
+        yield c
 
 
 def write_manifest(mod: Path, module_id: str = "svc_mod", module_type: str | None = "service") -> None:
@@ -130,3 +140,137 @@ class TestServiceDescriptor:
         assert data["status"] == "ACTIVE"
         assert data["capabilities"] == ["aws.cost.read"]
         assert isinstance(data["contract"], dict)
+
+
+# ── Slice 2 — ServiceRegistry: rebuild / discovery / conflicts ───────────────
+
+def _module_entry(module_id, module_type="service", status=None):
+    from datetime import datetime
+    from app.module_engine.registry import ModuleEntry, ModuleStatus
+    return ModuleEntry(
+        module_id=module_id, name=module_id, version="1.0.0",
+        category="C", vendor="V", author="A", description="D",
+        status=status or ModuleStatus.INSTALLED, install_date=datetime.now(),
+        module_type=module_type,
+    )
+
+
+class _FakeIndexer:
+    def __init__(self, contracts: dict[str, ServiceContract]):
+        self._contracts = contracts
+
+    def get_contract(self, module_id):
+        return self._contracts.get(module_id)
+
+
+class TestServiceRegistryRebuild:
+
+    def test_registers_service_module_with_contract(self):
+        entry = _module_entry("aws_cost_service")
+        contract = ServiceContract(
+            service_id="aws.costs", module_id="aws_cost_service",
+            description="d", version="1.0.0", capabilities=["aws.cost.read"],
+        )
+        reg = ServiceRegistry()
+        reg.rebuild([entry], _FakeIndexer({"aws_cost_service": contract}))
+
+        descriptor = reg.find_service("aws.costs")
+        assert descriptor is not None
+        assert descriptor.status == ServiceStatus.ACTIVE
+        assert descriptor.capabilities == ["aws.cost.read"]
+
+    def test_skips_application_modules(self):
+        entry = _module_entry("some_app", module_type="application")
+        reg = ServiceRegistry()
+        reg.rebuild([entry], _FakeIndexer({}))
+        assert reg.list_services() == []
+
+    def test_service_module_without_contract_marked_failed(self):
+        entry = _module_entry("broken_service")
+        reg = ServiceRegistry()
+        reg.rebuild([entry], _FakeIndexer({}))
+        descriptor = reg.find_by_module("broken_service")
+        assert descriptor is not None
+        assert descriptor.status == ServiceStatus.FAILED
+
+    def test_disabled_module_yields_disabled_service(self):
+        from app.module_engine.registry import ModuleStatus
+        entry = _module_entry("aws_cost_service", status=ModuleStatus.DISABLED)
+        contract = ServiceContract(
+            service_id="aws.costs", module_id="aws_cost_service",
+            description="d", version="1.0.0",
+        )
+        reg = ServiceRegistry()
+        reg.rebuild([entry], _FakeIndexer({"aws_cost_service": contract}))
+        assert reg.find_service("aws.costs").status == ServiceStatus.DISABLED
+
+    def test_rebuild_clears_previous_state(self):
+        entry = _module_entry("aws_cost_service")
+        contract = ServiceContract(service_id="aws.costs", module_id="aws_cost_service",
+                                   description="d", version="1.0.0")
+        reg = ServiceRegistry()
+        reg.rebuild([entry], _FakeIndexer({"aws_cost_service": contract}))
+        assert len(reg.list_services()) == 1
+
+        reg.rebuild([], _FakeIndexer({}))
+        assert reg.list_services() == []
+
+
+class TestServiceRegistryDiscovery:
+
+    def _registry_with_two_services(self, same_capability=False):
+        e1 = _module_entry("svc_a")
+        e2 = _module_entry("svc_b")
+        cap = "shared.read" if same_capability else "svc_a.read"
+        c1 = ServiceContract(service_id="a", module_id="svc_a", description="d",
+                             version="1.0.0", capabilities=[cap])
+        c2 = ServiceContract(service_id="b", module_id="svc_b", description="d",
+                             version="1.0.0",
+                             capabilities=["shared.read"] if same_capability else ["svc_b.read"])
+        reg = ServiceRegistry()
+        reg.rebuild([e1, e2], _FakeIndexer({"svc_a": c1, "svc_b": c2}))
+        return reg
+
+    def test_find_capability_returns_providers(self):
+        reg = self._registry_with_two_services()
+        providers = reg.find_capability("svc_a.read")
+        assert [d.service_id for d in providers] == ["a"]
+
+    def test_list_capabilities_maps_capability_to_service_ids(self):
+        reg = self._registry_with_two_services()
+        caps = reg.list_capabilities()
+        assert caps["svc_a.read"] == ["a"]
+        assert caps["svc_b.read"] == ["b"]
+
+    def test_no_conflict_when_capabilities_differ(self):
+        reg = self._registry_with_two_services(same_capability=False)
+        assert reg.list_conflicts() == {}
+
+    def test_conflict_detected_when_two_active_services_share_capability(self):
+        reg = self._registry_with_two_services(same_capability=True)
+        conflicts = reg.list_conflicts()
+        assert set(conflicts["shared.read"]) == {"a", "b"}
+
+
+class TestServiceRegistryRealModules:
+    """Integração com o boot real da app (hello_world/veeam_m365)."""
+
+    def test_hello_world_registered_as_active_service(self, client):
+        from app.service_registry.registry import service_registry
+        descriptor = service_registry.find_by_module("hello_world")
+        assert descriptor is not None, service_registry.list_services()
+        assert descriptor.status == ServiceStatus.ACTIVE
+        assert descriptor.capabilities or descriptor.contract is not None
+
+    def test_deactivate_then_activate_updates_service_status(self, client):
+        from app.service_registry.registry import service_registry
+
+        client.post("/api/v1/marketplace/activate/hello_world")  # ensure clean baseline
+
+        r1 = client.post("/api/v1/marketplace/deactivate/hello_world")
+        assert r1.status_code == 200, r1.text
+        assert service_registry.find_by_module("hello_world").status == ServiceStatus.DISABLED
+
+        r2 = client.post("/api/v1/marketplace/activate/hello_world")
+        assert r2.status_code == 200, r2.text
+        assert service_registry.find_by_module("hello_world").status == ServiceStatus.ACTIVE

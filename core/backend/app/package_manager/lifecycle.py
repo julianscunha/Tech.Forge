@@ -87,6 +87,8 @@ async def deactivate_module(db: AsyncSession, module_id: str) -> dict:
     registry.set_status(module_id, ModuleStatus.DISABLED)
     _write_disabled_flag(module_id, True)
     await _set_db_enabled(db, module_id, False)
+    from app.service_registry import sync as sync_service_registry
+    sync_service_registry()
     operation_log.record("deactivate", module_id,
                          entry.version, "success", "Module deactivated")
 
@@ -123,6 +125,9 @@ async def activate_module(db: AsyncSession, module_id: str) -> dict:
         mount_module_routers(app)
     except Exception as exc:
         logger.warning("Hot mount after activation failed for %s: %s", module_id, exc)
+
+    from app.service_registry import sync as sync_service_registry
+    sync_service_registry()
 
     await _notify(db, "success", f"Módulo ativado: {entry.name}",
                   f"{module_id} v{entry.version} está ativo novamente.", module_id)

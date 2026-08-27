@@ -465,6 +465,9 @@ class PackageManager:
             from app.services.registry_sync import sync_from_request
             await sync_from_request()
 
+        from app.service_registry import sync as sync_service_registry
+        sync_service_registry()
+
         logger.info(
             "Hot reload: %d installed, %d invalid.",
             result.installed, result.invalid,

@@ -57,10 +57,18 @@ async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as db:
         await sync_registry_to_db(db)
 
+    # Fase 8 §26 — Discover Service Modules → Register Services
+    from app.service_registry import sync as sync_service_registry
+    sync_service_registry()
+
     # Phase 6 — Runtime: platform is READY
     await runtime.fire_startup("platform ready")
 
     yield
+
+    # Fase 8 §27 — stop accepting invocations, clear transient registry state
+    from app.service_registry import service_registry
+    service_registry.clear_transient_state()
 
     # Phase 6 — Runtime: coordinated shutdown
     await runtime.fire_shutdown("backend stopped")
