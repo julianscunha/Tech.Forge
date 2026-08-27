@@ -11,7 +11,12 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "if ($filePath -match '\\.py$') { ruff check --fix $filePath } elseif ($filePath -match '\\.(ts|tsx)$') { npx prettier --write $filePath }"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$input = [Console]::In.ReadLine() | ConvertFrom-Json; $fp = $input.tool_input.file_path; if ($fp -match '\\.py$') { ruff check --fix $fp } elseif ($fp -match '\\.(ts|tsx)$') { npx prettier --write $fp }\""
+          }
+        ]
       }
     ]
   }
