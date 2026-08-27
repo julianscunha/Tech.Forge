@@ -103,9 +103,37 @@ class ServiceRegistry:
 service_registry = ServiceRegistry()
 
 
-def sync() -> None:
-    """Rebuild the Service Registry from the current ModuleRegistry state."""
+async def _notify_conflicts(db) -> None:
+    """§17 — notifica (dedupe) capabilities disputadas por serviços ACTIVE."""
+    conflicts = service_registry.list_conflicts()
+    if not conflicts:
+        return
+
+    from sqlalchemy import select, func
+    from app.models.notifications import Notification
+    from app.services.notifications import NotificationService
+
+    title = "Capability conflict"
+    for capability, providers in conflicts.items():
+        message = f"Capability '{capability}' provided by: {', '.join(sorted(providers))}"
+        existing = await db.execute(
+            select(func.count(Notification.id)).where(
+                Notification.title == title, Notification.message == message))
+        if existing.scalar() == 0:
+            await NotificationService.create(db, level="warning", title=title, message=message)
+
+
+async def sync_with_notifications(module_entries, doc_indexer, db) -> None:
+    """Rebuild + notifica conflitos de capability (dedupe) — usa uma sessão existente."""
+    service_registry.rebuild(module_entries, doc_indexer)
+    await _notify_conflicts(db)
+
+
+async def sync() -> None:
+    """Rebuild the Service Registry from the current ModuleRegistry state, notifying conflicts."""
     from app.module_engine.registry import registry as module_registry
     from app.doc_engine import doc_indexer
+    from app.db.database import AsyncSessionLocal
 
-    service_registry.rebuild(module_registry.all(), doc_indexer)
+    async with AsyncSessionLocal() as db:
+        await sync_with_notifications(module_registry.all(), doc_indexer, db)

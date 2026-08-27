@@ -407,3 +407,56 @@ class TestDocsContractsExposeCapabilities:
         resp = client.get("/api/v1/docs/contracts/hello_world")
         assert resp.status_code == 200
         assert resp.json()["capabilities"] == ["hello_world.ping", "hello_world.info"]
+
+
+# ── Slice 6 — AI Context inclui capabilities/status ───────────────────────────
+
+class TestAIContextServiceRegistry:
+
+    def test_ai_context_includes_service_capabilities_and_status(self, client):
+        import asyncio
+        from app.service_registry import sync as sync_service_registry
+        asyncio.run(sync_service_registry())
+
+        resp = client.get("/api/v1/docs/export/ai-context")
+        assert resp.status_code == 200
+        text = resp.text
+        assert "hello_world.ping" in text
+        assert "**Status:** ACTIVE" in text
+
+
+class TestConflictNotification:
+
+    def test_conflict_notifies_once_with_dedupe(self, client, tmp_path, monkeypatch):
+        import asyncio
+        from app.module_engine.registry import ModuleEntry, ModuleStatus
+        from app.service_registry.registry import ServiceRegistry
+        import app.service_registry.registry as registry_mod
+
+        e1 = _module_entry("conflict_a")
+        e2 = _module_entry("conflict_b")
+        c1 = ServiceContract(service_id="a", module_id="conflict_a", description="d",
+                             version="1.0.0", capabilities=["shared.read"])
+        c2 = ServiceContract(service_id="b", module_id="conflict_b", description="d",
+                             version="1.0.0", capabilities=["shared.read"])
+        fake_indexer = _FakeIndexer({"conflict_a": c1, "conflict_b": c2})
+
+        reg = ServiceRegistry()
+        monkeypatch.setattr(registry_mod, "service_registry", reg)
+
+        async def _run():
+            from app.db.database import AsyncSessionLocal
+            from app.service_registry.registry import sync_with_notifications
+
+            async with AsyncSessionLocal() as db:
+                await sync_with_notifications([e1, e2], fake_indexer, db)
+                await sync_with_notifications([e1, e2], fake_indexer, db)  # repeat — must dedupe
+
+        before_count = client.get("/api/v1/notifications/unread-count").json()["count"]
+        asyncio.run(_run())
+        after_count = client.get("/api/v1/notifications/unread-count").json()["count"]
+        assert after_count == before_count + 1
+
+        notifs = client.get("/api/v1/notifications?limit=5").json()
+        assert any("shared.read" in (n.get("message") or "") for n in notifs)
+        client.post("/api/v1/notifications/read-all")

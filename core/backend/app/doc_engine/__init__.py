@@ -126,9 +126,11 @@ class AIContextExporter:
                 lines.append(entry.content)
                 lines.append("")
 
-        # ── Service contracts ─────────────────────────────────────────────────
+        # ── Service contracts (Fase 8 — Service Registry) ──────────────────────
         contracts = indexer.all_contracts()
         if contracts:
+            from app.service_registry.registry import service_registry
+
             lines.append("---")
             lines.append("## Service Contracts")
             lines.append("")
@@ -138,6 +140,13 @@ class AIContextExporter:
                 lines.append(f"**Version:** {contract.version}")
                 lines.append(f"**Description:** {contract.description}")
                 lines.append("")
+                descriptor = service_registry.find_service(contract.service_id)
+                if descriptor:
+                    lines.append(f"**Status:** {descriptor.status.value}")
+                    lines.append("")
+                if contract.capabilities:
+                    lines.append(f"**Capabilities:** {', '.join(contract.capabilities)}")
+                    lines.append("")
                 if contract.dependencies:
                     lines.append(f"**Dependencies:** {', '.join(contract.dependencies)}")
                     lines.append("")

@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
 
     # Fase 8 §26 — Discover Service Modules → Register Services
     from app.service_registry import sync as sync_service_registry
-    sync_service_registry()
+    await sync_service_registry()
 
     # Phase 6 — Runtime: platform is READY
     await runtime.fire_startup("platform ready")
