@@ -2,6 +2,7 @@ service_id: hello_world
 description: Reference module — exposes a ping/info endpoint for architecture validation.
 version: 1.0.0
 dependencies: []
+capabilities: [hello_world.ping, hello_world.info]
 
 exports:
   - name: ping

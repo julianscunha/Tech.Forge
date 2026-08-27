@@ -354,3 +354,45 @@ class TestInvoke:
         with pytest.raises(ServiceExecutionFailedError) as exc_info:
             invoker_mod.invoke("broken", "explode")
         assert "some internal secret detail" not in str(exc_info.value)
+
+
+# ── Slice 4 — API /services* ──────────────────────────────────────────────────
+
+class TestServicesAPI:
+
+    def test_list_services_includes_hello_world(self, client):
+        resp = client.get("/api/v1/services")
+        assert resp.status_code == 200
+        ids = [s["service_id"] for s in resp.json()]
+        assert "hello_world" in ids
+
+    def test_get_service_by_id(self, client):
+        resp = client.get("/api/v1/services/hello_world")
+        assert resp.status_code == 200
+        assert resp.json()["module_id"] == "hello_world"
+
+    def test_get_unknown_service_404(self, client):
+        resp = client.get("/api/v1/services/ghost_service")
+        assert resp.status_code == 404
+
+    def test_get_service_contract(self, client):
+        resp = client.get("/api/v1/services/hello_world/contract")
+        assert resp.status_code == 200
+        names = [e["name"] for e in resp.json()["exports"]]
+        assert "ping" in names
+
+    def test_list_capabilities(self, client):
+        resp = client.get("/api/v1/services/capabilities")
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), dict)
+
+    def test_get_capability_providers(self, client):
+        resp = client.get("/api/v1/services/capabilities/hello_world.ping")
+        assert resp.status_code == 200
+        providers = [s["service_id"] for s in resp.json()]
+        assert "hello_world" in providers
+
+    def test_get_unknown_capability_returns_empty_list(self, client):
+        resp = client.get("/api/v1/services/capabilities/ghost.capability")
+        assert resp.status_code == 200
+        assert resp.json() == []

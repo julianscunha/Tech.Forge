@@ -2,6 +2,7 @@ service_id: veeam_m365
 description: Veeam M365 Sizing — calcula capacidade de backup para Microsoft 365.
 version: 1.0.0
 dependencies: []
+capabilities: [veeam.m365.calculate]
 
 exports:
   - name: calculate_storage
