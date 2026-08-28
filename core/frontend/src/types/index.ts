@@ -197,6 +197,74 @@ export interface OperationResponse {
   message: string
 }
 
+// ── Catalog (Fase 11) ───────────────────────────────────────────────────────
+// Espelha exatamente app/api/routes/catalog.py::CatalogModuleRead e afins —
+// não reusa PackageInfo (Fase 4) porque os dois já divergiram em nomes de
+// campo (ex: compatibility aqui é o .value do enum, não o objeto completo).
+
+export type CatalogSourceType = 'local' | 'official_catalog' | 'custom_catalog'
+
+export interface CatalogModule {
+  module_id: string
+  name: string
+  version: string
+  category: string
+  vendor: string
+  author: string
+  description: string
+  platform_min_version: string
+  platform_max_version: string
+  compatibility: CompatibilityLevel
+  trust_level: TrustLevel
+  is_installed: boolean
+  installed_version: string | null
+  install_date: string | null
+  has_update: boolean
+  source: CatalogSourceType
+  source_url: string | null
+  signature: string | null
+  checksum: string | null
+  publisher: string | null
+  icon: string | null
+  color: string | null
+  homepage: string | null
+  documentation: string | null
+  favorite: boolean
+}
+
+export interface CatalogModuleListResponse {
+  items: CatalogModule[]
+  total: number
+  page: number
+  page_size: number
+  conflicts: Record<string, string[]>
+}
+
+export interface CatalogCategory {
+  name: string
+  count: number
+}
+
+export interface CatalogSourceConfig {
+  id: string
+  name: string
+  url: string
+  type: CatalogSourceType
+  enabled: boolean
+  status: 'available' | 'unavailable'
+}
+
+export type InstallJobPhase = 'ACQUIRING' | 'VALIDATING' | 'INSTALLING' | 'DONE' | 'FAILED'
+
+export interface InstallJob {
+  job_id: string
+  module_id: string
+  phase: InstallJobPhase
+  error: string | null
+  started_at: string
+  finished_at: string | null
+}
+
 export interface OperationLogEntry {
   timestamp: string
   operation: string

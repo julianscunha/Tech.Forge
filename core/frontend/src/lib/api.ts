@@ -10,6 +10,11 @@ import type {
   OperationResponse,
   OperationLogEntry,
   NavigationTree,
+  CatalogModuleListResponse,
+  CatalogCategory,
+  CatalogModule,
+  CatalogSourceConfig,
+  InstallJob,
 } from '@/types'
 
 const BASE_URL = '/api/v1'
@@ -97,6 +102,73 @@ export const marketplaceApi = {
 
   deactivate: (moduleId: string) =>
     request<OperationResponse>(`/marketplace/deactivate/${moduleId}`, { method: 'POST' }),
+}
+
+// ── Catalog (Fase 11) ─────────────────────────────────────────────────────────
+
+export interface CatalogListParams {
+  search?: string
+  category?: string
+  source?: string
+  trust_level?: string
+  compatible_only?: boolean
+  installed_only?: boolean
+  favorites_only?: boolean
+  sort?: 'name' | 'recent'
+  page?: number
+  page_size?: number
+}
+
+function toQueryString(params: object): string {
+  const q = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') q.set(key, String(value))
+  }
+  const s = q.toString()
+  return s ? `?${s}` : ''
+}
+
+export const catalogApi = {
+  list: (params: CatalogListParams = {}) =>
+    request<CatalogModuleListResponse>(`/catalog/modules${toQueryString(params)}`),
+
+  categories: () => request<CatalogCategory[]>('/catalog/categories'),
+
+  get: (moduleId: string) => request<CatalogModule>(`/catalog/modules/${moduleId}`),
+
+  updates: (params: { page?: number; page_size?: number } = {}) =>
+    request<CatalogModuleListResponse>(`/catalog/updates${toQueryString(params)}`),
+
+  sources: () => request<CatalogSourceConfig[]>('/catalog/sources'),
+
+  addSource: (payload: { name: string; url: string; type: 'official_catalog' | 'custom_catalog' }) =>
+    request<CatalogSourceConfig>('/catalog/sources', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  removeSource: (sourceId: string) =>
+    request<{ success: boolean }>(`/catalog/sources/${sourceId}`, { method: 'DELETE' }),
+
+  favorites: () => request<string[]>('/catalog/favorites'),
+
+  favorite: (moduleId: string) =>
+    request<{ success: boolean }>(`/catalog/favorites/${moduleId}`, { method: 'POST' }),
+
+  unfavorite: (moduleId: string) =>
+    request<{ success: boolean }>(`/catalog/favorites/${moduleId}`, { method: 'DELETE' }),
+}
+
+// ── Remote installation with progress (Fase 11 Slice 5b) ─────────────────────
+
+export const installJobApi = {
+  installRemote: (moduleId: string, sourceId?: string) =>
+    request<{ job_id: string }>(`/marketplace/install-remote/${moduleId}`, {
+      method: 'POST',
+      body: JSON.stringify({ source_id: sourceId ?? null }),
+    }),
+
+  getJob: (jobId: string) => request<InstallJob>(`/marketplace/install-jobs/${jobId}`),
 }
 
 // ── Navigation Tree (§7.1) ────────────────────────────────────────────────────
