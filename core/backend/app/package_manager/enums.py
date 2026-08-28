@@ -12,6 +12,7 @@ class RemoveStatus(str, Enum):
     SUCCESS = "success"
     FAILED  = "failed"
     NOT_FOUND = "not_found"
+    BLOCKED = "blocked"
 
 
 class UpdateStatus(str, Enum):

@@ -84,6 +84,13 @@ async def deactivate_module(db: AsyncSession, module_id: str) -> dict:
         return {"ok": False, "status": 409,
                 "detail": f"Module '{module_id}' is already disabled"}
 
+    from app.dependency_engine.lifecycle import check_can_deactivate
+    from app.service_registry.registry import service_registry
+    can, dependents = check_can_deactivate(module_id, registry, service_registry)
+    if not can:
+        return {"ok": False, "status": 409,
+                "detail": f"Module '{module_id}' has active dependents: {', '.join(dependents)}"}
+
     registry.set_status(module_id, ModuleStatus.DISABLED)
     _write_disabled_flag(module_id, True)
     await _set_db_enabled(db, module_id, False)
@@ -112,6 +119,15 @@ async def activate_module(db: AsyncSession, module_id: str) -> dict:
     if entry.status != ModuleStatus.DISABLED:
         return {"ok": False, "status": 409,
                 "detail": f"Module '{module_id}' is not disabled"}
+
+    from app.dependency_engine.lifecycle import check_can_activate
+    from app.service_registry.registry import service_registry
+    can, blocking = check_can_activate(module_id, registry, service_registry)
+    if not can:
+        registry.set_status(module_id, ModuleStatus.BLOCKED)
+        missing = ", ".join(f"{d.target_type.value}:{d.target_id}" for d in blocking)
+        return {"ok": False, "status": 409,
+                "detail": f"Module '{module_id}' is BLOCKED — unmet dependencies: {missing}"}
 
     registry.set_status(module_id, ModuleStatus.INSTALLED)
     _write_disabled_flag(module_id, False)

@@ -617,3 +617,126 @@ class TestDependencyResolver:
         registry = _AllEntriesRegistry([])
         deps = DependencyResolver.resolve("ghost", registry, _FakeServiceRegistryFull())
         assert deps == []
+
+
+# ── Lifecycle hooks (§10/§11/§12/§13/§14) ──────────────────────────────────────
+
+class TestCheckCanActivate:
+
+    def test_blocks_when_required_module_dependency_missing(self):
+        from app.dependency_engine.lifecycle import check_can_activate
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        can, blocking = check_can_activate("consumer", registry, _FakeServiceRegistryFull())
+        assert can is False
+        assert len(blocking) == 1
+
+    def test_allows_when_required_dependency_satisfied(self):
+        from app.dependency_engine.lifecycle import check_can_activate
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        provider = _entry_with_deps("provider", [])
+        registry = _AllEntriesRegistry([consumer, provider])
+
+        can, blocking = check_can_activate("consumer", registry, _FakeServiceRegistryFull())
+        assert can is True
+        assert blocking == []
+
+    def test_optional_unavailable_dependency_does_not_block(self):
+        from app.dependency_engine.lifecycle import check_can_activate
+
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "nowhere"}, "required": False},
+        ])
+        registry = _AllEntriesRegistry([consumer])
+
+        can, blocking = check_can_activate("consumer", registry, _FakeServiceRegistryFull())
+        assert can is True
+        assert blocking == []
+
+
+class TestCheckCanDeactivate:
+
+    def test_blocks_when_installed_dependent_requires_it_via_module(self):
+        from app.dependency_engine.lifecycle import check_can_deactivate
+
+        provider = _entry_with_deps("provider", [])
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([provider, consumer])
+
+        can, dependents = check_can_deactivate("provider", registry, _FakeServiceRegistryFull())
+        assert can is False
+        assert dependents == ["consumer"]
+
+    def test_blocks_when_installed_dependent_requires_it_via_capability(self):
+        from app.dependency_engine.lifecycle import check_can_deactivate
+
+        provider = _entry_with_deps("provider", [])
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "capability", "id": "aws.cost.read"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([provider, consumer])
+        services = _FakeServiceRegistryFull({"aws.cost.read": [_FakeDescriptor("provider")]})
+
+        can, dependents = check_can_deactivate("provider", registry, services)
+        assert can is False
+        assert dependents == ["consumer"]
+
+    def test_allows_when_no_installed_dependents(self):
+        from app.dependency_engine.lifecycle import check_can_deactivate
+
+        provider = _entry_with_deps("provider", [])
+        registry = _AllEntriesRegistry([provider])
+
+        can, dependents = check_can_deactivate("provider", registry, _FakeServiceRegistryFull())
+        assert can is True
+        assert dependents == []
+
+    def test_allows_when_dependent_is_optional(self):
+        from app.dependency_engine.lifecycle import check_can_deactivate
+
+        provider = _entry_with_deps("provider", [])
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": False},
+        ])
+        registry = _AllEntriesRegistry([provider, consumer])
+
+        can, dependents = check_can_deactivate("provider", registry, _FakeServiceRegistryFull())
+        assert can is True
+
+    def test_allows_when_dependent_is_disabled(self):
+        from app.dependency_engine.lifecycle import check_can_deactivate
+
+        provider = _entry_with_deps("provider", [])
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        consumer.status = ModuleStatus.DISABLED
+        registry = _AllEntriesRegistry([provider, consumer])
+
+        can, dependents = check_can_deactivate("provider", registry, _FakeServiceRegistryFull())
+        assert can is True
+
+
+class TestCheckCanRemove:
+
+    def test_mirrors_check_can_deactivate(self):
+        from app.dependency_engine.lifecycle import check_can_remove
+
+        provider = _entry_with_deps("provider", [])
+        consumer = _entry_with_deps("consumer", [
+            {"target": {"type": "module", "id": "provider"}, "required": True},
+        ])
+        registry = _AllEntriesRegistry([provider, consumer])
+
+        can, dependents = check_can_remove("provider", registry, _FakeServiceRegistryFull())
+        assert can is False
+        assert dependents == ["consumer"]

@@ -261,6 +261,14 @@ class PackageManager:
         except Exception as exc:
             logger.warning("Failed to read version before remove %s: %s", module_id, exc)
 
+        from app.dependency_engine.lifecycle import check_can_remove
+        from app.service_registry.registry import service_registry
+        can, dependents = check_can_remove(module_id, registry, service_registry)
+        if not can:
+            msg = f"Module '{module_id}' has active dependents: {', '.join(dependents)}"
+            operation_log.record("remove", module_id, version, "blocked", msg)
+            return RemoveResult(RemoveStatus.BLOCKED, module_id, msg)
+
         # Call the module's uninstall() hook if its backend exports a contract
         # instance — gives the module a chance to clean up its own data (§11).
         self._call_uninstall_hook(module_id, entry)

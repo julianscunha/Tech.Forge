@@ -10,6 +10,9 @@ from app.dependency_engine.parser import DependencyParser, DependencyParseError
 from app.dependency_engine.validator import DependencyCheck, DependencyValidator
 from app.dependency_engine.graph import DependencyGraph, Edge
 from app.dependency_engine.resolver import DependencyResolver
+from app.dependency_engine.lifecycle import (
+    check_can_activate, check_can_deactivate, check_can_remove,
+)
 
 __all__ = [
     "Dependency", "DependencyStatus", "TargetType",
@@ -17,4 +20,5 @@ __all__ = [
     "DependencyCheck", "DependencyValidator",
     "DependencyGraph", "Edge",
     "DependencyResolver",
+    "check_can_activate", "check_can_deactivate", "check_can_remove",
 ]

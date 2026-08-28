@@ -162,6 +162,8 @@ async def remove_module(module_id: str):
     result = await package_manager.remove(module_id)
     if result.status == RemoveStatus.NOT_FOUND:
         raise HTTPException(status_code=404, detail=result.message)
+    if result.status == RemoveStatus.BLOCKED:
+        raise HTTPException(status_code=409, detail=result.message)
     return OperationResponse(
         success=result.success,
         status=result.status.value,
