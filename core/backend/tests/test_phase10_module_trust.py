@@ -1022,3 +1022,65 @@ class TestModuleTrustRoute:
             assert "integrity_status" in body
             assert "signature_status" in body
             assert "module_id" in body
+
+    def test_get_trust_with_registered_publisher_is_verified(self, tmp_path, monkeypatch):
+        """Prova a resolucao real com Publisher do banco — o motivo desta
+        rota existir separada do ModuleCLIValidator sincrono (Slice 5).
+
+        Nota de ordem: o registro manual em `registry` e o monkeypatch de
+        MODULES_INSTALLED_PATH precisam acontecer DEPOIS que o TestClient
+        ja disparou o lifespan de startup (que reescaneia o diretorio real
+        de modulos) — senao o scan do boot sobrescreve a entrada fake."""
+        import asyncio
+        from datetime import datetime
+        from fastapi.testclient import TestClient
+        from app.main import app
+        from app.core.settings import settings
+        from app.module_engine.registry import registry, ModuleEntry
+        from app.module_engine.enums import ModuleStatus
+        from app.module_trust.integrity import write_integrity_manifest
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+        from sqlalchemy import delete
+        from app.models.publisher import Publisher
+
+        module_id = "trust_get_test"
+
+        with TestClient(app) as client:
+            monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+            mod_dir = tmp_path / module_id
+            (mod_dir / "backend").mkdir(parents=True)
+            (mod_dir / "backend" / "main.py").write_text("x=1\n", encoding="utf-8")
+            write_integrity_manifest(mod_dir)
+
+            entry = ModuleEntry(
+                module_id=module_id, name=module_id, version="1.0.0",
+                category="C", vendor="V", author="A", description="D",
+                status=ModuleStatus.INSTALLED, install_date=datetime.now(),
+                manifest_raw={"publisher": {"id": "trust_get_publisher"}})
+            registry.register(entry)
+
+            try:
+                async def _setup():
+                    async with AsyncSessionLocal() as db:
+                        await db.execute(delete(Publisher).where(Publisher.id == "trust_get_publisher"))
+                        await db.commit()
+                        await PublisherService.register(db, PublisherCreate(
+                            id="trust_get_publisher", name="Test Publisher",
+                            type="INTERNAL", trust_status="UNTRUSTED"))
+                asyncio.run(_setup())
+
+                resp = client.get(f"/api/v1/modules/{module_id}/trust")
+                assert resp.status_code == 200
+                body = resp.json()
+                assert body["trust_level"] == "VERIFIED"
+                assert body["publisher"]["id"] == "trust_get_publisher"
+            finally:
+                registry.deregister(module_id)
+
+                async def _cleanup():
+                    async with AsyncSessionLocal() as db:
+                        await db.execute(delete(Publisher).where(Publisher.id == "trust_get_publisher"))
+                        await db.commit()
+                asyncio.run(_cleanup())
