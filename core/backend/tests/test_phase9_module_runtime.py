@@ -13,6 +13,7 @@ import pytest
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 sys.path.insert(0, str(ROOT / "sdk" / "python"))
+sys.path.insert(0, str(ROOT / "cli"))
 
 from app.module_engine.enums import ModuleStatus
 
@@ -659,3 +660,49 @@ class TestProgressState:
             ProgressReport(phase=ProgressPhase.RUNNING, percent=101)
         with pytest.raises(ValueError):
             ProgressReport(phase=ProgressPhase.RUNNING, percent=-1)
+
+
+# ── Slice 6 — API + CLI (§26/§27) ───────────────────────────────────────────────
+
+class TestRuntimeAPIRoutes:
+
+    def test_list_module_runtime_includes_installed_modules(self, client):
+        resp = client.get("/api/v1/runtime/modules")
+        assert resp.status_code == 200
+        module_ids = [e["module_id"] for e in resp.json()]
+        assert "hello_world" in module_ids
+
+    def test_get_module_runtime_known_module(self, client):
+        resp = client.get("/api/v1/runtime/modules/hello_world")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["state"] == "READY"
+        assert body["uptime_seconds"] >= 0
+
+    def test_get_module_runtime_unknown_module_404(self, client):
+        resp = client.get("/api/v1/runtime/modules/ghost_module_9x")
+        assert resp.status_code == 404
+
+    def test_initialize_unknown_module_404(self, client):
+        resp = client.post("/api/v1/runtime/modules/ghost_module_9x/initialize")
+        assert resp.status_code == 404
+
+    def test_initialize_known_module_reruns_health_check(self, client):
+        resp = client.post("/api/v1/runtime/modules/hello_world/initialize")
+        assert resp.status_code == 200
+        assert resp.json()["state"] in ("READY", "DEGRADED", "FAILED")
+
+    def test_platform_status_route_still_works(self, client):
+        """Regressao — rota /runtime/status (Fase 6) nao foi afetada pelas novas rotas."""
+        resp = client.get("/api/v1/runtime/status")
+        assert resp.status_code == 200
+
+
+class TestRuntimeCLI:
+
+    def test_runtime_commands_registered(self):
+        from techforge_cli.commands.runtime import runtime_cmd
+        assert "status" in runtime_cmd.commands
+        assert "modules" in runtime_cmd.commands
+        assert "module" in runtime_cmd.commands
+        assert "initialize" in runtime_cmd.commands
