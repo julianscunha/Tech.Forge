@@ -1,16 +1,22 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import {
-  RefreshCw, Upload, Store, Download,
+  RefreshCw, Upload, Store, Download, LayoutGrid,
   CheckCircle2, ArrowUpCircle, AlertCircle,
 } from 'lucide-react'
-import { marketplaceApi } from '@/lib/api'
+import { marketplaceApi, catalogApi, type CatalogListParams } from '@/lib/api'
 import { PackageCard } from '@/components/marketplace/PackageCard'
 import { PackageDetailPanel } from '@/components/marketplace/PackageDetailPanel'
 import { OperationFeedback } from '@/components/marketplace/OperationFeedback'
-import type { PackageInfo, OperationResponse } from '@/types'
+import { CategorySidebar } from '@/components/catalog/CategorySidebar'
+import { CatalogFilterBar } from '@/components/catalog/CatalogFilterBar'
+import { CatalogCard } from '@/components/catalog/CatalogCard'
+import { CatalogPagination } from '@/components/catalog/CatalogPagination'
+import { InstallJobDialog } from '@/components/catalog/InstallJobDialog'
+import { CatalogSourcesPanel } from '@/components/catalog/CatalogSourcesPanel'
+import type { PackageInfo, OperationResponse, CatalogModule } from '@/types'
 import { cn } from '@/lib/utils'
 
-type Tab = 'installed' | 'available' | 'updates'
+type Tab = 'installed' | 'available' | 'updates' | 'catalog'
 type LoadState = 'idle' | 'loading' | 'success' | 'error'
 
 interface Feedback { success: boolean; message: string; status?: string }
@@ -27,6 +33,21 @@ export function MarketplacePage() {
   const [feedback,    setFeedback]    = useState<Feedback | null>(null)
   const [importing,   setImporting]   = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Catalog state
+  const [catalogModules,    setCatalogModules]    = useState<CatalogModule[]>([])
+  const [catalogTotal,      setCatalogTotal]      = useState(0)
+  const [catalogPage,       setCatalogPage]       = useState(1)
+  const [catalogPageSize,   setCatalogPageSize]   = useState(24)
+  const [catalogLoadState,  setCatalogLoadState]  = useState<LoadState>('idle')
+  const [catalogError,      setCatalogError]      = useState<string | null>(null)
+  const [catalogFilters,    setCatalogFilters]    = useState<Partial<CatalogListParams>>({})
+  const [selectedCategory,  setSelectedCategory]  = useState<string | null>(null)
+  const [selectedCatalog,   setSelectedCatalog]   = useState<CatalogModule | null>(null)
+  const [installDialogModule, setInstallDialogModule] = useState<CatalogModule | null>(null)
+  const [catalogConflicts,  setCatalogConflicts]  = useState<Record<string, string[]>>({})
+  const [showSourcesPanel,  setShowSourcesPanel]  = useState(false)
+  const [catalogLoadingPkg, setCatalogLoadingPkg] = useState<string | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoadState('loading')
@@ -47,7 +68,34 @@ export function MarketplacePage() {
     }
   }, [])
 
+  const fetchCatalog = useCallback(async () => {
+    setCatalogLoadState('loading')
+    setCatalogError(null)
+    try {
+      const params: CatalogListParams = {
+        ...catalogFilters,
+        category: selectedCategory || undefined,
+        page: catalogPage,
+        page_size: catalogPageSize,
+      }
+      const res = await catalogApi.list(params)
+      setCatalogModules(res.items)
+      setCatalogTotal(res.total)
+      setCatalogConflicts(res.conflicts)
+      setCatalogLoadState('success')
+    } catch (e) {
+      setCatalogError(e instanceof Error ? e.message : 'Erro ao carregar catálogo')
+      setCatalogLoadState('error')
+    }
+  }, [catalogFilters, selectedCategory, catalogPage, catalogPageSize])
+
   useEffect(() => { fetchAll() }, [fetchAll])
+
+  useEffect(() => {
+    if (tab === 'catalog') {
+      fetchCatalog()
+    }
+  }, [tab, fetchCatalog])
 
   // auto-dismiss feedback after 4s
   useEffect(() => {
@@ -91,10 +139,30 @@ export function MarketplacePage() {
   const packages = tab === 'installed' ? installed : tab === 'available' ? available : updates
   const isLoading = loadState === 'loading'
 
+  const handleCatalogInstall = async (module: CatalogModule) => {
+    if (module.source === 'local') {
+      // Local source: use sync install from marketplace
+      setCatalogLoadingPkg(module.module_id)
+      try {
+        const res = await marketplaceApi.install(module.module_id)
+        setFeedback({ success: res.success, message: res.message, status: res.status })
+        if (res.success) await fetchCatalog()
+      } catch (e) {
+        setFeedback({ success: false, message: e instanceof Error ? e.message : 'Erro na instalação' })
+      } finally {
+        setCatalogLoadingPkg(null)
+      }
+    } else {
+      // Remote source: open install dialog with progress
+      setInstallDialogModule(module)
+    }
+  }
+
   const TAB_CONFIG: { id: Tab; label: string; icon: typeof Store; count: number }[] = [
     { id: 'installed', label: 'Instalados',   icon: CheckCircle2,  count: installed.length },
     { id: 'available', label: 'Disponíveis',  icon: Download,      count: available.filter(p => !p.is_installed).length },
     { id: 'updates',   label: 'Atualizações', icon: ArrowUpCircle, count: updates.length   },
+    { id: 'catalog',   label: 'Catálogo',     icon: LayoutGrid,    count: catalogTotal   },
   ]
 
   return (
@@ -194,46 +262,186 @@ export function MarketplacePage() {
         </div>
       )}
 
-      {/* ── Package grid ───────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
-        {isLoading && packages.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="h-40 rounded-lg bg-[hsl(var(--bg-elevated))] animate-pulse border border-[hsl(var(--border-subtle))]" />
-            ))}
-          </div>
-        ) : packages.length === 0 ? (
-          <EmptyTab tab={tab} />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {packages.map(pkg => (
-              <PackageCard
-                key={pkg.module_id}
-                pkg={pkg}
-                tab={tab}
-                loading={loadingPkg === pkg.module_id}
-                onClick={setSelected}
-                onInstall={p => handleOperation(p.module_id, () => marketplaceApi.install(p.module_id))}
-                onRemove={p  => {
-                  if (window.confirm(
-                    `Remover PERMANENTEMENTE o módulo "${p.name}"?\n` +
-                    'Os arquivos do módulo serão apagados. Esta ação não pode ser desfeita.'
-                  )) {
-                    handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id));
-                  }
-                }}
-                onUpdate={p  => handleOperation(p.module_id, () => marketplaceApi.update(p.module_id))}
-                onActivate={p   => handleOperation(p.module_id, () => marketplaceApi.activate(p.module_id))}
-                onDeactivate={p => handleOperation(p.module_id, () => marketplaceApi.deactivate(p.module_id))}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ── Package grid (Marketplace tabs) ─────────────────────────── */}
+      {tab !== 'catalog' && (
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {isLoading && packages.length === 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="h-40 rounded-lg bg-[hsl(var(--bg-elevated))] animate-pulse border border-[hsl(var(--border-subtle))]" />
+              ))}
+            </div>
+          ) : packages.length === 0 ? (
+            <EmptyTab tab={tab} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {packages.map(pkg => (
+                <PackageCard
+                  key={pkg.module_id}
+                  pkg={pkg}
+                  tab={tab}
+                  loading={loadingPkg === pkg.module_id}
+                  onClick={setSelected}
+                  onInstall={p => handleOperation(p.module_id, () => marketplaceApi.install(p.module_id))}
+                  onRemove={p  => {
+                    if (window.confirm(
+                      `Remover PERMANENTEMENTE o módulo "${p.name}"?\n` +
+                      'Os arquivos do módulo serão apagados. Esta ação não pode ser desfeita.'
+                    )) {
+                      handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id));
+                    }
+                  }}
+                  onUpdate={p  => handleOperation(p.module_id, () => marketplaceApi.update(p.module_id))}
+                  onActivate={p   => handleOperation(p.module_id, () => marketplaceApi.activate(p.module_id))}
+                  onDeactivate={p => handleOperation(p.module_id, () => marketplaceApi.deactivate(p.module_id))}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* ── Detail panel ───────────────────────────────────────────────── */}
+      {/* ── Catalog tab (3-zone layout) ───────────────────────────────── */}
+      {tab === 'catalog' && (
+        <>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Filter bar */}
+            <CatalogFilterBar
+              onChange={filters => {
+                setCatalogFilters(filters)
+                setCatalogPage(1)
+              }}
+            />
+
+            {/* Main content area */}
+            <div className="flex-1 overflow-hidden flex">
+              {/* Sidebar */}
+              <CategorySidebar
+                selected={selectedCategory}
+                onSelect={category => {
+                  setSelectedCategory(category)
+                  setCatalogPage(1)
+                }}
+                loading={catalogLoadState === 'loading'}
+              />
+
+              {/* Grid + Pagination */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Error banner */}
+                {catalogLoadState === 'error' && (
+                  <div className="mx-4 mt-4 flex items-center gap-2 px-4 py-2.5 rounded-lg
+                    border border-[hsl(var(--danger)/0.3)] bg-[hsl(var(--danger)/0.06)]
+                    text-sm text-[hsl(var(--danger))]">
+                    <AlertCircle size={14} className="flex-shrink-0" />
+                    <span>{catalogError}</span>
+                  </div>
+                )}
+
+                {/* Grid */}
+                <div className="flex-1 overflow-y-auto px-6 py-5">
+                  {catalogLoadState === 'loading' && catalogModules.length === 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[1,2,3,4,5,6].map(i => (
+                        <div key={i} className="h-40 rounded-lg bg-[hsl(var(--bg-elevated))] animate-pulse border border-[hsl(var(--border-subtle))]" />
+                      ))}
+                    </div>
+                  ) : catalogModules.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <div className="w-12 h-12 rounded-xl bg-[hsl(var(--bg-subtle))] flex items-center justify-center mb-4">
+                        <Store size={20} className="text-[hsl(var(--text-muted))]" />
+                      </div>
+                      <p className="text-sm font-medium text-[hsl(var(--text))] mb-1">Nenhum módulo encontrado</p>
+                      <p className="text-xs text-[hsl(var(--text-muted))] max-w-xs">Tente ajustar os filtros ou adicionar novas fontes</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {catalogModules.map(mod => (
+                        <CatalogCard
+                          key={mod.module_id}
+                          module={mod}
+                          conflictCount={catalogConflicts[mod.module_id]?.length}
+                          loading={catalogLoadingPkg === mod.module_id}
+                          onClick={setSelectedCatalog}
+                          onInstall={handleCatalogInstall}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pagination */}
+                {catalogModules.length > 0 && (
+                  <CatalogPagination
+                    page={catalogPage}
+                    pageSize={catalogPageSize}
+                    total={catalogTotal}
+                    onPageChange={setCatalogPage}
+                    onPageSizeChange={size => {
+                      setCatalogPageSize(size)
+                      setCatalogPage(1)
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Toolbar button for sources panel */}
+          <div className="px-6 py-4 border-t border-[hsl(var(--border-subtle))] flex gap-2">
+            <button
+              onClick={() => setShowSourcesPanel(true)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium',
+                'bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border))]',
+                'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--bg-subtle))]',
+                'transition-colors',
+              )}
+            >
+              Gerenciar fontes
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── Detail panel (Marketplace) ────────────────────────────────── */}
       {selected && (
         <PackageDetailPanel pkg={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {/* ── Detail panel (Catalog) ────────────────────────────────────── */}
+      {selectedCatalog && tab === 'catalog' && (
+        <PackageDetailPanel
+          pkg={{
+            ...selectedCatalog,
+            is_enabled: selectedCatalog.is_installed,
+            icon: null,
+            color: null,
+            order: null,
+            signature: null,
+          } as PackageInfo}
+          onClose={() => setSelectedCatalog(null)}
+        />
+      )}
+
+      {/* ── Install dialog (remote sources) ───────────────────────────── */}
+      {installDialogModule && (
+        <InstallJobDialog
+          moduleId={installDialogModule.module_id}
+          moduleName={installDialogModule.name}
+          onClose={() => setInstallDialogModule(null)}
+          onSuccess={() => {
+            fetchCatalog()
+            fetchAll()
+          }}
+        />
+      )}
+
+      {/* ── Sources panel ─────────────────────────────────────────────── */}
+      {showSourcesPanel && (
+        <CatalogSourcesPanel
+          onClose={() => setShowSourcesPanel(false)}
+          onRefresh={() => fetchCatalog()}
+        />
       )}
 
       {/* ── Operation feedback toast ────────────────────────────────────── */}
@@ -263,6 +471,10 @@ function EmptyTab({ tab }: { tab: Tab }) {
     updates: {
       title: 'Tudo atualizado',
       desc:  'Todos os módulos instalados estão na versão mais recente.',
+    },
+    catalog: {
+      title: 'Nenhum módulo encontrado',
+      desc:  'Tente ajustar os filtros ou adicionar novas fontes.',
     },
   }
   const { title, desc } = msgs[tab]
