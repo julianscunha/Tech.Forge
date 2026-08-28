@@ -19,6 +19,10 @@ from app.api.routes.module_verification import router as module_verification_rou
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(platform_router)
 api_router.include_router(categories_router)
+# Fase 10: module_verification_router precisa vir ANTES de modules_router —
+# GET /modules/trust colide com a rota generica GET /modules/{module_id}
+# (modules.py), que casaria "trust" como module_id se registrada primeiro.
+api_router.include_router(module_verification_router)  # Fase 10 — Runtime Integrity Verification
 api_router.include_router(modules_router)
 api_router.include_router(registry_router)     # Phase 2
 api_router.include_router(health_router)       # Phase 2
@@ -32,4 +36,3 @@ api_router.include_router(services_router)       # Fase 8 — Service Registry
 api_router.include_router(dependencies_modules_router)  # Fase 8.1 — Dependency Governance
 api_router.include_router(dependencies_router)          # Fase 8.1 — Dependency Governance
 api_router.include_router(publishers_router)           # Fase 10 — Publisher Registry
-api_router.include_router(module_verification_router)  # Fase 10 — Runtime Integrity Verification

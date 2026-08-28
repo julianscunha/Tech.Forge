@@ -983,6 +983,31 @@ class TestModuleIntegrityRoute:
             registry.deregister(module_id)
 
 
+# ── Slice 8 — Listagem em lote + AI Context + teste integrado (§21/§27/§29) ────
+
+class TestListModulesTrust:
+
+    def test_list_modules_trust_returns_only_installed(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/trust")
+            assert resp.status_code == 200
+            body = resp.json()
+            module_ids = [m["module_id"] for m in body]
+            assert "hello_world" in module_ids
+
+    def test_list_modules_trust_route_does_not_collide_with_module_id_route(self):
+        """Regressao — /trust (lote) nao pode ser interpretado como
+        module_id='trust' pela rota /{module_id}/trust."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/trust")
+            assert resp.status_code == 200
+            assert isinstance(resp.json(), list)
+
+
 class TestModuleTrustRoute:
 
     def test_get_trust_unknown_module_404(self):

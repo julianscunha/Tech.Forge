@@ -140,3 +140,33 @@ def ai_context_dependencies(monkeypatch):
     idx = DocIndexer(doc_index)
     idx.rebuild()
     return AIContextExporter.export(idx)
+
+
+# ── Fase 10 §27 — Module Trust no AI Context ───────────────────────────────────
+
+def test_context_includes_module_trust_section(monkeypatch):
+    from datetime import datetime
+    from app.doc_engine.indexer import DocIndexer
+    from app.doc_engine import doc_index, AIContextExporter
+    from app.module_engine.registry import ModuleEntry, ModuleStatus
+
+    class _FakeModuleRegistry:
+        def __init__(self, entries):
+            self._entries = {e.module_id: e for e in entries}
+        def all(self):
+            return list(self._entries.values())
+        def get(self, module_id):
+            return self._entries.get(module_id)
+
+    entry = ModuleEntry(
+        module_id="trust_ai_context_mod", name="mod", version="1.0.0",
+        category="C", vendor="V", author="A", description="D",
+        status=ModuleStatus.INSTALLED, install_date=datetime.now())
+    monkeypatch.setattr("app.module_engine.registry.registry",
+                        _FakeModuleRegistry([entry]))
+
+    idx = DocIndexer(doc_index)
+    idx.rebuild()
+    md = AIContextExporter.export(idx)
+    assert "## Module Trust" in md
+    assert "trust_ai_context_mod" in md

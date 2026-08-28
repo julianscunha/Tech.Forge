@@ -42,6 +42,7 @@ domain: [governanca-setup]
 | [core/service-registry](developer-center/core/service-registry.md) | Service Registry: discovery, capabilities, invocação, erros |
 | [core/dependency-governance](developer-center/core/dependency-governance.md) | Dependency Governance: declaração, direção, estados, grafo Mermaid |
 | [core/module-runtime](developer-center/core/module-runtime.md) | Module Runtime: lifecycle hooks reais, ExecutionContext, SDK, Focus Mode |
+| [core/module-trust](developer-center/core/module-trust.md) | Module Trust: integrity manifest, publisher, trust level, assinatura |
 | [core/module-lifecycle](developer-center/core/module-lifecycle.md) | Ciclo de vida: install → activate → deactivate → remove |
 | [core/module-engine](developer-center/core/module-engine.md) | Module Engine: loader, validação, plugin router (detalhado) |
 | [core/package-manager](developer-center/core/package-manager.md) | Package Manager (visão canônica) |
@@ -75,12 +76,12 @@ planos por fase em [`tasks/`](../tasks/).
 | 8 | [phases/08](phases/08-Fase-08-Service-Registry.md) | Service Registry: descoberta via contratos |
 | 8.1 | [phases/08.1](phases/08.1-Fase-08.1-Dependency-Governance.md) | Dependency Governance: declaração, direção, ciclos, lifecycle |
 | 9 | [phases/09](phases/09-Fase-09-Module-Runtime-Execution.md) | Module Runtime & Execution: lifecycle hooks reais, ExecutionContext, Focus Mode |
+| 10 | [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust: hash por-arquivo, publisher, trust level |
 
 ### Pendentes
 
 | Fase | Spec | Tema |
 |---|---|---|
-| 10 | [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust |
 | 11 | [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace Distribution |
 | 12 | [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration & Persistence |
 | 13 | [phases/13](phases/13-Fase-13-Central-Server-Multi-User-Readiness.md) | Central Server Readiness (Linux) |

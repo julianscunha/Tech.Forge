@@ -201,6 +201,39 @@ class AIContextExporter:
                     lines.append(f"**Last execution:** {e.last_execution.isoformat()}")
                 lines.append("")
 
+        # ── Module Trust (Fase 10 §27) ──────────────────────────────────────────
+        from app.core.settings import settings
+        from app.module_engine.enums import ModuleStatus as _MS
+        from app.module_trust.integrity import verify_integrity
+        from app.module_trust.signature import default_signature_provider
+        from app.module_trust.trust import TrustResolver
+
+        installed_entries = [e for e in module_registry.all() if e.status == _MS.INSTALLED]
+        if installed_entries:
+            lines.append("---")
+            lines.append("## Module Trust")
+            lines.append("")
+            for e in sorted(installed_entries, key=lambda e: e.module_id):
+                package_dir = settings.MODULES_INSTALLED_PATH / e.module_id
+                integrity_result = verify_integrity(package_dir)
+                raw = e.manifest_raw or {}
+                publisher_field = raw.get("publisher")
+                publisher_id = (publisher_field.get("id")
+                               if isinstance(publisher_field, dict) else publisher_field)
+                signature_value = raw.get("signature")
+                signature_status = default_signature_provider.verify(
+                    data=b"", signature=signature_value.encode() if signature_value else None,
+                    public_key=None,
+                ).value
+                trust_level = TrustResolver.resolve(integrity_result.status, None, signature_status)
+
+                lines.append(f"### {e.module_id}")
+                lines.append(f"**Trust Level:** {trust_level.value}")
+                lines.append(f"**Integrity:** {integrity_result.status.value}")
+                if publisher_id:
+                    lines.append(f"**Publisher:** {publisher_id}")
+                lines.append("")
+
         # ── Module documentation (overview + examples grouped per module) ─────
         wants_modules  = DocCategory.MODULE in categories
         wants_examples = DocCategory.MODULE_EXAMPLE in categories

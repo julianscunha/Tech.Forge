@@ -55,6 +55,19 @@ async def verify_module(module_id: str, db: AsyncSession = Depends(get_db)) -> I
     )
 
 
+@router.get("/trust", response_model=list[TrustRead],
+            summary="Trust Level of every INSTALLED module in one call (§21/§22 — avoid N+1)")
+async def list_modules_trust(db: AsyncSession = Depends(get_db)) -> list[TrustRead]:
+    from app.module_engine.enums import ModuleStatus
+
+    results: list[TrustRead] = []
+    for entry in registry.all():
+        if entry.status != ModuleStatus.INSTALLED:
+            continue
+        results.append(await get_module_trust(entry.module_id, db))
+    return results
+
+
 @router.get("/{module_id}/integrity", response_model=IntegrityVerifyRead,
             summary="Read a module's current integrity status (§24, GET — no side effects)")
 async def get_module_integrity(module_id: str) -> IntegrityVerifyRead:
