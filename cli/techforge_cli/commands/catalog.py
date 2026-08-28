@@ -1,11 +1,19 @@
-"""techforge catalog — module catalog management commands."""
+"""techforge catalog — module catalog management commands.
+
+Slice 5: list, search, show, sources (API calls to /catalog/*)
+Slice 2: build-index (generate index.json + .mod files)
+"""
 from __future__ import annotations
 
 import json
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import click
+from rich.table import Table
 
 from techforge_cli.console import (
     console,
@@ -22,8 +30,173 @@ from techforge_cli.packager.builder import PackageBuilder
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
+_CORE = "http://127.0.0.1:8000/api/v1"
 
-@click.command("build-index")
+
+def _get(path: str):
+    """Fetch JSON from Core API."""
+    try:
+        with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        print_error(exc.read().decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    except urllib.error.URLError as exc:
+        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
+        raise SystemExit(1)
+
+
+@click.group("catalog")
+def catalog_cmd():
+    """Module catalog management."""
+    pass
+
+
+@catalog_cmd.command("list")
+@click.option(
+    "--category",
+    default=None,
+    help="Filter by category",
+)
+@click.option(
+    "--source",
+    default=None,
+    help="Filter by source (local, official_catalog, custom_catalog)",
+)
+@click.option(
+    "--page",
+    type=int,
+    default=1,
+    help="Page number (default 1)",
+)
+@click.option(
+    "--page-size",
+    type=int,
+    default=24,
+    help="Items per page (default 24)",
+)
+def list_cmd(category, source, page, page_size):
+    """List modules from the catalog."""
+    params = []
+    if category:
+        params.append(f"category={urllib.parse.quote(category)}")
+    if source:
+        params.append(f"source={urllib.parse.quote(source)}")
+    params.append(f"page={page}")
+    params.append(f"page_size={page_size}")
+
+    query_str = "&".join(params)
+    path = f"/catalog/modules?{query_str}" if params else "/catalog/modules"
+
+    data = _get(path)
+    modules = data.get("items", [])
+
+    if not modules:
+        print_info("No modules found.")
+        return
+
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Category")
+    table.add_column("Version")
+    table.add_column("Source")
+    table.add_column("Trust", style="yellow")
+    table.add_column("Installed", style="green")
+
+    for mod in modules:
+        installed = "✓" if mod.get("is_installed") else ""
+        table.add_row(
+            mod["module_id"],
+            mod.get("name", ""),
+            mod.get("category", ""),
+            mod.get("version", ""),
+            mod.get("source", ""),
+            mod.get("trust_level", ""),
+            installed,
+        )
+
+    console.print(table)
+    total = data.get("total", len(modules))
+    print_muted(f"\nTotal: {total} • Page {page} of {(total + page_size - 1) // page_size}")
+
+
+@catalog_cmd.command("search")
+@click.argument("term")
+def search_cmd(term):
+    """Search for modules by name or description."""
+    data = _get(f"/catalog/modules?search={urllib.parse.quote(term)}")
+    modules = data.get("items", [])
+
+    if not modules:
+        print_info(f"No modules found matching '{term}'.")
+        return
+
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Category")
+    table.add_column("Version")
+    table.add_column("Source")
+
+    for mod in modules:
+        table.add_row(
+            mod["module_id"],
+            mod.get("name", ""),
+            mod.get("category", ""),
+            mod.get("version", ""),
+            mod.get("source", ""),
+        )
+
+    console.print(table)
+
+
+@catalog_cmd.command("show")
+@click.argument("module_id")
+def show_cmd(module_id):
+    """Show detailed information about a module."""
+    data = _get(f"/catalog/modules/{urllib.parse.quote(module_id)}")
+
+    console.print(f"[cyan]{data['module_id']}[/cyan]  {data.get('name', '')}")
+    print_muted(f"Version:       {data.get('version', '')}")
+    print_muted(f"Category:      {data.get('category', '')}")
+    print_muted(f"Author:        {data.get('author', '')}")
+    print_muted(f"Publisher:     {data.get('publisher', '')}")
+    print_muted(f"Source:        {data.get('source', '')}")
+    print_muted(f"Trust Level:   {data.get('trust_level', '')}")
+    print_muted(f"Installed:     {'Yes' if data.get('is_installed') else 'No'}")
+    console.print()
+    console.print(data.get("description", "(no description)"))
+
+
+@catalog_cmd.command("sources")
+def sources_cmd():
+    """List configured catalog sources and their status."""
+    sources = _get("/catalog/sources")
+
+    if not sources:
+        print_info("No sources configured.")
+        return
+
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Type")
+    table.add_column("Status", style="yellow")
+
+    for src in sources:
+        status_style = "green" if src.get("status") == "available" else "red"
+        table.add_row(
+            src["id"],
+            src.get("name", ""),
+            src.get("type", ""),
+            f"[{status_style}]{src.get('status', '')}[/{status_style}]",
+        )
+
+    console.print(table)
+
+
+@catalog_cmd.command("build-index")
 @click.argument(
     "modules_dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True),

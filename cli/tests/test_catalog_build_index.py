@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "sdk" / "python"))
 sys.path.insert(0, str(ROOT / "cli"))
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
-from techforge_cli.commands.catalog import build_index_cmd
+from techforge_cli.commands.catalog import catalog_cmd
 
 
 @pytest.fixture()
@@ -83,8 +83,8 @@ def test_build_index_creates_index_json(runner, modules_dir, tmp_path):
     output_dir.mkdir()
 
     result = runner.invoke(
-        build_index_cmd,
-        [str(modules_dir), "--output", str(output_dir)],
+        catalog_cmd,
+        ["build-index", str(modules_dir), "--output", str(output_dir)],
     )
 
     assert result.exit_code == 0, f"Command failed: {result.output}"
@@ -105,8 +105,8 @@ def test_build_index_generates_mod_files(runner, modules_dir, tmp_path):
     output_dir.mkdir()
 
     result = runner.invoke(
-        build_index_cmd,
-        [str(modules_dir), "--output", str(output_dir)],
+        catalog_cmd,
+        ["build-index", str(modules_dir), "--output", str(output_dir)],
     )
 
     assert result.exit_code == 0
@@ -124,8 +124,8 @@ def test_build_index_correct_module_metadata(runner, modules_dir, tmp_path):
     output_dir.mkdir()
 
     result = runner.invoke(
-        build_index_cmd,
-        [str(modules_dir), "--output", str(output_dir)],
+        catalog_cmd,
+        ["build-index", str(modules_dir), "--output", str(output_dir)],
     )
 
     assert result.exit_code == 0
@@ -153,8 +153,8 @@ def test_build_index_includes_checksum(runner, modules_dir, tmp_path):
     output_dir.mkdir()
 
     result = runner.invoke(
-        build_index_cmd,
-        [str(modules_dir), "--output", str(output_dir)],
+        catalog_cmd,
+        ["build-index", str(modules_dir), "--output", str(output_dir)],
     )
 
     assert result.exit_code == 0
@@ -177,8 +177,8 @@ def test_build_index_round_trip_validation(runner, modules_dir, tmp_path):
     output_dir.mkdir()
 
     result = runner.invoke(
-        build_index_cmd,
-        [str(modules_dir), "--output", str(output_dir)],
+        catalog_cmd,
+        ["build-index", str(modules_dir), "--output", str(output_dir)],
     )
 
     assert result.exit_code == 0
