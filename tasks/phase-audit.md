@@ -16,7 +16,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 8 | Service Registry | ✅ fechada | `app/service_registry/` (discovery, invocação, erros tipados, conflito) + API `/services*` + CLI `techforge services` + AI Context — ver tasks/phase-08-report.md |
 | 8.1 | Dependency Governance | ✅ fechada | `app/dependency_engine/` (parser, validator, graph+ciclos+Mermaid, resolver, lifecycle hooks) + API `/modules/{id}/dependencies\|dependents` + `/dependencies/validate\|graph` + CLI + Developer Center (grafo visual) + AI Context — ver tasks/phase-08.1-report.md |
 | 9 | Module Runtime & Execution | ✅ fechada | `app/module_runtime/` (loader único, Runtime State separado do Administrative State, lifecycle hooks reais enable/disable/health_check, ExecutionContext, ModuleExecutionResult+cancellation/progress esqueleto) + API `/runtime/modules*` + CLI + Focus Mode + AI Context — ver tasks/phase-09-report.md |
-| 10 | Security & Module Trust | ⚠️ rudimentar | apenas checksum SHA-256 + TrustLevel enum nunca populado; sem assinatura/publisher registry |
+| 10 | Security, Integrity & Module Trust | ✅ fechada | `app/module_trust/` (integrity manifest por-arquivo, Publisher Registry SQLite, TrustResolver, SignatureProvider abstrato) + API `/modules/{id}/integrity\|trust\|verify` + `/modules/trust` (lote) + `/publishers*` + CLI + Trust badge no frontend + AI Context — ver tasks/phase-10-report.md |
 | 11 | Marketplace Distribution | ⚠️ local-only | `RemoteRepositoryProvider` = NotImplementedError ×3 (`package_manager/repository.py:157-170`); marketplace/ vazio |
 | 12 | Configuration & Persistence | ❌ | só settings.py global |
 | 13 | Central Server Multi-User | ❌ | nada além de settings básicos |

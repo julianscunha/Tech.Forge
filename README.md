@@ -307,15 +307,16 @@ gantt
     Fase 8 Service Registry ✓          :done, 2, 3
     Fase 8.1 Dependency Governance ✓   :done, 2, 3
     Fase 9 Module Runtime ✓             :done, 3, 4
-    Fase 10-13 Trust/Distribution        :active, 4, 6
-    Fase 14-20 Release                  :6, 8
+    Fase 10 Security & Trust ✓          :done, 4, 5
+    Fase 11-13 Distribution/Persistence :active, 5, 7
+    Fase 14-20 Release                  :7, 9
 ```
 
 **Próximos marcos** (decididos por auditoria contra código real,
 ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
-- Security & Module Trust — assinatura, publisher registry (Fase 10)
 - Marketplace Distribution remota (Fase 11)
 - Configuration & Data Persistence (Fase 12)
+- Central Server Multi-User Readiness (Fase 13)
 
 ---
 
