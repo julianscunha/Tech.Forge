@@ -12,7 +12,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Tests](https://img.shields.io/badge/tests-194%20passing-brightgreen)](#-testes)
-[![License](https://img.shields.io/badge/license-TBD-blue)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
 </div>
