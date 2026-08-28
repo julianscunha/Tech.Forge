@@ -9,6 +9,7 @@ handles hot-reload of the in-memory registry automatically.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 
@@ -231,6 +232,163 @@ async def import_module(file: UploadFile = File(...)):
         status=result.status.value,
         module_id=result.module_id,
         message=result.message,
+    )
+
+
+# ── Remote installation (Fase 11 Slice 5b) ───────────────────────────────────
+
+class RemoteInstallRequest(BaseModel):
+    """Request body for remote installation."""
+    source_id: Optional[str] = None
+
+
+class InstallJobResponse(BaseModel):
+    """Response for job status queries."""
+    job_id:      str
+    module_id:   str
+    phase:       str
+    error:       Optional[str] = None
+    started_at:  str
+    finished_at: Optional[str] = None
+
+
+@router.post("/install-remote/{module_id}", status_code=202)
+async def install_remote_module(module_id: str, request: RemoteInstallRequest):
+    """
+    Install a module from a remote source (official or custom catalog).
+
+    Returns immediately with a job_id. The actual installation runs in the
+    background via asyncio.create_task(). Poll GET /install-jobs/{job_id}
+    to track progress.
+
+    Phases: ACQUIRING → VALIDATING → INSTALLING → DONE|FAILED
+    """
+    from app.package_manager.install_job import install_job_registry
+    import asyncio
+
+    job = install_job_registry.create(module_id)
+
+    # Start background task without blocking the response
+    asyncio.create_task(_install_remote_background(module_id, job.job_id, request.source_id))
+
+    return {"job_id": job.job_id}
+
+
+async def _resolve_remote_provider(db, module_id: str, source_id: Optional[str]):
+    """
+    Resolve which RepositoryProvider owns *module_id* for a remote install.
+
+    If source_id is given, it must be a registered CUSTOM_CATALOG source.
+    Otherwise, look the module up in the aggregated catalog and pick the
+    provider matching its CatalogSource (OFFICIAL_CATALOG or CUSTOM_CATALOG
+    — LOCAL modules never go through this remote-install path).
+
+    Returns None if the module/source cannot be resolved.
+    """
+    from app.package_manager.catalog_aggregator import CatalogAggregator
+    from app.package_manager.catalog_source import CatalogSource
+    from app.package_manager.repository import CustomCatalogProvider
+    from app.services.catalog_source import CatalogSourceService
+
+    aggregator = CatalogAggregator()
+
+    if source_id is not None:
+        sources = await CatalogSourceService.list_all(db)
+        source = next((s for s in sources if s.id == source_id), None)
+        if source is None:
+            return None
+        return CustomCatalogProvider(repo_url=source.url)
+
+    packages, _ = await aggregator.list_all_available(db, settings.PLATFORM_VERSION)
+    pkg = next((p for p in packages if p.module_id == module_id), None)
+    if pkg is None:
+        return None
+
+    if pkg.source == CatalogSource.OFFICIAL_CATALOG:
+        return aggregator.official_provider
+    if pkg.source == CatalogSource.CUSTOM_CATALOG and pkg.source_url:
+        return CustomCatalogProvider(repo_url=pkg.source_url)
+    return None
+
+
+async def _install_remote_background(module_id: str, job_id: str, source_id: Optional[str]) -> None:
+    """
+    Background task: acquire module from remote source, validate, install.
+
+    Phases:
+      1. ACQUIRING: resolve provider + fetch_mod_path() (network)
+      2. VALIDATING / INSTALLING: package_manager.install() (existing pipeline)
+      3. DONE / FAILED: terminal state with optional error
+
+    fetch_mod_path() already swallows network errors and returns None
+    (Slices 2/3) — never raises. Any other exception is still caught here
+    so the job always reaches a terminal state (never stuck on a poll).
+    """
+    from app.package_manager.install_job import install_job_registry, InstallJobPhase
+    from app.db.database import AsyncSessionLocal
+
+    try:
+        install_job_registry.set_phase(job_id, InstallJobPhase.ACQUIRING)
+
+        async with AsyncSessionLocal() as db:
+            provider = await _resolve_remote_provider(db, module_id, source_id)
+
+        if provider is None:
+            install_job_registry.set_phase(
+                job_id, InstallJobPhase.FAILED,
+                error="Módulo não encontrado em nenhuma fonte configurada.",
+            )
+            return
+
+        mod_path = await provider.fetch_mod_path(module_id)
+        if mod_path is None:
+            install_job_registry.set_phase(
+                job_id, InstallJobPhase.FAILED,
+                error="Falha ao baixar módulo: sem conexão com a fonte.",
+            )
+            return
+
+        install_job_registry.set_phase(job_id, InstallJobPhase.VALIDATING)
+        install_job_registry.set_phase(job_id, InstallJobPhase.INSTALLING)
+
+        result = await package_manager.install(mod_path)
+        if not result.success:
+            install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
+            return
+
+        install_job_registry.set_phase(job_id, InstallJobPhase.DONE)
+
+    except Exception as exc:
+        logger.error("Background install task failed for job %s (module %s): %s",
+                     job_id, module_id, exc)
+        install_job_registry.set_phase(
+            job_id,
+            InstallJobPhase.FAILED,
+            error=str(exc)
+        )
+
+
+@router.get("/install-jobs/{job_id}", response_model=InstallJobResponse)
+async def get_install_job(job_id: str):
+    """
+    Poll the status of an installation job.
+
+    Returns current phase, error (if any), and timestamps.
+    Returns 404 if job_id not found.
+    """
+    from app.package_manager.install_job import install_job_registry
+
+    job = install_job_registry.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"Installation job '{job_id}' not found.")
+
+    return InstallJobResponse(
+        job_id=job.job_id,
+        module_id=job.module_id,
+        phase=job.phase.value,
+        error=job.error,
+        started_at=job.started_at.isoformat(),
+        finished_at=job.finished_at.isoformat() if job.finished_at else None,
     )
 
 
