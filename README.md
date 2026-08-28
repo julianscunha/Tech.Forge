@@ -295,24 +295,26 @@ gantt
     dateFormat X
     axisFormat %s
     section Fundação
-    Fase 1 Foundation ✓        :done, 0, 1
-    Fase 2 Core Architecture ✓ :done, 0, 1
-    Fase 3 Module System ✓     :done, 0, 1
+    Fase 1 Foundation ✓         :done, 0, 1
+    Fase 2 Core Architecture ✓  :done, 0, 1
+    Fase 3 Module System ✓      :done, 0, 1
     section Plataforma
-    Fase 4 Marketplace/PkgMgr  :active, 1, 2
-    Fase 5 Developer Center ✓  :done, 1, 2
-    Fase 6 Launcher/Runtime ✓  :done, 1, 2
-    Fase 7 Doc Compliance ✓    :done, 1, 2
+    Fase 4 Marketplace/PkgMgr ✓ :done, 1, 2
+    Fase 5 Developer Center ✓   :done, 1, 2
+    Fase 6 Launcher/Runtime ✓   :done, 1, 2
+    Fase 7 Doc Compliance ✓     :done, 1, 2
     section Ecossistema
-    Fase 8-13 Runtime/Trust    :2, 5
-    Fase 14-20 Release         :4, 6
+    Fase 8 Service Registry ✓          :done, 2, 3
+    Fase 8.1 Dependency Governance ✓   :done, 2, 3
+    Fase 9-13 Runtime/Trust             :active, 3, 5
+    Fase 14-20 Release                  :5, 7
 ```
 
-**Próximos marcos** (decididos por auditoria contra código real):
-- Notification Foundation (Fase 2)
-- Ciclo activate/deactivate de módulos (Fase 4)
-- Modo Desktop com frontend estático (Fase 6)
-- Service Registry e Dependency Governance (Fases 8–8.1)
+**Próximos marcos** (decididos por auditoria contra código real,
+ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
+- Module Runtime Execution / hot-unload (Fase 9)
+- Security & Module Trust — assinatura, publisher registry (Fase 10)
+- Marketplace Distribution remota (Fase 11)
 
 ---
 
