@@ -21,6 +21,9 @@ from techforge_cli.commands.modules        import modules_cmd
 from techforge_cli.commands.docs           import docs_cmd
 from techforge_cli.commands.services       import services_cmd
 from techforge_cli.commands.runtime        import runtime_cmd
+from techforge_cli.commands.module_trust   import (
+    verify_module_cmd, integrity_cmd, publishers_cmd,
+)
 from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd, logs_cmd, dev_cmd
 
 
@@ -57,6 +60,9 @@ cli.add_command(modules_cmd)    # Phase 3 — modules list/show/validate
 cli.add_command(docs_cmd)       # Phase 5 — docs list/search/get/export-context
 cli.add_command(services_cmd)   # Fase 8 — services list/show/capabilities/contract/status
 cli.add_command(runtime_cmd)    # Fase 9 — runtime status/modules/module/initialize
+cli.add_command(verify_module_cmd)  # Fase 10 — verify-module
+cli.add_command(integrity_cmd)      # Fase 10 — integrity check
+cli.add_command(publishers_cmd)     # Fase 10 — publishers list/show
 cli.add_command(start_cmd)     # Phase 6
 cli.add_command(stop_cmd)      # Phase 6
 cli.add_command(status_cmd)    # Phase 6

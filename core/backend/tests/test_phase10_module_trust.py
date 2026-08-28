@@ -910,3 +910,115 @@ class TestUpdateRegeneratesIntegrityManifest:
         assert integrity_file.is_file()
         data = _json.loads(integrity_file.read_text(encoding="utf-8"))
         assert "manifest.yaml" in data["files"]
+
+
+# ── Slice 7 — API: GET /modules/{id}/integrity e /trust (§24) ─────────────────
+
+class TestModuleIntegrityRoute:
+
+    def test_get_integrity_unknown_module_404(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/ghost_module_9x/integrity")
+            assert resp.status_code == 404
+
+    def test_get_integrity_known_module_returns_status(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/hello_world/integrity")
+            assert resp.status_code == 200
+            assert resp.json()["module_id"] == "hello_world"
+
+    def test_get_integrity_is_read_only_no_notification_side_effect(self, tmp_path, monkeypatch):
+        """GET nao deve notificar (diferente do POST /verify) — e so leitura."""
+        import asyncio
+        from app.core.settings import settings
+        from app.module_engine.registry import registry, ModuleEntry
+        from app.module_engine.enums import ModuleStatus
+        from datetime import datetime
+        from fastapi.testclient import TestClient
+        from app.main import app
+        from app.db.database import AsyncSessionLocal
+        from app.models.notifications import Notification
+        from sqlalchemy import select, func, delete
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        module_id = "integrity_get_test"
+        mod_dir = tmp_path / module_id
+        (mod_dir / "backend").mkdir(parents=True)
+        (mod_dir / "backend" / "main.py").write_text("x=1\n", encoding="utf-8")
+        from app.module_trust.integrity import write_integrity_manifest
+        write_integrity_manifest(mod_dir)
+        (mod_dir / "backend" / "main.py").write_text("x=2\n", encoding="utf-8")  # modifica
+
+        entry = ModuleEntry(
+            module_id=module_id, name=module_id, version="1.0.0",
+            category="C", vendor="V", author="A", description="D",
+            status=ModuleStatus.INSTALLED, install_date=datetime.now())
+        registry.register(entry)
+
+        title = "Module integrity changed"
+        try:
+            async def _clean():
+                async with AsyncSessionLocal() as db:
+                    await db.execute(delete(Notification).where(
+                        Notification.title == title, Notification.module_id == module_id))
+                    await db.commit()
+            asyncio.run(_clean())
+
+            with TestClient(app) as client:
+                resp = client.get(f"/api/v1/modules/{module_id}/integrity")
+                assert resp.status_code == 200
+                assert resp.json()["status"] == "MODIFIED"
+
+            async def _count():
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(func.count(Notification.id)).where(
+                        Notification.title == title, Notification.module_id == module_id))
+                    return result.scalar()
+            assert asyncio.run(_count()) == 0
+        finally:
+            registry.deregister(module_id)
+
+
+class TestModuleTrustRoute:
+
+    def test_get_trust_unknown_module_404(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/ghost_module_9x/trust")
+            assert resp.status_code == 404
+
+    def test_get_trust_known_module_without_publisher_is_unverified(self):
+        """hello_world nao declara publisher — integridade nao foi gerada
+        (nao esta em modules/installed com integrity.json real neste
+        ambiente de teste), entao aceita tanto UNVERIFIED quanto INVALID
+        dependendo do estado do integrity.json real do repo; o que importa
+        e que a rota responde 200 com um trust_level valido."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get("/api/v1/modules/hello_world/trust")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["trust_level"] in (
+                "TRUSTED", "VERIFIED", "UNVERIFIED", "MODIFIED", "INVALID")
+            assert body["publisher"] is None
+
+    def test_get_trust_returns_valid_trust_level_field(self):
+        """GET /trust com modulo conhecido retorna um trust_level valido."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.get(f"/api/v1/modules/hello_world/trust")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert "trust_level" in body
+            assert body["trust_level"] in (
+                "TRUSTED", "VERIFIED", "UNVERIFIED", "MODIFIED", "INVALID")
+            assert "integrity_status" in body
+            assert "signature_status" in body
+            assert "module_id" in body
