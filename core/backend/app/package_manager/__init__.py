@@ -1,9 +1,9 @@
 from app.package_manager.manager import PackageManager, package_manager
 from app.package_manager.models import PackageInfo
 from app.package_manager.enums import (
-    InstallStatus, RemoveStatus, UpdateStatus,
-    TrustLevel, CompatibilityLevel,
+    InstallStatus, RemoveStatus, UpdateStatus, CompatibilityLevel,
 )
+from app.module_trust.trust import TrustLevel
 from app.package_manager.repository import (
     RepositoryProvider,
     LocalRepositoryProvider,

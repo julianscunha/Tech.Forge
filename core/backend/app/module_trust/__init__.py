@@ -9,9 +9,11 @@ from app.module_trust.integrity import (
     generate_integrity_manifest, verify_integrity, write_integrity_manifest,
 )
 from app.module_trust.publisher import PublisherType, PublisherTrustStatus
+from app.module_trust.trust import TrustLevel, TrustResolver
 
 __all__ = [
     "IntegrityStatus", "IntegrityResult",
     "generate_integrity_manifest", "verify_integrity", "write_integrity_manifest",
     "PublisherType", "PublisherTrustStatus",
+    "TrustLevel", "TrustResolver",
 ]

@@ -161,7 +161,7 @@ export interface LoaderResult {
 // ── Marketplace (Phase 4) ─────────────────────────────────────────────────────
 
 export type CompatibilityLevel = 'compatible' | 'warning' | 'incompatible'
-export type TrustLevel = 'verified' | 'community' | 'unsigned' | 'untrusted'
+export type TrustLevel = 'TRUSTED' | 'VERIFIED' | 'UNVERIFIED' | 'MODIFIED' | 'INVALID'
 
 export interface PackageInfo {
   module_id: string

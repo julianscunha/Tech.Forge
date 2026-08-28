@@ -366,3 +366,110 @@ class TestPublisherEnums:
         from app.module_trust.publisher import PublisherTrustStatus
         assert {s.value for s in PublisherTrustStatus} == {
             "TRUSTED", "UNTRUSTED", "REVOKED"}
+
+
+# ── Slice 3 — TrustResolver (§8) ────────────────────────────────────────────────
+
+class _FakePublisher:
+    def __init__(self, trust_status: str):
+        self.trust_status = trust_status
+
+
+class TestTrustLevelEnum:
+
+    def test_trust_level_values(self):
+        from app.module_trust.trust import TrustLevel
+        assert {t.value for t in TrustLevel} == {
+            "TRUSTED", "VERIFIED", "UNVERIFIED", "MODIFIED", "INVALID"}
+
+
+class TestTrustResolver:
+
+    def test_invalid_manifest_is_invalid(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        result = TrustResolver.resolve(IntegrityStatus.INVALID_MANIFEST, publisher=None)
+        assert result == TrustLevel.INVALID
+
+    def test_missing_file_is_invalid(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        result = TrustResolver.resolve(IntegrityStatus.MISSING_FILE, publisher=None)
+        assert result == TrustLevel.INVALID
+
+    def test_modified_file_is_modified(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        result = TrustResolver.resolve(IntegrityStatus.MODIFIED, publisher=None)
+        assert result == TrustLevel.MODIFIED
+
+    def test_unexpected_file_is_also_modified(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        result = TrustResolver.resolve(IntegrityStatus.UNEXPECTED_FILE, publisher=None)
+        assert result == TrustLevel.MODIFIED
+
+    def test_valid_integrity_unknown_publisher_is_unverified(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        result = TrustResolver.resolve(IntegrityStatus.VALID, publisher=None)
+        assert result == TrustLevel.UNVERIFIED
+
+    def test_valid_integrity_known_publisher_is_verified(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        publisher = _FakePublisher(trust_status="UNTRUSTED")
+        result = TrustResolver.resolve(IntegrityStatus.VALID, publisher=publisher)
+        assert result == TrustLevel.VERIFIED
+
+    def test_revoked_publisher_is_invalid_even_with_valid_integrity(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        publisher = _FakePublisher(trust_status="REVOKED")
+        result = TrustResolver.resolve(IntegrityStatus.VALID, publisher=publisher)
+        assert result == TrustLevel.INVALID
+
+    def test_trusted_publisher_with_valid_signature_is_trusted(self):
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        publisher = _FakePublisher(trust_status="TRUSTED")
+        result = TrustResolver.resolve(IntegrityStatus.VALID, publisher=publisher,
+                                       signature_status="VALID")
+        assert result == TrustLevel.TRUSTED
+
+    def test_trusted_publisher_without_signature_is_only_verified(self):
+        """Sem assinatura real (Slice 4 = so abstracao), TRUSTED e inalcancavel."""
+        from app.module_trust.trust import TrustResolver, TrustLevel
+        from app.module_trust.integrity import IntegrityStatus
+
+        publisher = _FakePublisher(trust_status="TRUSTED")
+        result = TrustResolver.resolve(IntegrityStatus.VALID, publisher=publisher)
+        assert result == TrustLevel.VERIFIED
+
+
+class TestOldTrustLevelMigration:
+    """Regressao — o TrustLevel antigo (Fase 4, minusculo) nao existe mais
+    separado; package_manager reexporta o novo."""
+
+    def test_package_manager_trust_level_is_the_new_one(self):
+        from app.package_manager import TrustLevel as PMTrustLevel
+        from app.module_trust.trust import TrustLevel as ModuleTrustLevel
+
+        assert PMTrustLevel is ModuleTrustLevel
+
+    def test_package_info_default_trust_level_is_unverified(self):
+        from app.module_trust.trust import TrustLevel
+        from app.package_manager.models import PackageInfo
+
+        info = PackageInfo(
+            module_id="x", name="X", version="1.0.0", category="C", vendor="V",
+            author="A", description="D")
+        assert info.trust_level == TrustLevel.UNVERIFIED

@@ -11,7 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from app.package_manager.enums import TrustLevel, CompatibilityLevel
+from app.package_manager.enums import CompatibilityLevel
+from app.module_trust.trust import TrustLevel
 
 
 @dataclass
@@ -38,7 +39,7 @@ class PackageInfo:
     signature:  Optional[str] = None
     checksum:   Optional[str] = None
     publisher:  Optional[str] = None
-    trust_level: TrustLevel   = TrustLevel.UNSIGNED
+    trust_level: TrustLevel   = TrustLevel.UNVERIFIED
 
     # ── Display ───────────────────────────────────────────────────────────────
     icon:  Optional[str] = None
@@ -94,7 +95,7 @@ class PackageInfo:
             signature   = raw.get("signature"),
             checksum    = raw.get("checksum"),
             publisher   = raw.get("publisher"),
-            trust_level = TrustLevel.UNSIGNED,
+            trust_level = TrustLevel.UNVERIFIED,
             icon        = raw.get("icon"),
             color       = raw.get("color"),
             order       = int(raw["order"]) if raw.get("order") is not None else None,
