@@ -47,6 +47,9 @@ class CatalogAggregator:
         self.official_provider = OfficialCatalogProvider(
             base_url="https://techforge.io/catalog"  # placeholder
         )
+        # Track source availability for detecting transitions
+        # {source_id: bool} where True = last fetch was successful (non-empty)
+        self._source_availability: dict[str, bool] = {}
 
     async def _get_custom_providers(
         self, db: AsyncSession
@@ -101,7 +104,7 @@ class CatalogAggregator:
 
         results = await asyncio.gather(
             *(
-                self._fetch_source(source_id, provider, platform_version, force_refresh)
+                self._fetch_source(source_id, provider, platform_version, force_refresh, db)
                 for source_id, provider in ordered_sources
             )
         )
@@ -120,8 +123,14 @@ class CatalogAggregator:
         provider,
         platform_version: str,
         force_refresh: bool,
+        db: AsyncSession,
     ) -> list[PackageInfo]:
-        """Fetch from a single source, use cache if available, handle errors gracefully."""
+        """
+        Fetch from a single source, use cache if available, handle errors gracefully.
+
+        Detects source availability transitions and creates notifications when a
+        previously-available source becomes unavailable (returns empty list due to error).
+        """
         try:
             if not force_refresh:
                 cached = self.cache.get(source_id)
@@ -129,6 +138,17 @@ class CatalogAggregator:
                     return cached
 
             result = await provider.list_available(platform_version)
+
+            # Track successful fetch (non-empty result)
+            was_available = self._source_availability.get(source_id, False)
+            is_available = len(result) > 0
+
+            self._source_availability[source_id] = is_available
+
+            # Detect transition: was available, now is NOT
+            if was_available and not is_available:
+                await self._notify_source_unavailable(db, source_id)
+
             self.cache.set(source_id, result)
             return result
 
@@ -136,5 +156,42 @@ class CatalogAggregator:
             logger.warning(
                 f"Failed to fetch from source '{source_id}': {type(e).__name__}: {e}"
             )
+
+            # Detect transition: was available (if we're catching exception), now is NOT
+            was_available = self._source_availability.get(source_id, False)
+            if was_available:
+                self._source_availability[source_id] = False
+                try:
+                    await self._notify_source_unavailable(db, source_id)
+                except Exception as notify_error:
+                    logger.error(f"Failed to notify source unavailability for {source_id}: {notify_error}")
+
             # Don't propagate exception; other sources should still work
             return []
+
+    async def _notify_source_unavailable(
+        self, db: AsyncSession, source_id: str
+    ) -> None:
+        """
+        Create a notification when a source becomes unavailable (transition detection).
+
+        Uses dedupe pattern: only notifies if no identical notification already exists
+        (same title + message). Prevents duplicate notifications on repeated failures.
+        """
+        from sqlalchemy import func, select
+        from app.models.notifications import Notification
+        from app.services.notifications import NotificationService
+
+        title = "Catálogo indisponível"
+        message = f"A fonte de catálogo '{source_id}' não está respondendo."
+
+        # Dedupe: check if identical notification already exists
+        existing = await db.execute(
+            select(func.count(Notification.id)).where(
+                Notification.title == title, Notification.message == message
+            )
+        )
+        if existing.scalar() == 0:
+            await NotificationService.create(
+                db, level="warning", title=title, message=message, module_id=None
+            )
