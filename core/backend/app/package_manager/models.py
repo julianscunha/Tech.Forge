@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from app.package_manager.catalog_source import CatalogSource
 from app.package_manager.enums import CompatibilityLevel
 from app.module_trust.trust import TrustLevel
 
@@ -45,6 +46,10 @@ class PackageInfo:
     icon:  Optional[str] = None
     color: Optional[str] = None
     order: Optional[int] = None
+
+    # ── Catalog source (Fase 11) ──────────────────────────────────────────────
+    source: CatalogSource = CatalogSource.LOCAL
+    source_url: Optional[str] = None     # URL of the catalog this package came from
 
     # ── Source ────────────────────────────────────────────────────────────────
     source_path: Optional[Path] = None    # path to the .mod file or installed dir
