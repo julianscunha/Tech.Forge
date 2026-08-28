@@ -473,3 +473,57 @@ class TestOldTrustLevelMigration:
             module_id="x", name="X", version="1.0.0", category="C", vendor="V",
             author="A", description="D")
         assert info.trust_level == TrustLevel.UNVERIFIED
+
+
+# ── Slice 4 — SignatureProvider (abstracao, §11/§12) ────────────────────────────
+
+class TestSignatureStatusEnum:
+
+    def test_signature_status_values(self):
+        from app.module_trust.signature import SignatureStatus
+        assert {s.value for s in SignatureStatus} == {
+            "NOT_CONFIGURED", "VALID", "INVALID", "UNSUPPORTED"}
+
+
+class TestNoOpSignatureProvider:
+
+    def test_verify_without_signature_is_not_configured(self):
+        from app.module_trust.signature import NoOpSignatureProvider, SignatureStatus
+
+        provider = NoOpSignatureProvider()
+        result = provider.verify(data=b"content", signature=None, public_key=None)
+        assert result == SignatureStatus.NOT_CONFIGURED
+
+    def test_verify_with_signature_present_is_unsupported(self):
+        """Ha uma assinatura no pacote, mas nenhum algoritmo real pra checa-la."""
+        from app.module_trust.signature import NoOpSignatureProvider, SignatureStatus
+
+        provider = NoOpSignatureProvider()
+        result = provider.verify(data=b"content", signature=b"fake-sig", public_key="fake-key")
+        assert result == SignatureStatus.UNSUPPORTED
+
+    def test_sign_raises_not_implemented(self):
+        from app.module_trust.signature import NoOpSignatureProvider
+
+        provider = NoOpSignatureProvider()
+        with pytest.raises(NotImplementedError):
+            provider.sign(data=b"content", private_key=b"key")
+
+    def test_identify_algorithm_is_none(self):
+        from app.module_trust.signature import NoOpSignatureProvider
+
+        assert NoOpSignatureProvider().identify_algorithm() == "none"
+
+
+class TestSignatureProviderAbstraction:
+
+    def test_cannot_instantiate_abstract_base_directly(self):
+        from app.module_trust.signature import SignatureProvider
+
+        with pytest.raises(TypeError):
+            SignatureProvider()
+
+    def test_default_signature_provider_is_noop_instance(self):
+        from app.module_trust.signature import default_signature_provider, NoOpSignatureProvider
+
+        assert isinstance(default_signature_provider, NoOpSignatureProvider)
