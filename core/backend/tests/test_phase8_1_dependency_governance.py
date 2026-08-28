@@ -740,3 +740,48 @@ class TestCheckCanRemove:
         can, dependents = check_can_remove("provider", registry, _FakeServiceRegistryFull())
         assert can is False
         assert dependents == ["consumer"]
+
+
+# ── API routes (§25) ───────────────────────────────────────────────────────────
+
+@pytest.fixture
+def client():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as c:
+        yield c
+
+
+class TestDependencyAPIRoutes:
+
+    def test_get_dependencies_of_module_without_declarations(self, client):
+        resp = client.get("/api/v1/modules/hello_world/dependencies")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_get_dependents_of_module_without_dependents(self, client):
+        resp = client.get("/api/v1/modules/hello_world/dependents")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_validate_endpoint_returns_dict(self, client):
+        resp = client.get("/api/v1/dependencies/validate")
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), dict)
+
+    def test_graph_endpoint_returns_mermaid(self, client):
+        resp = client.get("/api/v1/dependencies/graph")
+        assert resp.status_code == 200
+        assert resp.json()["mermaid"].startswith("flowchart TD")
+
+
+# ── CLI commands (§24) ──────────────────────────────────────────────────────────
+
+class TestDependencyCLI:
+
+    def test_dependencies_command_registered(self):
+        from techforge_cli.commands.modules import modules_cmd
+        assert "dependencies" in modules_cmd.commands
+        assert "dependents" in modules_cmd.commands
+        assert "validate-dependencies" in modules_cmd.commands
+        assert "graph" in modules_cmd.commands

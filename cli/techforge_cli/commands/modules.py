@@ -193,3 +193,73 @@ def remove_cmd(module_id, yes):
     except urllib.error.URLError as exc:
         print_error(f"Plataforma não acessível: {exc.reason}")
         raise SystemExit(1)
+
+
+# ── Dependency Governance (Fase 8.1 §24) — delegates to Core API ────────────
+
+def _core_get(path: str):
+    import urllib.request
+    import urllib.error
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:8000/api/v1{path}", timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.URLError as exc:
+        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
+        raise SystemExit(1)
+
+
+@modules_cmd.command("dependencies")
+@click.argument("module_id")
+def dependencies_cmd(module_id):
+    """Show resolved dependencies (status) of a module."""
+    deps = _core_get(f"/modules/{module_id}/dependencies")
+    if not deps:
+        print_info(f"'{module_id}' não declara dependências.")
+        return
+    table = Table(show_header=True, header_style="bold white", border_style="dim")
+    table.add_column("Target", style="cyan")
+    table.add_column("Type")
+    table.add_column("Required")
+    table.add_column("Version range")
+    table.add_column("Status")
+    for d in deps:
+        table.add_row(d["target_id"], d["target_type"], str(d["required"]),
+                      d.get("version_range") or "-", d.get("status") or "-")
+    console.print(table)
+
+
+@modules_cmd.command("dependents")
+@click.argument("module_id")
+def dependents_cmd(module_id):
+    """List installed modules that depend on this one."""
+    dependents = _core_get(f"/modules/{module_id}/dependents")
+    if not dependents:
+        print_info(f"Nenhum módulo instalado depende de '{module_id}'.")
+        return
+    for dep in dependents:
+        console.print(f"  [cyan]{dep}[/cyan]")
+
+
+@modules_cmd.command("validate-dependencies")
+def validate_dependencies_cmd():
+    """Validate declared dependencies of every installed module."""
+    report = _core_get("/dependencies/validate")
+    if not report:
+        print_info("Nenhum módulo instalado declara dependências.")
+        return
+    failed = False
+    for module_id, checks in report.items():
+        console.print(f"[cyan]{module_id}[/cyan]")
+        for c in checks:
+            icon = "[green]✓[/green]" if c["passed"] else "[red]✗[/red]"
+            console.print(f"  {icon} {c['name']}: {c['detail']}")
+            failed = failed or (not c["passed"] and c["required"])
+    if failed:
+        raise SystemExit(1)
+
+
+@modules_cmd.command("graph")
+def graph_cmd():
+    """Print the dependency graph as raw Mermaid flowchart syntax."""
+    result = _core_get("/dependencies/graph")
+    console.print(result.get("mermaid", ""))

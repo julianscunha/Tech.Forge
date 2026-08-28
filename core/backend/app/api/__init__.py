@@ -11,6 +11,8 @@ from app.api.routes.notifications import router as notifications_router
 from app.api.routes.module_assets import router as module_assets_router
 from app.api.routes.docs_context import router as docs_context_router
 from app.api.routes.services import router as services_router
+from app.api.routes.dependencies import modules_router as dependencies_modules_router
+from app.api.routes.dependencies import dependencies_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(platform_router)
@@ -25,3 +27,5 @@ api_router.include_router(notifications_router)  # Phase 2 — Notification Foun
 api_router.include_router(module_assets_router)  # Phase 3 — module frontend assets
 api_router.include_router(docs_context_router)   # Fase 5 — help contextual
 api_router.include_router(services_router)       # Fase 8 — Service Registry
+api_router.include_router(dependencies_modules_router)  # Fase 8.1 — Dependency Governance
+api_router.include_router(dependencies_router)          # Fase 8.1 — Dependency Governance
