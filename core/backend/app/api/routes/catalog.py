@@ -10,6 +10,7 @@ in-memory filter/sorted/slice over what's already cached — no external search 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -464,7 +465,3 @@ async def list_favorites(
     """Get list of module IDs that are marked as favorites."""
     favorites = await CatalogFavoriteService.list_ids(db)
     return sorted(list(favorites))
-
-
-# Add missing import
-from datetime import datetime
