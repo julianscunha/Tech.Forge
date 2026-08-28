@@ -216,6 +216,11 @@ class PackageManager:
 
             # Atomic move: tmp → installed/<module_id>
             shutil.move(str(extract_tmp), str(target_dir))
+
+            # Fase 10 §5/§6 — integrity manifest (hash por-arquivo) dos arquivos
+            # recém-instalados, para detectar alteração depois.
+            from app.module_trust.integrity import write_integrity_manifest
+            write_integrity_manifest(target_dir)
         except Exception as exc:
             if extract_tmp.exists():
                 shutil.rmtree(extract_tmp, ignore_errors=True)
