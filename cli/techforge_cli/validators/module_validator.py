@@ -230,6 +230,15 @@ class ModuleCLIValidator:
         # ── 13. §8.1 Dependency Governance ──────────────────────────────────────
         ModuleCLIValidator._check_dependency_governance(report, raw)
 
+        # ── 14. §10.6 Integrity ──────────────────────────────────────────────────
+        integrity_status = ModuleCLIValidator._check_integrity(report, module_path)
+
+        # ── 15. §10.11 Signature ───────────────────────────────────────────────
+        ModuleCLIValidator._check_signature(report, raw)
+
+        # ── 16. §10.8 Trust Level ──────────────────────────────────────────────
+        ModuleCLIValidator._check_trust(report, integrity_status)
+
         return report
 
     @staticmethod
@@ -302,6 +311,73 @@ class ModuleCLIValidator:
         for c in checks:
             report.add(f"§8.1 {c.name}", c.passed, c.detail,
                        level="error" if c.required else "warning")
+
+    @staticmethod
+    def _check_integrity(report: ValidationReport, module_path: Path):
+        """
+        §10.6 — verifica integrity.json se já existir (típico de um
+        diretório JÁ INSTALADO, gerado por PackageManager.install()).
+        Um diretório de código-fonte ainda não empacotado/instalado
+        legitimamente não tem integrity.json — isso não é uma falha,
+        é o estado esperado antes da instalação. Retorna o
+        IntegrityStatus resolvido, ou None se não havia o que checar.
+        """
+        from app.module_trust.integrity import verify_integrity, IntegrityStatus, INTEGRITY_FILENAME
+
+        integrity_file = module_path / INTEGRITY_FILENAME
+        if not integrity_file.is_file():
+            report.add("§10 Integrity: manifest present", True,
+                       "integrity.json not yet generated — expected before installation",
+                       level="warning")
+            return None
+
+        result = verify_integrity(module_path)
+        passed = result.status == IntegrityStatus.VALID
+        detail = result.detail or (
+            f"modified={result.modified_files}, missing={result.missing_files}, "
+            f"unexpected={result.unexpected_files}"
+        )
+        report.add(f"§10 Integrity: {result.status.value}", passed,
+                   "all files match integrity.json" if passed else detail)
+        return result.status
+
+    @staticmethod
+    def _check_signature(report: ValidationReport, raw: dict) -> None:
+        """§10.11 — assinatura ausente/não suportada nunca bloqueia
+        (Fase 10 é abstração-only, sem Ed25519 real); só uma assinatura
+        presente E explicitamente inválida seria bloqueante, e isso não
+        pode acontecer ainda com NoOpSignatureProvider."""
+        from app.module_trust.signature import default_signature_provider, SignatureStatus
+
+        signature = raw.get("signature")
+        status = default_signature_provider.verify(
+            data=b"", signature=signature.encode() if signature else None, public_key=None)
+        report.add(f"§10 Signature: {status.value}", status != SignatureStatus.INVALID,
+                   f"signature status: {status.value}", level="warning")
+
+    @staticmethod
+    def _check_trust(report: ValidationReport, integrity_status) -> None:
+        """
+        §10.8 — Trust Level. Limitação conhecida e documentada: este
+        validador roda de forma síncrona (sem sessão de banco), então
+        não consulta o Publisher Registry (que exige AsyncSession) —
+        o resultado aqui nunca chega a VERIFIED/TRUSTED, só reflete a
+        dimensão de integridade. A resolução completa (com publisher
+        real) acontece na API assíncrona (GET /modules/{id}/trust).
+        Só roda se houver integrity_status pra avaliar (diretório já
+        instalado) — pular silenciosamente pra diretório-fonte ainda
+        não instalado não é um erro.
+        """
+        if integrity_status is None:
+            return
+
+        from app.module_trust.trust import TrustResolver
+
+        level = TrustResolver.resolve(integrity_status, publisher=None)
+        report.add(f"§10 Trust Level: {level.value}", True,
+                   f"{level.value} (publisher not checked — synchronous validator, "
+                   f"see GET /modules/{{id}}/trust for full resolution)",
+                   level="warning")
 
     @staticmethod
     def _check_contract_completeness(report: ValidationReport, contract_path: Path) -> None:

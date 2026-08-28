@@ -201,6 +201,19 @@ class PackageManager:
             operation_log.record("install", module_id, version, "already_installed", msg)
             return InstallResult(InstallStatus.ALREADY_INSTALLED, module_id, version, msg)
 
+        # ── 4.5 Dependency governance (Fase 10 §7 — não instalar silenciosamente
+        # um pacote com dependências estruturalmente inválidas) ─────────────────
+        dependencies = raw.get("dependencies") or []
+        if dependencies:
+            module_type = str(raw.get("module_type", "application")).strip().lower()
+            from app.dependency_engine.validator import DependencyValidator
+            dep_checks = DependencyValidator.validate(module_type, dependencies, module_registry=registry)
+            failed = [c for c in dep_checks if not c.passed and c.required]
+            if failed:
+                msg = "Invalid dependencies: " + "; ".join(f"{c.name}: {c.detail}" for c in failed)
+                operation_log.record("install", module_id, version, "invalid_dependencies", msg)
+                return self._fail_install(module_id, version, msg)
+
         # ── 5. Extract ────────────────────────────────────────────────────────
         try:
             extract_tmp = self._cache / f"_extract_{module_id}"

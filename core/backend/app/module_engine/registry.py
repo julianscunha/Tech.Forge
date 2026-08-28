@@ -50,6 +50,10 @@ class ModuleEntry:
     # Module type (Fase 8 §5) — "application" | "service"
     module_type: str = "application"
 
+    # Provenance (Fase 10 §14) — de onde este módulo veio
+    source_type: str = "local"
+    source_location: Optional[str] = None
+
     # Compatibility window
     platform_min_version: str = "0.0.0"
     platform_max_version: str = "999.999.999"
@@ -91,6 +95,8 @@ class ModuleEntry:
             errors=errors,
             warnings=warnings,
             module_type=manifest.module_type,
+            source_type=manifest.source_type,
+            source_location=manifest.source_location,
             platform_min_version=manifest.platform_min_version,
             platform_max_version=manifest.platform_max_version,
             entry_backend=manifest.entry_backend,

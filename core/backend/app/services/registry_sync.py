@@ -34,6 +34,8 @@ async def sync_registry_to_db(db: AsyncSession) -> None:
             existing.description = entry.description
             existing.is_enabled = enabled
             existing.category_id = category.id if category else existing.category_id
+            existing.source_type = entry.source_type
+            existing.source_location = entry.source_location
         else:
             db.add(Module(
                 module_id=entry.module_id,
@@ -46,6 +48,8 @@ async def sync_registry_to_db(db: AsyncSession) -> None:
                 platform_max_version=entry.platform_max_version,
                 is_enabled=enabled,
                 category_id=category.id if category else None,
+                source_type=entry.source_type,
+                source_location=entry.source_location,
             ))
     await db.commit()
     logger.info("Registry synced to DB (%d modules).", len(registry.all()))

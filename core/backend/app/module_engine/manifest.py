@@ -266,6 +266,8 @@ class ManifestParser:
             **_parse_documentation_versioning(raw),
             signature=raw.get("signature") or None,
             checksum=raw.get("checksum") or None,
+            source_type=str(raw.get("source_type", "local")).strip().lower(),
+            source_location=raw.get("source_location") or None,
             dependencies=list(raw.get("dependencies") or []),
             raw=raw,
         )

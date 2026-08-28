@@ -12,6 +12,7 @@ import pytest
 
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
+sys.path.insert(0, str(ROOT / "cli"))
 
 
 def _write_package(tmp_path: Path, files: dict[str, str]) -> Path:
@@ -527,3 +528,229 @@ class TestSignatureProviderAbstraction:
         from app.module_trust.signature import default_signature_provider, NoOpSignatureProvider
 
         assert isinstance(default_signature_provider, NoOpSignatureProvider)
+
+
+# ── Slice 5 — Provenance (§14) ──────────────────────────────────────────────────
+
+class TestInstallSource:
+
+    def test_local_maps_to_local_file(self):
+        from app.module_trust.provenance import resolve_install_source, InstallSource
+        assert resolve_install_source("local") == InstallSource.LOCAL_FILE
+
+    def test_development_maps_to_local_development(self):
+        from app.module_trust.provenance import resolve_install_source, InstallSource
+        assert resolve_install_source("development") == InstallSource.LOCAL_DEVELOPMENT
+
+    def test_catalog_maps_to_internal_catalog(self):
+        from app.module_trust.provenance import resolve_install_source, InstallSource
+        assert resolve_install_source("catalog") == InstallSource.INTERNAL_CATALOG
+
+    def test_unknown_source_type_defaults_to_local_file(self):
+        from app.module_trust.provenance import resolve_install_source, InstallSource
+        assert resolve_install_source("something_else") == InstallSource.LOCAL_FILE
+
+
+class TestModuleEntryProvenance:
+
+    def test_module_entry_default_source_type_is_local(self):
+        from datetime import datetime
+        from app.module_engine.registry import ModuleEntry
+        from app.module_engine.enums import ModuleStatus
+
+        entry = ModuleEntry(
+            module_id="x", name="X", version="1.0.0", category="C", vendor="V",
+            author="A", description="D", status=ModuleStatus.INSTALLED,
+            install_date=datetime.now())
+        assert entry.source_type == "local"
+        assert entry.source_location is None
+
+    def test_from_manifest_carries_source_type(self, tmp_path):
+        import yaml
+        from app.module_engine.manifest import ManifestParser
+        from app.module_engine.registry import ModuleEntry
+        from app.module_engine.enums import ModuleStatus
+
+        mod_dir = tmp_path / "mod"
+        mod_dir.mkdir()
+        manifest = {
+            "id": "mod", "name": "Mod", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "2.0.0",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "icon": "shield-check", "order": 10,
+            "source_type": "development", "source_location": "/dev/mod",
+        }
+        (mod_dir / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
+
+        parsed = ManifestParser.parse(mod_dir)
+        entry = ModuleEntry.from_manifest(parsed, ModuleStatus.INSTALLED, [], [])
+        assert entry.source_type == "development"
+        assert entry.source_location == "/dev/mod"
+
+
+# ── Slice 5 — Module Validator: Integrity/Signature/Trust (§19) ────────────────
+
+class TestValidatorIntegritySignatureTrust:
+
+    def test_source_dir_without_integrity_json_is_warning_not_error(self, tmp_path):
+        """Fluxo normal: fonte ainda nao instalada nao tem integrity.json."""
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+
+        mod = tmp_path / "mod"
+        (mod / "backend").mkdir(parents=True)
+        (mod / "frontend").mkdir(parents=True)
+        (mod / "backend" / "main.py").write_text("router = None\nmodule = None\n")
+        (mod / "frontend" / "index.tsx").write_text(
+            "export const moduleConfig={}\nexport default function(){return null}\n")
+        manifest = {
+            "id": "mod", "name": "Mod", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "2.0.0",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "icon": "shield-check", "order": 10,
+        }
+        import yaml
+        (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
+
+        report = ModuleCLIValidator.validate(mod)
+        integrity_checks = [c for c in report.checks if c.name.startswith("§10 Integrity")]
+        assert integrity_checks and integrity_checks[0].passed
+        assert integrity_checks[0].level == "warning"
+
+    def test_installed_dir_with_valid_integrity_passes(self, tmp_path):
+        from app.module_trust.integrity import write_integrity_manifest
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        import yaml
+
+        mod = tmp_path / "mod"
+        (mod / "backend").mkdir(parents=True)
+        (mod / "frontend").mkdir(parents=True)
+        (mod / "backend" / "main.py").write_text("router = None\nmodule = None\n")
+        (mod / "frontend" / "index.tsx").write_text(
+            "export const moduleConfig={}\nexport default function(){return null}\n")
+        manifest = {
+            "id": "mod", "name": "Mod", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "2.0.0",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "icon": "shield-check", "order": 10,
+        }
+        (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
+        write_integrity_manifest(mod)
+
+        report = ModuleCLIValidator.validate(mod)
+        integrity_checks = [c for c in report.checks
+                            if c.name.startswith("§10 Integrity") and "VALID" in c.name]
+        assert integrity_checks and integrity_checks[0].passed
+
+        trust_checks = [c for c in report.checks if c.name.startswith("§10 Trust Level")]
+        assert trust_checks and "UNVERIFIED" in trust_checks[0].name
+
+    def test_installed_dir_with_modified_file_fails_integrity(self, tmp_path):
+        from app.module_trust.integrity import write_integrity_manifest
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        import yaml
+
+        mod = tmp_path / "mod"
+        (mod / "backend").mkdir(parents=True)
+        (mod / "frontend").mkdir(parents=True)
+        (mod / "backend" / "main.py").write_text("router = None\nmodule = None\n")
+        (mod / "frontend" / "index.tsx").write_text(
+            "export const moduleConfig={}\nexport default function(){return null}\n")
+        manifest = {
+            "id": "mod", "name": "Mod", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "2.0.0",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "icon": "shield-check", "order": 10,
+        }
+        (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
+        write_integrity_manifest(mod)
+        (mod / "backend" / "main.py").write_text("router = None\nmodule = None\nEVIL=1\n")
+
+        report = ModuleCLIValidator.validate(mod)
+        integrity_checks = [c for c in report.checks if c.name.startswith("§10 Integrity")]
+        assert integrity_checks and not integrity_checks[0].passed
+        assert not report.passed
+
+    def test_signature_absent_is_warning_never_blocks(self, tmp_path):
+        from techforge_cli.validators.module_validator import ModuleCLIValidator
+        import yaml
+
+        mod = tmp_path / "mod"
+        (mod / "backend").mkdir(parents=True)
+        (mod / "frontend").mkdir(parents=True)
+        (mod / "backend" / "main.py").write_text("router = None\nmodule = None\n")
+        (mod / "frontend" / "index.tsx").write_text(
+            "export const moduleConfig={}\nexport default function(){return null}\n")
+        manifest = {
+            "id": "mod", "name": "Mod", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "2.0.0",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "icon": "shield-check", "order": 10,
+        }
+        (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
+
+        report = ModuleCLIValidator.validate(mod)
+        sig_checks = [c for c in report.checks if c.name.startswith("§10 Signature")]
+        assert sig_checks and sig_checks[0].passed
+        assert sig_checks[0].level == "warning"
+
+
+# ── Slice 5 — Install-time dependency blocking (§7) ────────────────────────────
+
+class TestInstallBlocksInvalidDependencies:
+
+    def test_install_rejects_structurally_invalid_dependency(self, tmp_path):
+        import asyncio
+        from app.package_manager.manager import PackageManager
+        from app.package_manager.enums import InstallStatus
+        from tests.test_phase4 import make_mod_file
+
+        installed_dir = tmp_path / "installed"
+        cache_dir = tmp_path / "cache"
+        installed_dir.mkdir()
+        cache_dir.mkdir()
+
+        manifest = {
+            "id": "bad_dep_mod", "name": "Bad Dep", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "999.999.999",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "dependencies": [{"target": {"type": "bogus_type", "id": "x"}}],
+        }
+        mod_path = make_mod_file(tmp_path, manifest)
+
+        pm = PackageManager(installed_path=installed_dir, cache_path=cache_dir)
+        result = asyncio.run(pm.install(mod_path))
+
+        assert result.status == InstallStatus.FAILED
+        assert not (installed_dir / "bad_dep_mod").exists()
+
+    def test_install_accepts_structurally_valid_dependency(self, tmp_path):
+        import asyncio
+        from app.package_manager.manager import PackageManager
+        from app.package_manager.enums import InstallStatus
+        from tests.test_phase4 import make_mod_file
+
+        installed_dir = tmp_path / "installed"
+        cache_dir = tmp_path / "cache"
+        installed_dir.mkdir()
+        cache_dir.mkdir()
+
+        manifest = {
+            "id": "good_dep_mod", "name": "Good Dep", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "999.999.999",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+            "dependencies": [{"target": {"type": "capability", "id": "aws.cost.read"},
+                              "required": False}],
+        }
+        mod_path = make_mod_file(tmp_path, manifest)
+
+        pm = PackageManager(installed_path=installed_dir, cache_path=cache_dir)
+        result = asyncio.run(pm.install(mod_path))
+
+        assert result.status == InstallStatus.SUCCESS

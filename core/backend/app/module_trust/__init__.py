@@ -8,6 +8,7 @@ from app.module_trust.integrity import (
     IntegrityStatus, IntegrityResult,
     generate_integrity_manifest, verify_integrity, write_integrity_manifest,
 )
+from app.module_trust.provenance import InstallSource, resolve_install_source
 from app.module_trust.publisher import PublisherType, PublisherTrustStatus
 from app.module_trust.trust import TrustLevel, TrustResolver
 from app.module_trust.signature import (
@@ -17,6 +18,7 @@ from app.module_trust.signature import (
 __all__ = [
     "IntegrityStatus", "IntegrityResult",
     "generate_integrity_manifest", "verify_integrity", "write_integrity_manifest",
+    "InstallSource", "resolve_install_source",
     "PublisherType", "PublisherTrustStatus",
     "TrustLevel", "TrustResolver",
     "SignatureStatus", "SignatureProvider", "NoOpSignatureProvider", "default_signature_provider",
