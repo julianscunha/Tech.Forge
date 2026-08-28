@@ -208,3 +208,161 @@ class TestInstallWritesIntegrityManifest:
         assert integrity_file.is_file()
         data = _json.loads(integrity_file.read_text(encoding="utf-8"))
         assert "manifest.yaml" in data["files"]
+
+
+# ── Slice 2 — Publisher model + Registry (§10/§13) ─────────────────────────────
+
+@pytest.fixture()
+def db_client():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as c:
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from sqlalchemy import delete
+        from app.models.publisher import Publisher
+
+        async def _clean():
+            async with AsyncSessionLocal() as s:
+                await s.execute(delete(Publisher))
+                await s.commit()
+
+        asyncio.run(_clean())
+        yield c
+        asyncio.run(_clean())
+
+
+class TestPublisherService:
+
+    def test_register_creates_publisher(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                p = await PublisherService.register(db, PublisherCreate(
+                    id="techforge.internal", name="TechForge Internal",
+                    type="INTERNAL", trust_status="TRUSTED"))
+                return p
+
+        publisher = asyncio.run(_run())
+        assert publisher.id == "techforge.internal"
+        assert publisher.trust_status == "TRUSTED"
+
+    def test_register_is_idempotent_updates_existing(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await PublisherService.register(db, PublisherCreate(
+                    id="acme", name="Acme v1", type="THIRD_PARTY"))
+                updated = await PublisherService.register(db, PublisherCreate(
+                    id="acme", name="Acme v2", type="THIRD_PARTY"))
+                all_publishers = await PublisherService.get_all(db)
+                return updated, all_publishers
+
+        updated, all_publishers = asyncio.run(_run())
+        assert updated.name == "Acme v2"
+        assert len([p for p in all_publishers if p.id == "acme"]) == 1
+
+    def test_get_by_id_unknown_returns_none(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                return await PublisherService.get_by_id(db, "ghost_publisher_9x")
+
+        assert asyncio.run(_run()) is None
+
+    def test_revoke_sets_trust_status_revoked(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await PublisherService.register(db, PublisherCreate(
+                    id="bad_actor", name="Bad Actor", trust_status="TRUSTED"))
+                return await PublisherService.revoke(db, "bad_actor")
+
+        revoked = asyncio.run(_run())
+        assert revoked.trust_status == "REVOKED"
+
+    def test_revoke_unknown_publisher_returns_none(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                return await PublisherService.revoke(db, "ghost_publisher_9x")
+
+        assert asyncio.run(_run()) is None
+
+
+class TestPublisherAPIRoutes:
+
+    def test_list_publishers_empty_by_default(self, db_client):
+        resp = db_client.get("/api/v1/publishers")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_list_publishers_includes_registered(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await PublisherService.register(db, PublisherCreate(
+                    id="techforge.internal", name="TechForge Internal", type="INTERNAL"))
+
+        asyncio.run(_run())
+        resp = db_client.get("/api/v1/publishers")
+        assert resp.status_code == 200
+        ids = [p["id"] for p in resp.json()]
+        assert "techforge.internal" in ids
+
+    def test_get_publisher_unknown_returns_404(self, db_client):
+        resp = db_client.get("/api/v1/publishers/ghost_publisher_9x")
+        assert resp.status_code == 404
+
+    def test_get_publisher_known_returns_data(self, db_client):
+        import asyncio
+        from app.db.database import AsyncSessionLocal
+        from app.services.publisher import PublisherService
+        from app.schemas.publisher import PublisherCreate
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await PublisherService.register(db, PublisherCreate(
+                    id="acme", name="Acme Corp", type="THIRD_PARTY", trust_status="UNTRUSTED"))
+
+        asyncio.run(_run())
+        resp = db_client.get("/api/v1/publishers/acme")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["name"] == "Acme Corp"
+        assert body["trust_status"] == "UNTRUSTED"
+
+
+class TestPublisherEnums:
+
+    def test_publisher_type_values(self):
+        from app.module_trust.publisher import PublisherType
+        assert {t.value for t in PublisherType} == {
+            "OFFICIAL", "INTERNAL", "THIRD_PARTY", "LOCAL_DEVELOPMENT"}
+
+    def test_publisher_trust_status_values(self):
+        from app.module_trust.publisher import PublisherTrustStatus
+        assert {s.value for s in PublisherTrustStatus} == {
+            "TRUSTED", "UNTRUSTED", "REVOKED"}
