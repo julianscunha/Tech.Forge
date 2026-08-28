@@ -38,6 +38,18 @@ descoberta → validação → registro → instalação → execução → docu
 | Deploy e atualização manuais por ferramenta | `.mod` empacotado, instalado e atualizado com rollback |
 | Conhecimento espalhado | **Documentation Engine** indexa tudo, com busca e contexto p/ IA |
 
+### Este repositório é só a plataforma — os módulos ficam à parte
+
+Este repositório (`Tech.Forge`) contém **só o Core**: o motor que carrega,
+executa e gerencia módulos. Ele **não vem com módulos de negócio prontos**
+(fora dois exemplos de referência usados internamente para testes).
+
+Os módulos reais — as ferramentas que você de fato usa dentro da
+plataforma — vivem num catálogo separado:
+**[`Tech.Forge.Modules`](https://github.com/julianscunha/Tech.Forge.Modules)**.
+Se você quer ver o que já existe pra instalar, ou criar um módulo novo,
+é lá que você deve ir depois de ter o Core rodando.
+
 ---
 
 ## 🏗️ Arquitetura
