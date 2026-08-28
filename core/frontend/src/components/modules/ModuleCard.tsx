@@ -2,16 +2,18 @@ import { AlertCircle, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
 import { CompletenessBadge } from './CompletenessBadge'
-import type { ModuleEntry, CompletenessReport } from '@/types'
+import { TrustBadge } from '@/components/marketplace/TrustBadge'
+import type { ModuleEntry, CompletenessReport, ModuleTrust } from '@/types'
 
 interface Props {
   module: ModuleEntry
   developerMode: boolean
   completeness?: CompletenessReport
+  trust?: ModuleTrust
   onClick: (module: ModuleEntry) => void
 }
 
-export function ModuleCard({ module, developerMode, completeness, onClick }: Props) {
+export function ModuleCard({ module, developerMode, completeness, trust, onClick }: Props) {
   const hasIssues = module.errors.length > 0
 
   return (
@@ -44,6 +46,7 @@ export function ModuleCard({ module, developerMode, completeness, onClick }: Pro
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          {trust && <TrustBadge level={trust.trust_level} />}
           <ModuleStatusBadge status={module.status} />
           <ChevronRight
             size={13}

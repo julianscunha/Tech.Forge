@@ -3,12 +3,12 @@ import {
   Boxes, RefreshCw, AlertCircle, Terminal,
   ToggleLeft, ToggleRight, Search,
 } from 'lucide-react'
-import { registryApi, completenessApi } from '@/lib/api'
+import { registryApi, completenessApi, moduleTrustApi } from '@/lib/api'
 import { useDevModeStore } from '@/store/devmode'
 import { ModuleCard } from '@/components/modules/ModuleCard'
 import { ModuleDetailPanel } from '@/components/modules/ModuleDetailPanel'
 import { LoaderJournalViewer } from '@/components/modules/LoaderJournalViewer'
-import type { ModuleEntry, LoaderResult, ModuleStatus, CompletenessReport } from '@/types'
+import type { ModuleEntry, LoaderResult, ModuleStatus, CompletenessReport, ModuleTrust } from '@/types'
 import { cn } from '@/lib/utils'
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error'
@@ -27,6 +27,7 @@ export function ModulesPage() {
   const [modules, setModules]           = useState<ModuleEntry[]>([])
   const [journal, setJournal]           = useState<LoaderResult | null>(null)
   const [completeness, setCompleteness] = useState<Record<string, CompletenessReport>>({})
+  const [moduleTrust, setModuleTrust]   = useState<Record<string, ModuleTrust>>({})
   const [loadState, setLoadState]       = useState<LoadState>('idle')
   const [error, setError]               = useState<string | null>(null)
   const [selected, setSelected]         = useState<ModuleEntry | null>(null)
@@ -38,14 +39,16 @@ export function ModulesPage() {
     setLoadState('loading')
     setError(null)
     try {
-      const [mods, j, comp] = await Promise.all([
+      const [mods, j, comp, trust] = await Promise.all([
         registryApi.listModules(developerMode),
         registryApi.getLoaderJournal().catch(() => null),
         completenessApi.all().catch(() => [] as CompletenessReport[]),
+        moduleTrustApi.list().catch(() => [] as ModuleTrust[]),
       ])
       setModules(mods)
       setJournal(j)
       setCompleteness(Object.fromEntries(comp.map(c => [c.module_id, c])))
+      setModuleTrust(Object.fromEntries(trust.map(t => [t.module_id, t])))
       setLoadState('success')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
@@ -241,6 +244,7 @@ export function ModulesPage() {
                 module={m}
                 developerMode={developerMode}
                 completeness={completeness[m.module_id]}
+                trust={moduleTrust[m.module_id]}
                 onClick={setSelected}
               />
             ))}

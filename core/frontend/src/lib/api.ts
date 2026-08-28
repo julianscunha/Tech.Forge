@@ -169,3 +169,12 @@ import type { ModuleRuntimeEntry } from '@/types'
 export const runtimeApi = {
   getModule: (moduleId: string) => request<ModuleRuntimeEntry>(`/runtime/modules/${moduleId}`),
 }
+
+// ── Fase 10 — Module Trust ────────────────────────────────────────────────
+
+import type { ModuleTrust } from '@/types'
+
+export const moduleTrustApi = {
+  list: () => request<ModuleTrust[]>('/modules/trust'),
+  get:  (moduleId: string) => request<ModuleTrust>(`/modules/${moduleId}/trust`),
+}

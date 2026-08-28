@@ -316,3 +316,23 @@ export interface CompletenessReport {
   missing:     string[]
   checks:      DoDCheck[]
 }
+
+// ── Module Trust (Fase 10) ─────────────────────────────────────────────────
+
+export interface PublisherRead {
+  id:           string
+  name:         string
+  type:         string
+  public_key:   string | null
+  trust_status: string
+  extra:        Record<string, unknown> | null
+  created_at:   string
+}
+
+export interface ModuleTrust {
+  module_id:        string
+  trust_level:      TrustLevel
+  integrity_status: string
+  signature_status: string
+  publisher:        PublisherRead | null
+}

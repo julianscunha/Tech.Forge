@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { X, AlertCircle, AlertTriangle, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
-import { dependenciesApi } from '@/lib/api'
-import type { ModuleEntry, Dependency } from '@/types'
+import { TrustBadge } from '@/components/marketplace/TrustBadge'
+import { dependenciesApi, moduleTrustApi } from '@/lib/api'
+import type { ModuleEntry, Dependency, ModuleTrust } from '@/types'
 
 interface Props {
   module: ModuleEntry
@@ -19,10 +20,12 @@ const DEP_STATUS_STYLE: Record<string, string> = {
 export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
   const [dependencies, setDependencies] = useState<Dependency[]>([])
   const [dependents, setDependents] = useState<string[]>([])
+  const [trust, setTrust] = useState<ModuleTrust | null>(null)
 
   useEffect(() => {
     dependenciesApi.dependencies(module.module_id).then(setDependencies).catch(() => setDependencies([]))
     dependenciesApi.dependents(module.module_id).then(setDependents).catch(() => setDependents([]))
+    moduleTrustApi.get(module.module_id).then(setTrust).catch(() => setTrust(null))
   }, [module.module_id])
 
   return (
@@ -93,6 +96,26 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
               {module.description}
             </p>
           </Section>
+
+          {/* Trust & Integrity (Fase 10) */}
+          {trust && (
+            <Section title="Trust & Integrity">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-[hsl(var(--text-muted))]">Trust Level</span>
+                <TrustBadge level={trust.trust_level} />
+              </div>
+              <Field label="Integridade" value={trust.integrity_status} mono />
+              <Field label="Assinatura" value={trust.signature_status} mono />
+              {trust.publisher ? (
+                <>
+                  <Field label="Publisher" value={trust.publisher.name} />
+                  <Field label="Publisher Trust Status" value={trust.publisher.trust_status} mono />
+                </>
+              ) : (
+                <Field label="Publisher" value="(não declarado)" />
+              )}
+            </Section>
+          )}
 
           {/* Dependencies (Fase 8.1) */}
           {dependencies.length > 0 && (
