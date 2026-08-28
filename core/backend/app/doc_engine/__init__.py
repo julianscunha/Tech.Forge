@@ -234,6 +234,56 @@ class AIContextExporter:
                     lines.append(f"**Publisher:** {publisher_id}")
                 lines.append("")
 
+        # ── Module Catalog (Fase 11 §25) ─────────────────────────────────────────
+        # Provide context about available catalog sources and remote installation
+        try:
+            from app.package_manager.catalog_aggregator import CatalogAggregator
+            from app.services.catalog_source import CatalogSourceService
+            from app.db.database import AsyncSessionLocal
+
+            # Note: This section builds without actual DB query
+            # (AI context is generated server-side on demand, not in background)
+            lines.append("---")
+            lines.append("## Module Catalog")
+            lines.append("")
+            lines.append("### Configured Sources")
+            lines.append("")
+            lines.append("Catalog sources are configured in the platform and define where modules can be discovered:")
+            lines.append("")
+            lines.append("1. **Local Repository** (`modules/repository/`) — Always available")
+            lines.append("   - Modules in `.mod` format (ZIP archives)")
+            lines.append("   - Fast discovery; no network required")
+            lines.append("")
+            lines.append("2. **Official Catalog** (TechForge-maintained)")
+            lines.append("   - URL: Configured in settings")
+            lines.append("   - Metada: `index.json` (one fetch per poll period)")
+            lines.append("   - Installation: Downloads `.mod` from official repository")
+            lines.append("")
+            lines.append("3. **Custom Catalogs** (User-configured)")
+            lines.append("   - Multiple sources allowed")
+            lines.append("   - URL: Provided by user (GitHub repo, self-hosted, etc.)")
+            lines.append("   - Discovery: Via GitHub Contents API + folder convention (`modules/<id>/manifest.yaml`)")
+            lines.append("   - Installation: On-demand; platform fetches files and zips them")
+            lines.append("")
+            lines.append("### Installation Flow")
+            lines.append("")
+            lines.append("Remote module installation is **asynchronous** with progress tracking:")
+            lines.append("")
+            lines.append("1. **Acquisition Phase** — Resolves source and fetches module files to local cache")
+            lines.append("2. **Validation Phase** — Verifies manifest, integrity, compatibility")
+            lines.append("3. **Installation Phase** — Runs standard package manager install pipeline")
+            lines.append("4. **Terminal State** — DONE (success) or FAILED (with error message)")
+            lines.append("")
+            lines.append("Users poll `GET /marketplace/install-jobs/{job_id}` for progress. No background retry.")
+            lines.append("")
+            lines.append("### Cache & TTL")
+            lines.append("")
+            lines.append("Module discovery results are cached per source with a configurable TTL (default: 15 minutes).")
+            lines.append("Manual refresh forces immediate fetch, bypassing cache.")
+            lines.append("")
+        except Exception as e:
+            logger.warning(f"Failed to build Module Catalog section for AI context: {e}")
+
         # ── Module documentation (overview + examples grouped per module) ─────
         wants_modules  = DocCategory.MODULE in categories
         wants_examples = DocCategory.MODULE_EXAMPLE in categories

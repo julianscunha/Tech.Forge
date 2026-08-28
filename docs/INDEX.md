@@ -44,6 +44,7 @@ domain: [governanca-setup]
 | [core/module-runtime](developer-center/core/module-runtime.md) | Module Runtime: lifecycle hooks reais, ExecutionContext, SDK, Focus Mode |
 | [core/module-trust](developer-center/core/module-trust.md) | Module Trust: integrity manifest, publisher, trust level, assinatura |
 | [core/module-lifecycle](developer-center/core/module-lifecycle.md) | Ciclo de vida: install → activate → deactivate → remove |
+| [core/module-catalog](developer-center/core/module-catalog.md) | Module Catalog: múltiplas fontes, descoberta remota, job de instalação |
 | [core/module-engine](developer-center/core/module-engine.md) | Module Engine: loader, validação, plugin router (detalhado) |
 | [core/package-manager](developer-center/core/package-manager.md) | Package Manager (visão canônica) |
 | [core/package-manager-internals](developer-center/core/package-manager-internals.md) | Package Manager: instalação .mod, cache, update (detalhado) |

@@ -1,7 +1,7 @@
-# TechForge — Phase Audit (2026-08-25)
+# TechForge — Phase Audit (2026-08-28)
 
 Método: specs de docs/phases vs código real + execução de testes.
-Backend: 192 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
+Backend: 600 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
 Frontend: sem testes (vitest não encontra arquivos *.test.*).
 
 | Fase | Tema | Status | Lacunas principais |
@@ -17,7 +17,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 8.1 | Dependency Governance | ✅ fechada | `app/dependency_engine/` (parser, validator, graph+ciclos+Mermaid, resolver, lifecycle hooks) + API `/modules/{id}/dependencies\|dependents` + `/dependencies/validate\|graph` + CLI + Developer Center (grafo visual) + AI Context — ver tasks/phase-08.1-report.md |
 | 9 | Module Runtime & Execution | ✅ fechada | `app/module_runtime/` (loader único, Runtime State separado do Administrative State, lifecycle hooks reais enable/disable/health_check, ExecutionContext, ModuleExecutionResult+cancellation/progress esqueleto) + API `/runtime/modules*` + CLI + Focus Mode + AI Context — ver tasks/phase-09-report.md |
 | 10 | Security, Integrity & Module Trust | ✅ fechada | `app/module_trust/` (integrity manifest por-arquivo, Publisher Registry SQLite, TrustResolver, SignatureProvider abstrato) + API `/modules/{id}/integrity\|trust\|verify` + `/modules/trust` (lote) + `/publishers*` + CLI + Trust badge no frontend + AI Context — ver tasks/phase-10-report.md |
-| 11 | Marketplace Distribution | ⚠️ local-only | `RemoteRepositoryProvider` = NotImplementedError ×3 (`package_manager/repository.py:157-170`); marketplace/ vazio |
+| 11 | Marketplace Distribution | ✅ fechada | `CatalogAggregator` (múltiplas fontes, cache TTL, detecção de conflitos), `OfficialCatalogProvider` (index.json), `CustomCatalogProvider` (GitHub API), `CatalogSourceConfig` CRUD, API `/catalog/*` com paginação/filtros, CLI `techforge catalog`, UI Catálogo 3-zona (sidebar + filtro + grid), Remote install jobs (ACQUIRING/VALIDATING/INSTALLING), Notificações (transição de fonte, instalação), Developer Center docs, AI Context — ver tasks/phase-11-report.md |
 | 12 | Configuration & Persistence | ❌ | só settings.py global |
 | 13 | Central Server Multi-User | ❌ | nada além de settings básicos |
 | 14–20 | Observability / Quality / Desktop dist / Security hardening / Finalization / Public release / Governance | ❌ não iniciadas | fragmentos herdados: logging básico, single-instance launcher, PLATFORM_VERSION única |
