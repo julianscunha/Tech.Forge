@@ -359,3 +359,114 @@ class TestRemoteInstallEndpoints:
         final_job = clean_install_jobs.get(job_id)
         assert final_job.phase == InstallJobPhase.FAILED
         install_mock.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_background_task_done_creates_success_notification(
+        self, clean_install_jobs, test_db, tmp_path
+    ):
+        """Background task: installation succeeds → creates success notification."""
+        from app.api.routes import marketplace as marketplace_module
+        from app.package_manager.manager import InstallResult
+        from app.package_manager.enums import InstallStatus
+        from app.services.notifications import NotificationService
+        from app.db.database import AsyncSessionLocal
+
+        job = clean_install_jobs.create("test_module_success")
+        job_id = job.job_id
+
+        fake_mod_path = tmp_path / "test_module_success-1.0.0.mod"
+        fake_mod_path.write_bytes(b"fake zip content")
+
+        fake_provider = AsyncMock()
+        fake_provider.fetch_mod_path.return_value = fake_mod_path
+
+        success_result = InstallResult(
+            status=InstallStatus.SUCCESS, module_id="test_module_success",
+            version="1.0.0", message="Installed successfully.",
+        )
+
+        # Mock AsyncSessionLocal to return test_db
+        class MockAsyncContext:
+            async def __aenter__(self):
+                return test_db
+            async def __aexit__(self, *args):
+                pass
+
+        def mock_session_local():
+            return MockAsyncContext()
+
+        with patch.object(marketplace_module, "_resolve_remote_provider", AsyncMock(return_value=fake_provider)), \
+             patch.object(marketplace_module.package_manager, "install", AsyncMock(return_value=success_result)), \
+             patch("app.db.database.AsyncSessionLocal", mock_session_local):
+            await marketplace_module._install_remote_background("test_module_success", job_id, None)
+
+        final_job = clean_install_jobs.get(job_id)
+        assert final_job.phase == InstallJobPhase.DONE
+
+        # Verify notification was created
+        notifications = await NotificationService.list(test_db)
+        assert len(notifications) == 1
+        assert notifications[0].level == "success"
+        assert "test_module_success" in notifications[0].message or notifications[0].title == "Módulo instalado"
+
+    @pytest.mark.asyncio
+    async def test_background_task_failed_creates_error_notification(
+        self, clean_install_jobs, test_db
+    ):
+        """Background task: installation fails → creates error notification."""
+        from app.api.routes import marketplace as marketplace_module
+        from app.services.notifications import NotificationService
+
+        job = clean_install_jobs.create("ghost_module")
+        job_id = job.job_id
+
+        # Mock AsyncSessionLocal to return test_db
+        class MockAsyncContext:
+            async def __aenter__(self):
+                return test_db
+            async def __aexit__(self, *args):
+                pass
+
+        def mock_session_local():
+            return MockAsyncContext()
+
+        with patch.object(marketplace_module, "_resolve_remote_provider", AsyncMock(return_value=None)), \
+             patch("app.db.database.AsyncSessionLocal", mock_session_local):
+            await marketplace_module._install_remote_background("ghost_module", job_id, None)
+
+        final_job = clean_install_jobs.get(job_id)
+        assert final_job.phase == InstallJobPhase.FAILED
+
+        # Verify error notification was created
+        notifications = await NotificationService.list(test_db)
+        assert len(notifications) == 1
+        assert notifications[0].level == "error"
+        assert "Falha" in notifications[0].title or "erro" in notifications[0].message.lower()
+
+    @pytest.mark.asyncio
+    async def test_background_task_duplicate_error_notification_not_created(
+        self, clean_install_jobs, test_db
+    ):
+        """Background task: calling _notify_installation twice with same title+message → no duplicate."""
+        from app.api.routes.marketplace import _notify_installation
+        from app.services.notifications import NotificationService
+
+        # First notification
+        await _notify_installation(
+            test_db, "test_module", "error", "Source unavailable",
+            "Source X is temporarily unavailable. Try again later."
+        )
+
+        notifications = await NotificationService.list(test_db)
+        assert len(notifications) == 1
+
+        # Second notification with SAME title and message (dedupe should prevent duplicate)
+        await _notify_installation(
+            test_db, "other_module", "error", "Source unavailable",
+            "Source X is temporarily unavailable. Try again later."
+        )
+
+        # Verify no duplicate (still 1)
+        notifications = await NotificationService.list(test_db)
+        assert len(notifications) == 1, f"Expected 1 notification (dedupe) but got {len(notifications)}"
+        assert notifications[0].title == "Source unavailable"

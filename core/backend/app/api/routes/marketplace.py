@@ -311,6 +311,25 @@ async def _resolve_remote_provider(db, module_id: str, source_id: Optional[str])
     return None
 
 
+async def _notify_installation(
+    db, module_id: str, level: str, title: str, message: str
+) -> None:
+    """Helper: create installation notification with dedupe (same title + message = skip)."""
+    from sqlalchemy import func, select
+    from app.models.notifications import Notification
+    from app.services.notifications import NotificationService
+
+    existing = await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.title == title, Notification.message == message
+        )
+    )
+    if existing.scalar() == 0:
+        await NotificationService.create(
+            db, level=level, title=title, message=message, module_id=module_id
+        )
+
+
 async def _install_remote_background(module_id: str, job_id: str, source_id: Optional[str]) -> None:
     """
     Background task: acquire module from remote source, validate, install.
@@ -338,6 +357,11 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
                 job_id, InstallJobPhase.FAILED,
                 error="Módulo não encontrado em nenhuma fonte configurada.",
             )
+            async with AsyncSessionLocal() as db:
+                await _notify_installation(
+                    db, module_id, "error", "Falha na instalação",
+                    f"{module_id}: Módulo não encontrado em nenhuma fonte configurada."
+                )
             return
 
         mod_path = await provider.fetch_mod_path(module_id)
@@ -346,6 +370,11 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
                 job_id, InstallJobPhase.FAILED,
                 error="Falha ao baixar módulo: sem conexão com a fonte.",
             )
+            async with AsyncSessionLocal() as db:
+                await _notify_installation(
+                    db, module_id, "error", "Falha na instalação",
+                    f"{module_id}: Falha ao baixar módulo: sem conexão com a fonte."
+                )
             return
 
         install_job_registry.set_phase(job_id, InstallJobPhase.VALIDATING)
@@ -354,9 +383,19 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
         result = await package_manager.install(mod_path)
         if not result.success:
             install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
+            async with AsyncSessionLocal() as db:
+                await _notify_installation(
+                    db, module_id, "error", "Falha na instalação",
+                    f"{module_id}: {result.message}"
+                )
             return
 
         install_job_registry.set_phase(job_id, InstallJobPhase.DONE)
+        async with AsyncSessionLocal() as db:
+            await _notify_installation(
+                db, module_id, "success", "Módulo instalado",
+                f"Módulo {module_id} foi instalado com sucesso."
+            )
 
     except Exception as exc:
         logger.error("Background install task failed for job %s (module %s): %s",
@@ -366,6 +405,11 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
             InstallJobPhase.FAILED,
             error=str(exc)
         )
+        async with AsyncSessionLocal() as db:
+            await _notify_installation(
+                db, module_id, "error", "Falha na instalação",
+                f"{module_id}: {str(exc)}"
+            )
 
 
 @router.get("/install-jobs/{job_id}", response_model=InstallJobResponse)
