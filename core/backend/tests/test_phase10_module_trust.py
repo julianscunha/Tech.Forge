@@ -1109,3 +1109,88 @@ class TestModuleTrustRoute:
                         await db.execute(delete(Publisher).where(Publisher.id == "trust_get_publisher"))
                         await db.commit()
                 asyncio.run(_cleanup())
+
+
+# ── Regra final (§29) — teste integrado completo, tmp_path ─────────────────────
+
+class TestPhase10FullIntegration:
+    """
+    Create Package -> Generate Integrity -> Install -> Verify VALID ->
+    Modify File -> Verify MODIFIED -> Notification (dedupe).
+
+    Os casos de publisher desconhecido/revogado (-> UNVERIFIED/INVALID)
+    já têm cobertura dedicada exaustiva em TestTrustResolver (Slice 3) e
+    TestModuleTrustRoute (Slice 7) — não repetidos aqui pra evitar
+    redundância; esta amarra especificamente a cadeia real
+    install -> modify -> verify -> notify em um fluxo só.
+    """
+
+    def test_full_lifecycle_install_modify_verify_notify(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.package_manager.manager import PackageManager
+        from app.package_manager.enums import InstallStatus
+        from app.module_trust.integrity import IntegrityStatus, verify_integrity
+        from app.module_trust.verification import verify_module_integrity
+        from app.db.database import AsyncSessionLocal
+        from app.models.notifications import Notification
+        from sqlalchemy import select, func, delete
+        from tests.test_phase4 import make_mod_file
+
+        installed_dir = tmp_path / "installed"
+        cache_dir = tmp_path / "cache"
+        installed_dir.mkdir()
+        cache_dir.mkdir()
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", installed_dir)
+
+        module_id = "full_integration_trust_mod"
+        manifest = {
+            "id": module_id, "name": "Full Integration", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "999.999.999",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+        }
+        mod_path = make_mod_file(tmp_path, manifest)
+
+        pm = PackageManager(installed_path=installed_dir, cache_path=cache_dir)
+
+        # Install -> integrity.json gerado automaticamente (Slice 1/5)
+        result = asyncio.run(pm.install(mod_path))
+        assert result.status == InstallStatus.SUCCESS
+
+        module_dir = installed_dir / module_id
+        assert (module_dir / "integrity.json").is_file()
+
+        # Verify VALID
+        initial = verify_integrity(module_dir)
+        assert initial.status == IntegrityStatus.VALID
+
+        # Modify file -> Verify MODIFIED
+        backend_file = module_dir / "backend" / "main.py"
+        backend_file.write_text(backend_file.read_text(encoding="utf-8") + "\n# tampered\n",
+                                encoding="utf-8")
+
+        title = "Module integrity changed"
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await db.execute(delete(Notification).where(
+                    Notification.title == title, Notification.module_id == module_id))
+                await db.commit()
+
+                before = (await db.execute(select(func.count(Notification.id)).where(
+                    Notification.title == title, Notification.module_id == module_id))).scalar()
+
+                result1 = await verify_module_integrity(module_id, db)
+                result2 = await verify_module_integrity(module_id, db)  # repete — deve dedupe
+
+                after = (await db.execute(select(func.count(Notification.id)).where(
+                    Notification.title == title, Notification.module_id == module_id))).scalar()
+                return result1, result2, before, after
+
+        r1, r2, before, after = asyncio.run(_run())
+
+        assert r1.status == IntegrityStatus.MODIFIED
+        assert r2.status == IntegrityStatus.MODIFIED
+        assert before == 0
+        assert after == 1  # notificado uma unica vez (dedupe)
