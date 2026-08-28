@@ -422,8 +422,7 @@ class CustomCatalogProvider(RepositoryProvider):
         import shutil
         import tempfile
 
-        # Import here to avoid circular dependencies (techforge_cli is installed as editable)
-        from techforge_cli.packager.builder import PackageBuilder
+        from app.package_manager.builder import PackageBuilder
 
         try:
             async with httpx.AsyncClient() as client:
