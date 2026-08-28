@@ -61,6 +61,11 @@ async def lifespan(app: FastAPI):
     from app.service_registry import sync as sync_service_registry
     await sync_service_registry()
 
+    # Fase 9 §4/§29 — Runtime State reconstruído a partir do Administrative State
+    from app.module_engine.registry import registry as module_registry
+    from app.module_runtime import module_runtime_registry
+    module_runtime_registry.rebuild(module_registry.all())
+
     # Phase 6 — Runtime: platform is READY
     await runtime.fire_startup("platform ready")
 
@@ -69,6 +74,9 @@ async def lifespan(app: FastAPI):
     # Fase 8 §27 — stop accepting invocations, clear transient registry state
     from app.service_registry import service_registry
     service_registry.clear_transient_state()
+
+    # Fase 9 §27/§29 — Runtime State é efêmero, nunca sobrevive a um shutdown
+    module_runtime_registry.clear_transient_state()
 
     # Phase 6 — Runtime: coordinated shutdown
     await runtime.fire_shutdown("backend stopped")
