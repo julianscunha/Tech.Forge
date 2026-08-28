@@ -14,6 +14,7 @@ from app.api.routes.services import router as services_router
 from app.api.routes.dependencies import modules_router as dependencies_modules_router
 from app.api.routes.dependencies import dependencies_router
 from app.api.routes.publishers import router as publishers_router
+from app.api.routes.module_verification import router as module_verification_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(platform_router)
@@ -31,3 +32,4 @@ api_router.include_router(services_router)       # Fase 8 — Service Registry
 api_router.include_router(dependencies_modules_router)  # Fase 8.1 — Dependency Governance
 api_router.include_router(dependencies_router)          # Fase 8.1 — Dependency Governance
 api_router.include_router(publishers_router)           # Fase 10 — Publisher Registry
+api_router.include_router(module_verification_router)  # Fase 10 — Runtime Integrity Verification

@@ -14,6 +14,7 @@ from app.module_trust.trust import TrustLevel, TrustResolver
 from app.module_trust.signature import (
     SignatureStatus, SignatureProvider, NoOpSignatureProvider, default_signature_provider,
 )
+from app.module_trust.verification import verify_module_integrity
 
 __all__ = [
     "IntegrityStatus", "IntegrityResult",
@@ -22,4 +23,5 @@ __all__ = [
     "PublisherType", "PublisherTrustStatus",
     "TrustLevel", "TrustResolver",
     "SignatureStatus", "SignatureProvider", "NoOpSignatureProvider", "default_signature_provider",
+    "verify_module_integrity",
 ]

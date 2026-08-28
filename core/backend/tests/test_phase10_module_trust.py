@@ -754,3 +754,159 @@ class TestInstallBlocksInvalidDependencies:
         result = asyncio.run(pm.install(mod_path))
 
         assert result.status == InstallStatus.SUCCESS
+
+
+# ── Slice 6 — Runtime verification + Notifications (§15/§16/§20) ──────────────
+
+class TestVerifyModuleIntegrity:
+
+    def test_valid_module_does_not_notify(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.db.database import AsyncSessionLocal
+        from app.module_trust.integrity import write_integrity_manifest
+        from app.module_trust.verification import verify_module_integrity
+        from app.models.notifications import Notification
+        from sqlalchemy import select, func, delete
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        module_id = "verify_test_valid"
+        mod_dir = tmp_path / module_id
+        (mod_dir / "backend").mkdir(parents=True)
+        (mod_dir / "backend" / "main.py").write_text("x=1\n", encoding="utf-8")
+        write_integrity_manifest(mod_dir)
+
+        title = "Module integrity changed"
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await db.execute(delete(Notification).where(
+                    Notification.title == title, Notification.module_id == module_id))
+                await db.commit()
+
+                before = (await db.execute(
+                    select(func.count(Notification.id)).where(
+                        Notification.title == title, Notification.module_id == module_id)
+                )).scalar()
+
+                result = await verify_module_integrity(module_id, db)
+
+                after = (await db.execute(
+                    select(func.count(Notification.id)).where(
+                        Notification.title == title, Notification.module_id == module_id)
+                )).scalar()
+                return result, before, after
+
+        result, before, after = asyncio.run(_run())
+        assert result.status.value == "VALID"
+        assert before == after == 0
+
+    def test_modified_module_notifies_once_with_dedupe(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.db.database import AsyncSessionLocal
+        from app.module_trust.integrity import write_integrity_manifest
+        from app.module_trust.verification import verify_module_integrity
+        from app.models.notifications import Notification
+        from sqlalchemy import select, func, delete
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        module_id = "verify_test_modified"
+        mod_dir = tmp_path / module_id
+        (mod_dir / "backend").mkdir(parents=True)
+        (mod_dir / "backend" / "main.py").write_text("x=1\n", encoding="utf-8")
+        write_integrity_manifest(mod_dir)
+        (mod_dir / "backend" / "main.py").write_text("x=2\n", encoding="utf-8")
+
+        title = "Module integrity changed"
+
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                await db.execute(delete(Notification).where(
+                    Notification.title == title, Notification.module_id == module_id))
+                await db.commit()
+
+                before = (await db.execute(
+                    select(func.count(Notification.id)).where(
+                        Notification.title == title, Notification.module_id == module_id)
+                )).scalar()
+
+                r1 = await verify_module_integrity(module_id, db)
+                r2 = await verify_module_integrity(module_id, db)  # repete — deve dedupe
+
+                after = (await db.execute(
+                    select(func.count(Notification.id)).where(
+                        Notification.title == title, Notification.module_id == module_id)
+                )).scalar()
+                return r1, r2, before, after
+
+        r1, r2, before, after = asyncio.run(_run())
+        assert r1.status.value == "MODIFIED"
+        assert r2.status.value == "MODIFIED"
+        assert before == 0
+        assert after == 1  # notificou uma unica vez, mesmo chamando 2x
+
+
+class TestVerifyModuleAPIRoute:
+
+    def test_verify_unknown_module_404(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.post("/api/v1/modules/ghost_module_9x/verify")
+            assert resp.status_code == 404
+
+    def test_verify_known_module_returns_status(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        with TestClient(app) as client:
+            resp = client.post("/api/v1/modules/hello_world/verify")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["module_id"] == "hello_world"
+            assert "status" in body
+
+
+class TestUpdateRegeneratesIntegrityManifest:
+    """Regressao do bug encontrado nesta slice — update() nao regravava integrity.json."""
+
+    def test_update_writes_fresh_integrity_manifest(self, tmp_path):
+        import asyncio
+        import json as _json
+        from app.package_manager.manager import PackageManager
+        from app.package_manager.enums import UpdateStatus
+        from tests.test_phase4 import make_mod_file
+
+        installed_dir = tmp_path / "installed"
+        cache_dir = tmp_path / "cache"
+        installed_dir.mkdir()
+        cache_dir.mkdir()
+
+        manifest_v1 = {
+            "id": "update_integrity_mod", "name": "V1", "version": "1.0.0",
+            "platform_min_version": "1.0.0", "platform_max_version": "999.999.999",
+            "category": "Test", "vendor": "T", "author": "T", "description": "T",
+            "entry_backend": "backend/main.py", "entry_frontend": "frontend/index.tsx",
+        }
+        mod_v1 = make_mod_file(tmp_path, manifest_v1)
+
+        pm = PackageManager(installed_path=installed_dir, cache_path=cache_dir)
+        install_result = asyncio.run(pm.install(mod_v1))
+        assert install_result.status.value == "success"
+
+        manifest_v2 = dict(manifest_v1, version="2.0.0")
+        # make_mod_file usa tmp/src/<id> como diretorio de staging — precisa
+        # limpar antes de gerar a v2 pra nao reusar arquivos da v1.
+        import shutil as _shutil
+        staging = tmp_path / "src" / "update_integrity_mod"
+        if staging.exists():
+            _shutil.rmtree(staging)
+        mod_v2 = make_mod_file(tmp_path, manifest_v2)
+
+        update_result = asyncio.run(pm.update("update_integrity_mod", mod_v2))
+        assert update_result.status == UpdateStatus.SUCCESS
+
+        integrity_file = installed_dir / "update_integrity_mod" / "integrity.json"
+        assert integrity_file.is_file()
+        data = _json.loads(integrity_file.read_text(encoding="utf-8"))
+        assert "manifest.yaml" in data["files"]

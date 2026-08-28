@@ -406,6 +406,12 @@ class PackageManager:
 
             shutil.rmtree(target_dir)
             shutil.move(str(extract_tmp), str(target_dir))
+
+            # Fase 10 §5/§6 — regenera integrity.json com os arquivos da
+            # NOVA versão (o antigo, da versão anterior, ficaria órfão e
+            # faria a próxima verificação reportar falso MODIFIED).
+            from app.module_trust.integrity import write_integrity_manifest
+            write_integrity_manifest(target_dir)
         except Exception as exc:
             # Attempt rollback from backup
             if backup.exists():

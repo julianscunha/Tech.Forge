@@ -57,6 +57,19 @@ async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as db:
         await sync_registry_to_db(db)
 
+        # Fase 10 §15/§28 — verificação de integridade no startup
+        # (event-driven, não é polling — roda uma vez, no boot)
+        from app.module_engine.enums import ModuleStatus
+        from app.module_trust.verification import verify_module_integrity
+        from app.module_engine.registry import registry as startup_module_registry
+        for entry in startup_module_registry.all():
+            if entry.status == ModuleStatus.INSTALLED:
+                try:
+                    await verify_module_integrity(entry.module_id, db)
+                except Exception as exc:
+                    logger.warning("Startup integrity check failed for %s: %s",
+                                   entry.module_id, exc)
+
     # Fase 8 §26 — Discover Service Modules → Register Services
     from app.service_registry import sync as sync_service_registry
     await sync_service_registry()
