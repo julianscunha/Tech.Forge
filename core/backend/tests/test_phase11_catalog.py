@@ -543,3 +543,342 @@ class TestOfficialCatalogProvider:
         assert result is not None
         assert result.exists()
         assert result.read_bytes() == mod_content
+
+
+# ── Tests for Slice 3: CustomCatalogProvider ─────────────────────────────────
+
+class TestCustomCatalogProvider:
+    """Test CustomCatalogProvider for GitHub-based custom catalogs."""
+
+    @pytest.mark.asyncio
+    async def test_list_available_parses_manifests_from_github_api(self, tmp_path):
+        """CustomCatalogProvider.list_available() lists modules/ via GitHub API."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        import base64
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        # Mock GitHub Contents API for modules/ directory listing
+        dir_response = MagicMock()
+        dir_response.json.return_value = [
+            {"name": "module_a", "type": "dir"},
+            {"name": "module_b", "type": "dir"},
+            {"name": "README.md", "type": "file"},  # Should be ignored
+        ]
+        dir_response.status_code = 200
+
+        # Mock manifest responses
+        manifest_a = {
+            "id": "module_a",
+            "name": "Module A",
+            "version": "1.0.0",
+            "category": "Utilities",
+            "vendor": "VendorA",
+            "author": "AuthorA",
+            "description": "Module A description",
+        }
+
+        manifest_b = {
+            "id": "module_b",
+            "name": "Module B",
+            "version": "2.0.0",
+            "category": "Tools",
+            "vendor": "VendorB",
+            "author": "AuthorB",
+            "description": "Module B description",
+        }
+
+        manifest_a_response = MagicMock()
+        manifest_a_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: module_a\nname: Module A\nversion: 1.0.0\ncategory: Utilities\nvendor: VendorA\nauthor: AuthorA\ndescription: Module A description"
+            ).decode()
+        }
+        manifest_a_response.status_code = 200
+
+        manifest_b_response = MagicMock()
+        manifest_b_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: module_b\nname: Module B\nversion: 2.0.0\ncategory: Tools\nvendor: VendorB\nauthor: AuthorB\ndescription: Module B description"
+            ).decode()
+        }
+        manifest_b_response.status_code = 200
+
+        responses = [dir_response, manifest_a_response, manifest_b_response]
+        response_iter = iter(responses)
+
+        async def mock_get(*args, **kwargs):
+            return next(response_iter)
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert len(packages) == 2
+        assert packages[0].module_id == "module_a"
+        assert packages[0].name == "Module A"
+        assert packages[0].source == CatalogSource.CUSTOM_CATALOG
+        assert packages[0].source_url == "https://github.com/owner/repo"
+        assert packages[1].module_id == "module_b"
+
+    @pytest.mark.asyncio
+    async def test_list_available_modules_directory_not_found_returns_empty(self, tmp_path):
+        """CustomCatalogProvider returns [] when modules/ directory not found (404)."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        # Mock GitHub API returning 404 for modules/
+        dir_response = MagicMock()
+        dir_response.status_code = 404
+
+        async def mock_get(*args, **kwargs):
+            return dir_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert packages == []
+
+    @pytest.mark.asyncio
+    async def test_list_available_network_error_returns_empty_list(self, tmp_path):
+        """CustomCatalogProvider returns [] on network error, doesn't raise."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        import httpx
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        # Mock httpx.AsyncClient to raise ConnectError
+        async def mock_get(*args, **kwargs):
+            raise httpx.ConnectError("Connection failed")
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert packages == []
+
+    @pytest.mark.asyncio
+    async def test_list_available_invalid_manifest_skips_module(self, tmp_path):
+        """CustomCatalogProvider skips a module with invalid manifest, continues with others."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        import base64
+
+        from app.package_manager.repository import CustomCatalogProvider
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        # Mock GitHub Contents API for modules/ directory listing
+        dir_response = MagicMock()
+        dir_response.json.return_value = [
+            {"name": "module_a", "type": "dir"},
+            {"name": "module_invalid", "type": "dir"},
+            {"name": "module_b", "type": "dir"},
+        ]
+        dir_response.status_code = 200
+
+        # Valid manifest for module_a
+        manifest_a_response = MagicMock()
+        manifest_a_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: module_a\nname: Module A\nversion: 1.0.0\ncategory: Test\nvendor: V\nauthor: A\ndescription: Desc"
+            ).decode()
+        }
+        manifest_a_response.status_code = 200
+
+        # Invalid YAML for module_invalid
+        invalid_manifest_response = MagicMock()
+        invalid_manifest_response.json.return_value = {
+            "content": base64.b64encode(b"invalid: yaml: content: [").decode()
+        }
+        invalid_manifest_response.status_code = 200
+
+        # Valid manifest for module_b
+        manifest_b_response = MagicMock()
+        manifest_b_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: module_b\nname: Module B\nversion: 2.0.0\ncategory: Test\nvendor: V\nauthor: B\ndescription: Desc"
+            ).decode()
+        }
+        manifest_b_response.status_code = 200
+
+        responses = [dir_response, manifest_a_response, invalid_manifest_response, manifest_b_response]
+        response_iter = iter(responses)
+
+        async def mock_get(*args, **kwargs):
+            return next(response_iter)
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        # Should have module_a and module_b, but not module_invalid
+        assert len(packages) == 2
+        assert packages[0].module_id == "module_a"
+        assert packages[1].module_id == "module_b"
+
+    @pytest.mark.asyncio
+    async def test_get_package_filters_by_id(self, tmp_path):
+        """CustomCatalogProvider.get_package() returns matching module or None."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        import base64
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        dir_response = MagicMock()
+        dir_response.json.return_value = [
+            {"name": "target_module", "type": "dir"},
+            {"name": "other_module", "type": "dir"},
+        ]
+        dir_response.status_code = 200
+
+        manifest_target_response = MagicMock()
+        manifest_target_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: target_module\nname: Target\nversion: 1.0.0\ncategory: Test\nvendor: V\nauthor: A\ndescription: Target"
+            ).decode()
+        }
+        manifest_target_response.status_code = 200
+
+        manifest_other_response = MagicMock()
+        manifest_other_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: other_module\nname: Other\nversion: 1.0.0\ncategory: Test\nvendor: V\nauthor: A\ndescription: Other"
+            ).decode()
+        }
+        manifest_other_response.status_code = 200
+
+        responses = [dir_response, manifest_target_response, manifest_other_response]
+        response_iter = iter(responses)
+
+        async def mock_get(*args, **kwargs):
+            return next(response_iter)
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            pkg = await provider.get_package("target_module", "1.0.0")
+
+        assert pkg is not None
+        assert pkg.module_id == "target_module"
+
+        # Non-existent module returns None
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            pkg = await provider.get_package("nonexistent_module", "1.0.0")
+
+        assert pkg is None
+
+    @pytest.mark.asyncio
+    async def test_fetch_mod_path_builds_and_caches_mod_file(self, tmp_path):
+        """CustomCatalogProvider.fetch_mod_path() downloads files and builds .mod."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        from pathlib import Path
+        import zipfile
+        import base64
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo",
+            branch="main",
+            cache_path=tmp_path,
+        )
+
+        # manifest.yaml content
+        manifest_content = b"id: test_module\nname: Test Module\nversion: 1.0.0\ncategory: Test\nvendor: Vendor\nauthor: Author\ndescription: Test"
+
+        # Mock for manifest.yaml fetch
+        manifest_response = MagicMock()
+        manifest_response.json.return_value = {
+            "content": base64.b64encode(manifest_content).decode()
+        }
+        manifest_response.status_code = 200
+
+        # Mock for backend/ directory (returns empty dir)
+        backend_response = MagicMock()
+        backend_response.json.return_value = []
+        backend_response.status_code = 200
+
+        async def mock_get(url, *args, **kwargs):
+            if "manifest.yaml" in url:
+                return manifest_response
+            elif "backend" in url or "frontend" in url or "docs" in url:
+                return backend_response
+            else:
+                # Unexpected URL
+                return backend_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        # Mock PackageBuilder.build to avoid sys.path issues in test
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            # Mock PackageBuilder.build to return a simple .mod file
+            mock_build_result = MagicMock()
+            mock_mod_path = tmp_path / "test_module-1.0.0.mod"
+
+            # Create a minimal valid .mod file (zip with manifest.yaml)
+            with zipfile.ZipFile(mock_mod_path, "w") as zf:
+                zf.writestr("manifest.yaml", manifest_content.decode("utf-8"))
+
+            mock_build_result.output_path = mock_mod_path
+
+            with patch(
+                "techforge_cli.packager.builder.PackageBuilder.build",
+                return_value=mock_build_result,
+            ):
+                result = await provider.fetch_mod_path("test_module")
+
+        # Verify the .mod file was created
+        assert result is not None
+        assert result.exists()
+        assert result.suffix == ".mod"
+
+        # Verify it's a valid zip
+        with zipfile.ZipFile(result) as zf:
+            assert "manifest.yaml" in zf.namelist()

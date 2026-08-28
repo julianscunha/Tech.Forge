@@ -14,6 +14,7 @@ Current implementations:
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import logging
@@ -272,6 +273,280 @@ class OfficialCatalogProvider(RepositoryProvider):
                 exc,
             )
             return None
+
+
+# ── Custom Catalog Provider (GitHub API) ─────────────────────────────────────
+
+class CustomCatalogProvider(RepositoryProvider):
+    """
+    Fetches module metadata from a custom GitHub repository.
+
+    Reads manifests directly from modules/<id>/manifest.yaml via GitHub Contents API.
+    No pre-built index.json required — discovers modules by scanning the directory.
+    Downloads and packages modules on-demand during installation.
+    """
+
+    def __init__(
+        self,
+        repo_url: str,
+        branch: str = "main",
+        cache_path: Optional[Path] = None,
+    ) -> None:
+        """
+        Initialize the custom catalog provider.
+
+        Args:
+            repo_url: URL of the GitHub repository (e.g., https://github.com/owner/repo
+                      or owner/repo)
+            branch: Git branch to read from (default: main)
+            cache_path: Where to store downloaded/built .mod files (default: modules/cache/)
+        """
+        # Normalize repo URL to https://github.com/owner/repo format
+        if repo_url.startswith("http"):
+            self._repo_url = repo_url.rstrip("/")
+        else:
+            # Handle owner/repo format
+            self._repo_url = f"https://github.com/{repo_url.rstrip('/')}"
+
+        # Extract owner/repo for API calls
+        parts = self._repo_url.rstrip("/").split("/")
+        self._owner = parts[-2]
+        self._repo = parts[-1]
+        self._branch = branch
+        self._cache = cache_path or (settings.MODULES_REPOSITORY_PATH.parent / "cache")
+        self._cache.mkdir(parents=True, exist_ok=True)
+
+    async def list_available(self, platform_version: str) -> list[PackageInfo]:
+        """Fetch module metadata from modules/ directory via GitHub Contents API."""
+        import httpx
+        import base64
+
+        # GitHub API endpoint for modules/ directory
+        api_url = (
+            f"https://api.github.com/repos/{self._owner}/{self._repo}"
+            f"/contents/modules?ref={self._branch}"
+        )
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(api_url, timeout=10.0)
+
+                if response.status_code >= 400:
+                    logger.warning(
+                        "Failed to fetch modules from %s: HTTP %d",
+                        self._repo_url,
+                        response.status_code,
+                    )
+                    return []
+
+            contents = response.json()
+            packages: list[PackageInfo] = []
+
+            # contents should be a list of directory entries
+            for entry in contents:
+                if entry.get("type") != "dir":
+                    continue
+
+                module_id = entry["name"]
+                manifest_url = (
+                    f"https://api.github.com/repos/{self._owner}/{self._repo}"
+                    f"/contents/modules/{module_id}/manifest.yaml?ref={self._branch}"
+                )
+
+                try:
+                    manifest_response = await client.get(manifest_url, timeout=10.0)
+                    if manifest_response.status_code >= 400:
+                        logger.warning(
+                            "Manifest not found for module %s in %s: HTTP %d",
+                            module_id,
+                            self._repo_url,
+                            manifest_response.status_code,
+                        )
+                        continue
+
+                    manifest_data = manifest_response.json()
+                    # GitHub API returns file content as base64
+                    manifest_content = base64.b64decode(
+                        manifest_data.get("content", "")
+                    ).decode("utf-8")
+                    raw = yaml.safe_load(manifest_content) or {}
+
+                    info = PackageInfo.from_manifest_dict(
+                        raw,
+                        source_path=None,
+                        platform_version=platform_version,
+                    )
+                    info.source = CatalogSource.CUSTOM_CATALOG
+                    info.source_url = self._repo_url
+                    packages.append(info)
+
+                except (yaml.YAMLError, KeyError, ValueError) as exc:
+                    logger.warning(
+                        "Could not parse manifest for module %s in %s: %s",
+                        module_id,
+                        self._repo_url,
+                        exc,
+                    )
+                    continue
+
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            logger.warning(
+                "Failed to fetch catalog from %s: %s",
+                self._repo_url,
+                exc,
+            )
+            return []
+        except Exception as exc:
+            logger.warning(
+                "Unexpected error fetching catalog from %s: %s",
+                self._repo_url,
+                exc,
+            )
+            return []
+
+        return packages
+
+    async def get_package(
+        self, module_id: str, platform_version: str
+    ) -> Optional[PackageInfo]:
+        """Get a single package from the catalog by ID."""
+        packages = await self.list_available(platform_version)
+        for pkg in packages:
+            if pkg.module_id == module_id:
+                return pkg
+        return None
+
+    async def fetch_mod_path(self, module_id: str) -> Optional[Path]:
+        """Download module files and build a .mod package."""
+        import httpx
+        import shutil
+        import tempfile
+
+        # Import here to avoid circular dependencies (techforge_cli is installed as editable)
+        from techforge_cli.packager.builder import PackageBuilder
+
+        try:
+            async with httpx.AsyncClient() as client:
+                # Get module manifest to find structure
+                manifest_url = (
+                    f"https://api.github.com/repos/{self._owner}/{self._repo}"
+                    f"/contents/modules/{module_id}/manifest.yaml?ref={self._branch}"
+                )
+                manifest_response = await client.get(manifest_url, timeout=10.0)
+                if manifest_response.status_code >= 400:
+                    logger.warning(
+                        "Manifest not found for module %s in %s",
+                        module_id,
+                        self._repo_url,
+                    )
+                    return None
+
+                manifest_data = manifest_response.json()
+                manifest_content = base64.b64decode(
+                    manifest_data.get("content", "")
+                ).decode("utf-8")
+
+                # Create temporary directory to assemble module
+                temp_dir = Path(tempfile.mkdtemp(prefix=f"module_{module_id}_"))
+
+                try:
+                    # Write manifest to temp directory
+                    (temp_dir / "manifest.yaml").write_text(manifest_content)
+
+                    # Fetch module files (backend, frontend, docs)
+                    directories_to_fetch = ["backend", "frontend", "docs"]
+
+                    for dir_name in directories_to_fetch:
+                        dir_url = (
+                            f"https://api.github.com/repos/{self._owner}/{self._repo}"
+                            f"/contents/modules/{module_id}/{dir_name}?ref={self._branch}"
+                        )
+
+                        try:
+                            dir_response = await client.get(dir_url, timeout=10.0)
+                            if dir_response.status_code == 404:
+                                # Directory doesn't exist, skip it
+                                continue
+                            elif dir_response.status_code >= 400:
+                                continue
+
+                            # Recursively download all files in this directory
+                            await self._download_dir_contents(
+                                client, dir_response.json(), temp_dir / dir_name
+                            )
+                        except Exception as exc:
+                            logger.warning(
+                                "Error fetching %s directory for module %s: %s",
+                                dir_name,
+                                module_id,
+                                exc,
+                            )
+                            continue
+
+                    # Build the .mod file using PackageBuilder
+                    result = PackageBuilder.build(
+                        module_path=temp_dir, output_dir=self._cache
+                    )
+                    logger.info(
+                        "Built module %s to cache: %s (%s)",
+                        module_id,
+                        result.output_path,
+                        result.size_human,
+                    )
+                    return result.output_path
+
+                finally:
+                    # Clean up temporary directory
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            logger.warning(
+                "Failed to fetch module %s from %s: %s",
+                module_id,
+                self._repo_url,
+                exc,
+            )
+            return None
+        except Exception as exc:
+            logger.warning(
+                "Unexpected error fetching module %s: %s",
+                module_id,
+                exc,
+            )
+            return None
+
+    async def _download_dir_contents(
+        self, client: "httpx.AsyncClient", dir_listing: list, target_dir: Path
+    ) -> None:
+        """
+        Recursively download all files from a GitHub directory listing.
+
+        Args:
+            client: httpx.AsyncClient to use for requests
+            dir_listing: List of entries from GitHub Contents API
+            target_dir: Where to save files
+        """
+        import base64
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        for entry in dir_listing:
+            if entry["type"] == "file":
+                # Download file
+                file_response = await client.get(entry["url"], timeout=10.0)
+                if file_response.status_code == 200:
+                    file_data = file_response.json()
+                    content = base64.b64decode(file_data.get("content", ""))
+                    file_path = target_dir / entry["name"]
+                    file_path.write_bytes(content)
+
+            elif entry["type"] == "dir":
+                # Recursively download subdirectory
+                subdir_response = await client.get(entry["url"], timeout=10.0)
+                if subdir_response.status_code == 200:
+                    await self._download_dir_contents(
+                        client, subdir_response.json(), target_dir / entry["name"]
+                    )
 
 
 # ── Remote stub ───────────────────────────────────────────────────────────────
