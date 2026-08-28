@@ -24,7 +24,6 @@ from __future__ import annotations
 import hashlib
 import asyncio
 import json
-import sys
 import logging
 import shutil
 import zipfile
@@ -490,7 +489,6 @@ class PackageManager:
         if entry is None:
             return
         try:
-            import importlib.util
             manifest_path = self._installed / module_id / "manifest.yaml"
             if not manifest_path.is_file():
                 return
@@ -499,13 +497,12 @@ class PackageManager:
             if not entry_backend:
                 return
             backend_file = self._installed / module_id / str(entry_backend)
-            if not backend_file.is_file():
+            from app.module_runtime.loader import ModuleLoadError, load_module_file
+            try:
+                py_module = load_module_file(
+                    f"techforge_modules.{module_id}.uninstall_hook", backend_file)
+            except ModuleLoadError:
                 return
-            spec = importlib.util.spec_from_file_location(
-                f"techforge_modules.{module_id}.uninstall_hook", backend_file)
-            py_module = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = py_module
-            spec.loader.exec_module(py_module)
             instance = getattr(py_module, "module", None)
             uninstall = getattr(instance, "uninstall", None)
             if callable(uninstall):

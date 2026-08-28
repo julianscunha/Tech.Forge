@@ -10,10 +10,10 @@ Fluxo (§13): Resolve Service → Validate Contract → Invoke → Return Result
 from __future__ import annotations
 
 import asyncio
-import importlib.util
 import logging
 
 from app.core.settings import settings
+from app.module_runtime.loader import ModuleLoadError, load_module_file
 from app.service_registry.descriptor import ServiceStatus
 from app.service_registry.errors import (
     CapabilityNotFoundError, ContractViolationError, InvalidArgumentsError,
@@ -38,12 +38,10 @@ def _load_export_callable(module_id: str, export_name: str):
     (padrão ModuleContract, ex: veeam_m365 calculate_storage).
     """
     backend_path = settings.MODULES_INSTALLED_PATH / module_id / "backend" / "main.py"
-    if not backend_path.is_file():
+    try:
+        mod = load_module_file(f"service_registry_{module_id}", backend_path)
+    except ModuleLoadError:
         return None
-
-    spec = importlib.util.spec_from_file_location(f"service_registry_{module_id}", backend_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
 
     if hasattr(mod, export_name):
         return getattr(mod, export_name)

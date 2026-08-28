@@ -17,12 +17,8 @@ journal as an error event and skipped, never crashing the platform.
 """
 from __future__ import annotations
 
-import importlib.util
 import logging
-import sys
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI
 
@@ -30,6 +26,7 @@ from app.core.settings import settings
 from app.module_engine import journal as loader_journal
 from app.module_engine.enums import ModuleStatus
 from app.module_engine.registry import registry
+from app.module_runtime.loader import ModuleLoadError, load_module_file
 
 logger = logging.getLogger("techforge.plugin_loader")
 
@@ -55,18 +52,12 @@ def _import_router(module_id: str, entry_backend: str):
     """
     module_dir = settings.MODULES_INSTALLED_PATH / module_id
     entry_path = module_dir / entry_backend
-
-    if not entry_path.is_file():
-        raise FileNotFoundError(f"entry_backend not found: {entry_path}")
-
     import_name = f"techforge_modules.{module_id}.backend"
-    spec = importlib.util.spec_from_file_location(import_name, entry_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot create import spec for {entry_path}")
 
-    py_module = importlib.util.module_from_spec(spec)
-    sys.modules[import_name] = py_module
-    spec.loader.exec_module(py_module)
+    try:
+        py_module = load_module_file(import_name, entry_path)
+    except ModuleLoadError as exc:
+        raise ImportError(str(exc)) from exc
 
     router = getattr(py_module, "router", None)
     if router is None:
