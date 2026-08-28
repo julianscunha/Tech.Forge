@@ -15,7 +15,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 7 | Documentation Compliance Checker | ✅ fechada | CLI validate-module c/ compliance (§12), notificações (§15), DoD no ai-context (§17), quality gate §9 (TODO/conteúdo vazio) e exemplo verificável §10 (hello_world+veeam_m365) — ver tasks/phase-07-report.md |
 | 8 | Service Registry | ✅ fechada | `app/service_registry/` (discovery, invocação, erros tipados, conflito) + API `/services*` + CLI `techforge services` + AI Context — ver tasks/phase-08-report.md |
 | 8.1 | Dependency Governance | ✅ fechada | `app/dependency_engine/` (parser, validator, graph+ciclos+Mermaid, resolver, lifecycle hooks) + API `/modules/{id}/dependencies\|dependents` + `/dependencies/validate\|graph` + CLI + Developer Center (grafo visual) + AI Context — ver tasks/phase-08.1-report.md |
-| 9 | Module Runtime Execution | ⚠️ mínimo | só runtime status + eventos startup/shutdown (fundação Fase 6) |
+| 9 | Module Runtime & Execution | ✅ fechada | `app/module_runtime/` (loader único, Runtime State separado do Administrative State, lifecycle hooks reais enable/disable/health_check, ExecutionContext, ModuleExecutionResult+cancellation/progress esqueleto) + API `/runtime/modules*` + CLI + Focus Mode + AI Context — ver tasks/phase-09-report.md |
 | 10 | Security & Module Trust | ⚠️ rudimentar | apenas checksum SHA-256 + TrustLevel enum nunca populado; sem assinatura/publisher registry |
 | 11 | Marketplace Distribution | ⚠️ local-only | `RemoteRepositoryProvider` = NotImplementedError ×3 (`package_manager/repository.py:157-170`); marketplace/ vazio |
 | 12 | Configuration & Persistence | ❌ | só settings.py global |

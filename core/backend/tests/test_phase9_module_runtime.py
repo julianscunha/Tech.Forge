@@ -706,3 +706,106 @@ class TestRuntimeCLI:
         assert "modules" in runtime_cmd.commands
         assert "module" in runtime_cmd.commands
         assert "initialize" in runtime_cmd.commands
+
+
+# ── Slice 7 — Teste integrado completo (§31, regra final) ──────────────────────
+
+class TestPhase9FullIntegration:
+    """
+    Start TechForge -> Runtime Ready -> instalar modulo (tmp_path) ->
+    activate (enable() real via API) -> READY -> health_check via API ->
+    modulo falha -> Core continua respondendo -> deactivate -> STOPPED ->
+    shutdown limpa Runtime State (nunca sobrevive a restart).
+    """
+
+    def test_full_module_lifecycle_through_api(self, client, tmp_path, monkeypatch):
+        import asyncio
+        from datetime import datetime
+        from app.core.settings import settings
+        from app.module_engine.registry import registry, ModuleEntry
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        module_id = "full_integration_mod"
+        mod_dir = tmp_path / module_id
+        _write_backend_module(mod_dir, """
+from techforge_sdk.contracts import HealthResult
+
+class _Instance:
+    def __init__(self):
+        self.healthy = True
+    async def enable(self):
+        pass
+    async def disable(self):
+        pass
+    async def health_check(self):
+        return HealthResult.ok() if self.healthy else HealthResult.fail("dependency down")
+
+module = _Instance()
+""")
+        (mod_dir / "data").mkdir(parents=True, exist_ok=True)
+
+        entry = ModuleEntry(
+            module_id=module_id, name=module_id, version="1.0.0",
+            category="C", vendor="V", author="A", description="D",
+            status=ModuleStatus.DISABLED, install_date=datetime.now(),
+            entry_backend="backend/main.py",
+        )
+        registry.register(entry)
+
+        try:
+            # activate -> enable() real via lifecycle -> READY
+            async def _activate():
+                from app.db.database import AsyncSessionLocal
+                from app.package_manager.lifecycle import activate_module
+                async with AsyncSessionLocal() as db:
+                    return await activate_module(db, module_id)
+
+            result = asyncio.run(_activate())
+            assert result["ok"] is True
+            assert module_runtime_registry.get(module_id).state == RuntimeState.READY
+
+            # GET /runtime/modules/{id} via API — READY
+            resp = client.get(f"/api/v1/runtime/modules/{module_id}")
+            assert resp.status_code == 200
+            assert resp.json()["state"] == "READY"
+
+            # Simular falha do modulo — health_check() reporta unhealthy
+            # (mesma instancia cacheada por on_activate, nao um reload)
+            from app.module_runtime.lifecycle import _load_module_instance
+            instance = _load_module_instance(module_id, "backend/main.py")
+            instance.healthy = False
+
+            resp = client.post(f"/api/v1/runtime/modules/{module_id}/initialize")
+            assert resp.status_code == 200
+            assert resp.json()["state"] == "DEGRADED"
+
+            # Core continua respondendo normalmente apos a falha do modulo
+            resp = client.get("/api/v1/platform/status")
+            assert resp.status_code == 200
+
+            # deactivate -> disable() real -> STOPPED
+            async def _deactivate():
+                from app.db.database import AsyncSessionLocal
+                from app.package_manager.lifecycle import deactivate_module
+                async with AsyncSessionLocal() as db:
+                    return await deactivate_module(db, module_id)
+
+            result = asyncio.run(_deactivate())
+            assert result["ok"] is True
+            assert module_runtime_registry.get(module_id).state == RuntimeState.STOPPED
+
+        finally:
+            registry.deregister(module_id)
+            module_runtime_registry._entries.pop(module_id, None)
+            from app.module_runtime.lifecycle import discard_instance
+            discard_instance(module_id)
+
+    def test_shutdown_clears_runtime_state(self):
+        """§27/§29 — Runtime State e efemero, nunca sobrevive a um shutdown."""
+        from app.module_runtime.state import ModuleRuntimeRegistry, RuntimeState
+
+        reg = ModuleRuntimeRegistry()
+        reg.set_state("mod_x", RuntimeState.READY)
+        reg.clear_transient_state()
+        assert reg.get("mod_x") is None

@@ -65,6 +65,47 @@ def test_context_omits_dependency_section_when_no_edges(ai_context):
     assert "\n## Dependency Governance\n" not in ai_context
 
 
+# ── Fase 9 §28 — Module Runtime Context no AI Context ─────────────────────────
+
+def test_context_includes_module_runtime_context(ai_context_with_runtime_state):
+    md = ai_context_with_runtime_state
+    assert "## Module Runtime Context" in md
+    assert "mod_a" in md
+    assert "READY" in md
+
+
+def test_context_omits_runtime_section_when_empty(monkeypatch):
+    """Sem nenhum modulo INSTALLED com Runtime State, a secao nao aparece."""
+    from app.module_runtime.state import module_runtime_registry
+
+    monkeypatch.setattr(module_runtime_registry, "_entries", {})
+    from app.doc_engine.indexer import DocIndexer
+    from app.doc_engine import doc_index, AIContextExporter
+
+    idx = DocIndexer(doc_index)
+    idx.rebuild()
+    md = AIContextExporter.export(idx)
+    assert "\n## Module Runtime Context\n" not in md
+
+
+@pytest.fixture()
+def ai_context_with_runtime_state(monkeypatch):
+    from datetime import datetime, timezone
+    from app.module_runtime.state import RuntimeState, ModuleRuntimeEntry, module_runtime_registry
+
+    entry = ModuleRuntimeEntry(
+        module_id="mod_a", state=RuntimeState.READY, since=datetime.now(timezone.utc),
+    )
+    monkeypatch.setattr(module_runtime_registry, "_entries", {"mod_a": entry})
+
+    from app.doc_engine.indexer import DocIndexer
+    from app.doc_engine import doc_index, AIContextExporter
+
+    idx = DocIndexer(doc_index)
+    idx.rebuild()
+    return AIContextExporter.export(idx)
+
+
 @pytest.fixture()
 def ai_context_dependencies(monkeypatch):
     from datetime import datetime

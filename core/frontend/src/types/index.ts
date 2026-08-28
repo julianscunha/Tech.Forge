@@ -113,6 +113,18 @@ export type DependencyStatus =
   | 'SATISFIED' | 'MISSING' | 'INCOMPATIBLE_VERSION' | 'DISABLED'
   | 'CONFLICT' | 'CYCLIC' | 'OPTIONAL_UNAVAILABLE'
 
+// ── Module Runtime (Fase 9) ────────────────────────────────────────────────────
+
+export type RuntimeState = 'READY' | 'INITIALIZING' | 'EXECUTING' | 'DEGRADED' | 'FAILED' | 'STOPPED'
+
+export interface ModuleRuntimeEntry {
+  module_id: string
+  state: RuntimeState
+  last_error: string | null
+  last_execution: string | null
+  uptime_seconds: number | null
+}
+
 export interface Dependency {
   target_type: 'module' | 'capability'
   target_id: string

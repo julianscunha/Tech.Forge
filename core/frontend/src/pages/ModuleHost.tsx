@@ -15,10 +15,31 @@
  */
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Puzzle, ArrowLeft, ExternalLink, AlertTriangle } from 'lucide-react'
-import { registryApi } from '@/lib/api'
-import type { ModuleEntry } from '@/types'
+import { Puzzle, ArrowLeft, ExternalLink, AlertTriangle, Maximize2 } from 'lucide-react'
+import { registryApi, runtimeApi } from '@/lib/api'
+import { useFocusModeStore } from '@/store/focusMode'
+import type { ModuleEntry, ModuleRuntimeEntry } from '@/types'
 import { cn } from '@/lib/utils'
+
+const RUNTIME_STYLE: Record<string, string> = {
+  READY:        'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]',
+  EXECUTING:    'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))]',
+  INITIALIZING: 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))]',
+  DEGRADED:     'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]',
+  FAILED:       'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]',
+  STOPPED:      'bg-[hsl(var(--text-subtle)/0.12)] text-[hsl(var(--text-muted))]',
+}
+
+function RuntimeStateBadge({ state }: { state: string }) {
+  return (
+    <span className={cn(
+      'px-1.5 py-0.5 rounded text-[10px] font-mono',
+      RUNTIME_STYLE[state] ?? 'bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))]',
+    )}>
+      {state}
+    </span>
+  )
+}
 
 const _loadedModules = new Map<string, { render: (container: HTMLElement) => void }>()
 
@@ -57,6 +78,8 @@ export function ModuleHost() {
   const [error, setError] = useState<string | null>(null)
   const [ModuleApi, setModuleApi] = useState<{ render: (c: HTMLElement) => void } | null>(null)
   const [moduleLoadError, setModuleLoadError] = useState<string | null>(null)
+  const [runtimeEntry, setRuntimeEntry] = useState<ModuleRuntimeEntry | null>(null)
+  const { toggleFocusMode } = useFocusModeStore()
 
   useEffect(() => {
     let cancelled = false
@@ -94,6 +117,15 @@ export function ModuleHost() {
         if (!cancelled) setLoading(false)
       })
 
+    return () => { cancelled = true }
+  }, [moduleId])
+
+  useEffect(() => {
+    if (!moduleId) return
+    let cancelled = false
+    runtimeApi.getModule(moduleId)
+      .then((r) => { if (!cancelled) setRuntimeEntry(r) })
+      .catch(() => { if (!cancelled) setRuntimeEntry(null) })
     return () => { cancelled = true }
   }, [moduleId])
 
@@ -141,16 +173,26 @@ export function ModuleHost() {
               >
                 v{entry.version}
               </span>
+              {runtimeEntry && <RuntimeStateBadge state={runtimeEntry.state} />}
             </div>
             <p className="text-xs text-[hsl(var(--text-muted))]">{entry.description}</p>
           </div>
         </div>
-        <Link
-          to="/modules"
-          className="inline-flex items-center gap-1 text-xs text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]"
-        >
-          <ArrowLeft size={12} /> Módulos
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleFocusMode}
+            className="inline-flex items-center gap-1 text-xs text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]"
+            title="Focus Mode — recolhe menus e maximiza o workspace"
+          >
+            <Maximize2 size={12} /> Focus Mode
+          </button>
+          <Link
+            to="/modules"
+            className="inline-flex items-center gap-1 text-xs text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]"
+          >
+            <ArrowLeft size={12} /> Módulos
+          </Link>
+        </div>
       </div>
 
       {/* Module UI — dynamic import of entry_frontend (Fase 3 §11, micro-frontend) */}

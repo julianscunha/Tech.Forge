@@ -161,3 +161,11 @@ export const dependenciesApi = {
   dependents:   (moduleId: string) => request<string[]>(`/modules/${moduleId}/dependents`),
   graph:        () => request<{ mermaid: string }>('/dependencies/graph'),
 }
+
+// ── Fase 9 — Module Runtime ───────────────────────────────────────────────────
+
+import type { ModuleRuntimeEntry } from '@/types'
+
+export const runtimeApi = {
+  getModule: (moduleId: string) => request<ModuleRuntimeEntry>(`/runtime/modules/${moduleId}`),
+}

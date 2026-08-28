@@ -272,6 +272,11 @@ class PackageManager:
         # instance — gives the module a chance to clean up its own data (§11).
         self._call_uninstall_hook(module_id, entry)
 
+        # Fase 9 — a instância cacheada do ModuleContract não deve sobreviver
+        # à remoção física dos arquivos do módulo.
+        from app.module_runtime.lifecycle import discard_instance
+        discard_instance(module_id)
+
         # Deregister first so the registry is consistent during file deletion
         registry.deregister(module_id)
         # Drop from the plugin loader's mounted set so a future reinstall

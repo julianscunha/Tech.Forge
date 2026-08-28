@@ -184,6 +184,23 @@ class AIContextExporter:
             lines.append("```")
             lines.append("")
 
+        # ── Module Runtime Context (Fase 9 §28) ────────────────────────────────
+        from app.module_runtime.state import module_runtime_registry
+
+        runtime_entries = module_runtime_registry.list_all()
+        if runtime_entries:
+            lines.append("---")
+            lines.append("## Module Runtime Context")
+            lines.append("")
+            for e in sorted(runtime_entries, key=lambda e: e.module_id):
+                lines.append(f"### {e.module_id}")
+                lines.append(f"**Runtime State:** {e.state.value}")
+                if e.last_error:
+                    lines.append(f"**Last error:** {e.last_error}")
+                if e.last_execution:
+                    lines.append(f"**Last execution:** {e.last_execution.isoformat()}")
+                lines.append("")
+
         # ── Module documentation (overview + examples grouped per module) ─────
         wants_modules  = DocCategory.MODULE in categories
         wants_examples = DocCategory.MODULE_EXAMPLE in categories

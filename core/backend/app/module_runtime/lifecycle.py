@@ -19,14 +19,34 @@ from app.module_runtime.state import RuntimeState, module_runtime_registry
 
 logger = logging.getLogger("techforge.module_runtime.lifecycle")
 
+# A instância `module` de um ModuleContract representa a execução de UM
+# módulo ativo — precisa persistir entre enable()/health_check()/disable()
+# (ex: um contador interno, uma conexão aberta em enable()). Diferente do
+# invoker.py da Fase 8 (invocação de capability é stateless por natureza),
+# aqui cacheamos por module_id em vez de recarregar o arquivo a cada chamada.
+_instances: dict[str, object] = {}
+
 
 def _load_module_instance(module_id: str, entry_backend: str):
+    if module_id in _instances:
+        return _instances[module_id]
+
     backend_path = settings.MODULES_INSTALLED_PATH / module_id / entry_backend
     try:
         py_module = load_module_file(f"techforge_modules.{module_id}.runtime_hook", backend_path)
     except ModuleLoadError:
         return None
-    return getattr(py_module, "module", None)
+
+    instance = getattr(py_module, "module", None)
+    if instance is not None:
+        _instances[module_id] = instance
+    return instance
+
+
+def discard_instance(module_id: str) -> None:
+    """Chamado quando o módulo é removido/desinstalado — não deve sobreviver
+    à remoção física dos arquivos."""
+    _instances.pop(module_id, None)
 
 
 async def on_activate(module_id: str, entry_backend: str) -> None:
