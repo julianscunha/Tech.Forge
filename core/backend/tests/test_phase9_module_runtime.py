@@ -214,3 +214,225 @@ def client():
     from app.main import app
     with TestClient(app) as c:
         yield c
+
+
+# ── Slice 3 — Lifecycle hooks reais (§10/§18) ──────────────────────────────────
+
+def _write_backend_module(mod_dir, body: str) -> None:
+    backend_dir = mod_dir / "backend"
+    backend_dir.mkdir(parents=True, exist_ok=True)
+    (backend_dir / "main.py").write_text(body, encoding="utf-8")
+
+
+class TestLifecycleHooks:
+
+    def test_on_activate_calls_enable_and_sets_ready(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import on_activate
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_a"
+        _write_backend_module(mod_dir, """
+class _Instance:
+    def __init__(self):
+        self.enabled = False
+    async def enable(self):
+        self.enabled = True
+module = _Instance()
+""")
+
+        asyncio.run(on_activate("hook_mod_a", "backend/main.py"))
+        assert module_runtime_registry.get("hook_mod_a").state == RuntimeState.READY
+
+    def test_on_activate_enable_failure_sets_failed_with_last_error(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import on_activate
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_b"
+        _write_backend_module(mod_dir, """
+class _Instance:
+    async def enable(self):
+        raise RuntimeError("boom")
+module = _Instance()
+""")
+
+        asyncio.run(on_activate("hook_mod_b", "backend/main.py"))
+        entry = module_runtime_registry.get("hook_mod_b")
+        assert entry.state == RuntimeState.FAILED
+        assert "boom" in entry.last_error
+
+    def test_on_activate_missing_enable_still_sets_ready(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import on_activate
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_c"
+        _write_backend_module(mod_dir, "class _Instance:\n    pass\nmodule = _Instance()\n")
+
+        asyncio.run(on_activate("hook_mod_c", "backend/main.py"))
+        assert module_runtime_registry.get("hook_mod_c").state == RuntimeState.READY
+
+    def test_on_deactivate_calls_disable_and_sets_stopped(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import on_deactivate
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_d"
+        _write_backend_module(mod_dir, """
+class _Instance:
+    def __init__(self):
+        self.disabled = False
+    async def disable(self):
+        self.disabled = True
+module = _Instance()
+""")
+
+        asyncio.run(on_deactivate("hook_mod_d", "backend/main.py"))
+        assert module_runtime_registry.get("hook_mod_d").state == RuntimeState.STOPPED
+
+    def test_on_deactivate_disable_failure_still_sets_stopped(self, tmp_path, monkeypatch):
+        """disable() falhar nao impede a desativacao administrativa (best-effort)."""
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import on_deactivate
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_e"
+        _write_backend_module(mod_dir, """
+class _Instance:
+    async def disable(self):
+        raise RuntimeError("boom")
+module = _Instance()
+""")
+
+        asyncio.run(on_deactivate("hook_mod_e", "backend/main.py"))
+        assert module_runtime_registry.get("hook_mod_e").state == RuntimeState.STOPPED
+
+    def test_health_check_healthy_sets_ready(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState
+        from app.module_runtime.lifecycle import health_check
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_f"
+        _write_backend_module(mod_dir, """
+from techforge_sdk.contracts import HealthResult
+class _Instance:
+    async def health_check(self):
+        return HealthResult.ok()
+module = _Instance()
+""")
+
+        state = asyncio.run(health_check("hook_mod_f", "backend/main.py"))
+        assert state == RuntimeState.READY
+
+    def test_health_check_unhealthy_sets_degraded(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.module_runtime.lifecycle import health_check
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_g"
+        _write_backend_module(mod_dir, """
+from techforge_sdk.contracts import HealthResult
+class _Instance:
+    async def health_check(self):
+        return HealthResult.fail("db unreachable")
+module = _Instance()
+""")
+
+        state = asyncio.run(health_check("hook_mod_g", "backend/main.py"))
+        assert state == RuntimeState.DEGRADED
+        assert module_runtime_registry.get("hook_mod_g").last_error == "db unreachable"
+
+    def test_health_check_exception_sets_failed(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState
+        from app.module_runtime.lifecycle import health_check
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_h"
+        _write_backend_module(mod_dir, """
+class _Instance:
+    async def health_check(self):
+        raise RuntimeError("crash")
+module = _Instance()
+""")
+
+        state = asyncio.run(health_check("hook_mod_h", "backend/main.py"))
+        assert state == RuntimeState.FAILED
+
+    def test_health_check_missing_hook_defaults_ready(self, tmp_path, monkeypatch):
+        import asyncio
+        from app.core.settings import settings
+        from app.module_runtime.state import RuntimeState
+        from app.module_runtime.lifecycle import health_check
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        mod_dir = tmp_path / "hook_mod_i"
+        _write_backend_module(mod_dir, "class _Instance:\n    pass\nmodule = _Instance()\n")
+
+        state = asyncio.run(health_check("hook_mod_i", "backend/main.py"))
+        assert state == RuntimeState.READY
+
+
+class TestLifecycleIntegration:
+
+    def test_activate_module_failure_in_enable_does_not_block_administrative_state(
+            self, tmp_path, monkeypatch):
+        """enable() falhar -> Runtime State FAILED, mas status administrativo vira INSTALLED mesmo assim."""
+        import asyncio
+        from datetime import datetime
+        from app.core.settings import settings
+        from app.module_engine.registry import registry, ModuleEntry
+        from app.module_engine.enums import ModuleStatus as MS
+        from app.module_runtime.state import RuntimeState, module_runtime_registry
+        from app.package_manager.lifecycle import activate_module
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+        module_id = "hook_mod_integration"
+        mod_dir = tmp_path / module_id
+        _write_backend_module(mod_dir, """
+class _Instance:
+    async def enable(self):
+        raise RuntimeError("enable boom")
+module = _Instance()
+""")
+        (mod_dir / "data").mkdir(parents=True, exist_ok=True)
+
+        entry = ModuleEntry(
+            module_id=module_id, name=module_id, version="1.0.0",
+            category="C", vendor="V", author="A", description="D",
+            status=MS.DISABLED, install_date=datetime.now(),
+            entry_backend="backend/main.py",
+        )
+        registry.register(entry)
+
+        try:
+            async def _run():
+                from app.db.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
+                    return await activate_module(db, module_id)
+
+            result = asyncio.run(_run())
+            assert result["ok"] is True
+            assert registry.get(module_id).status == MS.INSTALLED
+
+            runtime_entry = module_runtime_registry.get(module_id)
+            assert runtime_entry.state == RuntimeState.FAILED
+            assert "enable boom" in runtime_entry.last_error
+        finally:
+            registry.deregister(module_id)

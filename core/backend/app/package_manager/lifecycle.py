@@ -97,6 +97,13 @@ async def deactivate_module(db: AsyncSession, module_id: str) -> dict:
     from app.doc_engine import doc_indexer
     from app.service_registry.registry import sync_with_notifications
     await sync_with_notifications(registry.all(), doc_indexer, db)
+
+    # Fase 9 §10 — disable() best-effort do ModuleContract (nunca bloqueia a desativação)
+    try:
+        from app.module_runtime.lifecycle import on_deactivate
+        await on_deactivate(module_id, entry.entry_backend)
+    except Exception:
+        logger.warning("Runtime on_deactivate hook raised unexpectedly for %s", module_id)
     operation_log.record("deactivate", module_id,
                          entry.version, "success", "Module deactivated")
 
@@ -146,6 +153,13 @@ async def activate_module(db: AsyncSession, module_id: str) -> dict:
     from app.doc_engine import doc_indexer
     from app.service_registry.registry import sync_with_notifications
     await sync_with_notifications(registry.all(), doc_indexer, db)
+
+    # Fase 9 §10 — enable() best-effort do ModuleContract (nunca bloqueia a ativação)
+    try:
+        from app.module_runtime.lifecycle import on_activate
+        await on_activate(module_id, entry.entry_backend)
+    except Exception:
+        logger.warning("Runtime on_activate hook raised unexpectedly for %s", module_id)
 
     await _notify(db, "success", f"Módulo ativado: {entry.name}",
                   f"{module_id} v{entry.version} está ativo novamente.", module_id)

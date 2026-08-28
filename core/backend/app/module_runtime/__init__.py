@@ -9,8 +9,10 @@ from app.module_runtime.loader import ModuleLoadError, load_module_file
 from app.module_runtime.state import (
     ModuleRuntimeEntry, ModuleRuntimeRegistry, RuntimeState, module_runtime_registry,
 )
+from app.module_runtime.lifecycle import on_activate, on_deactivate, health_check
 
 __all__ = [
     "ModuleLoadError", "load_module_file",
     "ModuleRuntimeEntry", "ModuleRuntimeRegistry", "RuntimeState", "module_runtime_registry",
+    "on_activate", "on_deactivate", "health_check",
 ]
