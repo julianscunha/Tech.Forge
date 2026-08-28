@@ -15,7 +15,9 @@ import asyncio
 
 from app.db.database import Base
 from app.models.catalog_source import CatalogSourceConfig
+from app.models.catalog_favorite import CatalogFavorite
 from app.services.catalog_source import CatalogSourceService
+from app.services.catalog_favorite import CatalogFavoriteService
 from app.package_manager.catalog_cache import CatalogCache
 from app.package_manager.catalog_aggregator import CatalogAggregator
 from app.package_manager.catalog_source import CatalogSource
@@ -583,3 +585,121 @@ class TestCatalogSourceCacheInvalidation:
 
         # Verify cache was invalidated
         assert cache.get(source_id) is None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Part D — CatalogFavorite (Slice 4.5)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestCatalogFavorite:
+    """Test catalog favorites (local, no public ratings)."""
+
+    @pytest.mark.asyncio
+    async def test_add_favorite(self, test_db):
+        """Add a module to favorites."""
+        from app.models.catalog_favorite import CatalogFavorite
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        favorite = await CatalogFavoriteService.add(test_db, "test_module_1")
+
+        assert favorite.module_id == "test_module_1"
+        assert isinstance(favorite.favorited_at, datetime)
+
+    @pytest.mark.asyncio
+    async def test_add_favorite_idempotent(self, test_db):
+        """Adding the same favorite twice does not create duplicates."""
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        fav1 = await CatalogFavoriteService.add(test_db, "test_module_1")
+        fav2 = await CatalogFavoriteService.add(test_db, "test_module_1")
+
+        # Should return the same favorite (same favorited_at timestamp)
+        assert fav1.module_id == fav2.module_id
+        assert fav1.favorited_at == fav2.favorited_at
+
+        # Verify only one entry exists in DB
+        favorites = await CatalogFavoriteService.list_ids(test_db)
+        assert favorites == {"test_module_1"}
+
+    @pytest.mark.asyncio
+    async def test_list_favorites(self, test_db):
+        """List all favorited module IDs."""
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        # Initially empty
+        favorites = await CatalogFavoriteService.list_ids(test_db)
+        assert favorites == set()
+
+        # Add two favorites
+        await CatalogFavoriteService.add(test_db, "mod_1")
+        await CatalogFavoriteService.add(test_db, "mod_2")
+
+        favorites = await CatalogFavoriteService.list_ids(test_db)
+        assert favorites == {"mod_1", "mod_2"}
+
+    @pytest.mark.asyncio
+    async def test_remove_favorite(self, test_db):
+        """Remove a favorite by module_id."""
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        await CatalogFavoriteService.add(test_db, "mod_to_remove")
+
+        # Verify it exists
+        favorites_before = await CatalogFavoriteService.list_ids(test_db)
+        assert "mod_to_remove" in favorites_before
+
+        # Remove it
+        removed = await CatalogFavoriteService.remove(test_db, "mod_to_remove")
+        assert removed is True
+
+        # Verify it's gone
+        favorites_after = await CatalogFavoriteService.list_ids(test_db)
+        assert "mod_to_remove" not in favorites_after
+
+    @pytest.mark.asyncio
+    async def test_remove_nonexistent_favorite(self, test_db):
+        """Removing a non-existent favorite returns False."""
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        result = await CatalogFavoriteService.remove(test_db, "nonexistent_module")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_favorite_persistence_across_sessions(self):
+        """Favorites persist across DB sessions (prove it's a real table)."""
+        from app.models.catalog_favorite import CatalogFavorite
+        from app.services.catalog_favorite import CatalogFavoriteService
+
+        # Create a persistent in-memory engine (shared across sessions)
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+        # Session 1: Add favorites
+        AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+        async with AsyncSessionLocal() as session1:
+            await CatalogFavoriteService.add(session1, "persistent_mod_1")
+            await CatalogFavoriteService.add(session1, "persistent_mod_2")
+            favorites1 = await CatalogFavoriteService.list_ids(session1)
+            assert favorites1 == {"persistent_mod_1", "persistent_mod_2"}
+
+        # Session 2: Read favorites (should still be there)
+        async with AsyncSessionLocal() as session2:
+            favorites2 = await CatalogFavoriteService.list_ids(session2)
+            assert favorites2 == {"persistent_mod_1", "persistent_mod_2"}
+
+        # Session 3: Remove one and verify
+        async with AsyncSessionLocal() as session3:
+            removed = await CatalogFavoriteService.remove(session3, "persistent_mod_1")
+            assert removed is True
+            favorites3 = await CatalogFavoriteService.list_ids(session3)
+            assert favorites3 == {"persistent_mod_2"}
+
+        # Session 4: Verify removal persisted
+        async with AsyncSessionLocal() as session4:
+            favorites4 = await CatalogFavoriteService.list_ids(session4)
+            assert favorites4 == {"persistent_mod_2"}
+
+        await engine.dispose()
