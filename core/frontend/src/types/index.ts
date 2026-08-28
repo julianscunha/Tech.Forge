@@ -85,7 +85,7 @@ export type Theme = 'light' | 'dark'
 
 // ── Module Engine (Phase 2) ───────────────────────────────────────────────────
 
-export type ModuleStatus = 'INSTALLED' | 'DISABLED' | 'INVALID' | 'INCOMPATIBLE'
+export type ModuleStatus = 'INSTALLED' | 'DISABLED' | 'INVALID' | 'INCOMPATIBLE' | 'BLOCKED'
 
 export interface ModuleEntry {
   module_id: string
@@ -105,6 +105,20 @@ export interface ModuleEntry {
   entry_frontend: string | null
   is_active: boolean
   manifest_raw?: Record<string, unknown> | null
+}
+
+// ── Dependency Governance (Fase 8.1) ──────────────────────────────────────────
+
+export type DependencyStatus =
+  | 'SATISFIED' | 'MISSING' | 'INCOMPATIBLE_VERSION' | 'DISABLED'
+  | 'CONFLICT' | 'CYCLIC' | 'OPTIONAL_UNAVAILABLE'
+
+export interface Dependency {
+  target_type: 'module' | 'capability'
+  target_id: string
+  version_range: string | null
+  required: boolean
+  status: DependencyStatus | null
 }
 
 export interface RegistrySummary {

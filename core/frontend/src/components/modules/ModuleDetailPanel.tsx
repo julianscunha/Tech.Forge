@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { X, AlertCircle, AlertTriangle, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
-import type { ModuleEntry } from '@/types'
+import { dependenciesApi } from '@/lib/api'
+import type { ModuleEntry, Dependency } from '@/types'
 
 interface Props {
   module: ModuleEntry
@@ -9,7 +11,20 @@ interface Props {
   onClose: () => void
 }
 
+const DEP_STATUS_STYLE: Record<string, string> = {
+  SATISFIED: 'text-[hsl(var(--success))]',
+  OPTIONAL_UNAVAILABLE: 'text-[hsl(var(--text-muted))]',
+}
+
 export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
+  const [dependencies, setDependencies] = useState<Dependency[]>([])
+  const [dependents, setDependents] = useState<string[]>([])
+
+  useEffect(() => {
+    dependenciesApi.dependencies(module.module_id).then(setDependencies).catch(() => setDependencies([]))
+    dependenciesApi.dependents(module.module_id).then(setDependents).catch(() => setDependents([]))
+  }, [module.module_id])
+
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-end" onClick={onClose}>
       {/* Backdrop */}
@@ -78,6 +93,34 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
               {module.description}
             </p>
           </Section>
+
+          {/* Dependencies (Fase 8.1) */}
+          {dependencies.length > 0 && (
+            <Section title="Dependências">
+              {dependencies.map((dep) => (
+                <div key={`${dep.target_type}:${dep.target_id}`}
+                     className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-[hsl(var(--text))] truncate">
+                    {dep.target_id}
+                    <span className="text-[hsl(var(--text-subtle))]"> ({dep.target_type}{dep.required ? '' : ', opcional'})</span>
+                  </span>
+                  <span className={cn('font-mono flex-shrink-0',
+                    DEP_STATUS_STYLE[dep.status ?? ''] ?? 'text-[hsl(var(--warning))]')}>
+                    {dep.status}
+                  </span>
+                </div>
+              ))}
+            </Section>
+          )}
+
+          {/* Dependents (Fase 8.1) */}
+          {dependents.length > 0 && (
+            <Section title="Dependentes">
+              {dependents.map((id) => (
+                <div key={id} className="text-xs text-[hsl(var(--text))] font-mono">{id}</div>
+              ))}
+            </Section>
+          )}
 
           {/* Errors */}
           {module.errors.length > 0 && (

@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   BookOpen, Code2, Layers, Puzzle, FileText, HelpCircle,
   Package, Zap, ChevronRight, Download, RefreshCw,
-  Store, LayoutGrid, ShieldCheck,
+  Store, LayoutGrid, ShieldCheck, GitBranch,
 } from 'lucide-react'
-import { docsApi, servicesApi } from '@/lib/api'
+import { docsApi, servicesApi, dependenciesApi } from '@/lib/api'
 import { MarkdownRenderer } from '@/components/developer-center/MarkdownRenderer'
 import { DocSearch } from '@/components/developer-center/DocSearch'
 import { ServiceContractPanel } from '@/components/developer-center/ServiceContractPanel'
+import { MermaidDiagram } from '@/components/developer-center/MermaidDiagram'
 import { cn } from '@/lib/utils'
 import type { DocEntryMeta, DocEntryFull, ServiceContract, ServiceStatus } from '@/types'
 
@@ -31,6 +32,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
   { id: 'manifest-reference', label: 'Referência do Manifesto', icon: Package, category: 'manifest-reference' },
   { id: 'marketplace',    label: 'Marketplace para Devs',   icon: Store,     category: 'marketplace'    },
   { id: 'governance',     label: 'Documentation First (§16)', icon: ShieldCheck, category: 'governance'  },
+  { id: 'dependency-graph', label: 'Dependency Graph',       icon: GitBranch, category: 'dependency-graph' },
   { id: 'faq',            label: 'FAQ',                     icon: HelpCircle, category: 'faq'           },
 ]
 
@@ -42,6 +44,7 @@ export function DeveloperCenterPage() {
   const [selectedArticle, setSelectedArticle] = useState<DocEntryFull | null>(null)
   const [contracts,       setContracts]       = useState<ServiceContract[]>([])
   const [serviceStatus,   setServiceStatus]   = useState<Record<string, ServiceStatus>>({})
+  const [mermaidGraph,    setMermaidGraph]    = useState<string | null>(null)
   const [loading,         setLoading]         = useState(false)
   const [exporting,       setExporting]       = useState(false)
   const [reindexing,      setReindexing]      = useState(false)
@@ -52,8 +55,15 @@ export function DeveloperCenterPage() {
     if (!section) return
     setLoading(true)
     setSelectedArticle(null)
+    setMermaidGraph(null)
     try {
-      if (sectionId === 'service-module') {
+      if (sectionId === 'dependency-graph') {
+        const { mermaid } = await dependenciesApi.graph()
+        setMermaidGraph(mermaid)
+        setArticles([])
+        setContracts([])
+        setServiceStatus({})
+      } else if (sectionId === 'service-module') {
         const [arts, conts, services] = await Promise.all([
           docsApi.list(section.category),
           docsApi.contracts(),
@@ -191,8 +201,8 @@ export function DeveloperCenterPage() {
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex overflow-hidden min-w-0">
 
-        {/* Article list (only when no article selected) */}
-        {!selectedArticle && (
+        {/* Article list (only when no article selected, not for dependency-graph) */}
+        {!selectedArticle && activeSection !== 'dependency-graph' && (
           <div className="w-64 flex-shrink-0 border-r border-[hsl(var(--border-subtle))] overflow-y-auto bg-[hsl(var(--bg))]">
             <div className="px-4 py-3 border-b border-[hsl(var(--border-subtle))]">
               <h2 className="text-xs font-semibold text-[hsl(var(--text))] flex items-center gap-2">
@@ -275,7 +285,23 @@ export function DeveloperCenterPage() {
 
         {/* Article reader */}
         <div className="flex-1 overflow-y-auto">
-          {selectedArticle ? (
+          {activeSection === 'dependency-graph' ? (
+            <div className="max-w-4xl mx-auto px-8 py-8">
+              <h1 className="text-xl font-semibold text-[hsl(var(--text))] mb-1">Dependency Graph</h1>
+              <p className="text-xs text-[hsl(var(--text-muted))] mb-6">
+                Topologia real de dependências entre módulos instalados (§6/§22).
+              </p>
+              {loading ? (
+                <p className="text-xs text-[hsl(var(--text-subtle))]">Carregando…</p>
+              ) : mermaidGraph && mermaidGraph.split('\n').length > 1 ? (
+                <MermaidDiagram chart={mermaidGraph} />
+              ) : (
+                <p className="text-xs text-[hsl(var(--text-subtle))]">
+                  Nenhuma dependência declarada entre os módulos instalados.
+                </p>
+              )}
+            </div>
+          ) : selectedArticle ? (
             <div className="max-w-3xl mx-auto px-8 py-8">
               {/* Back button */}
               <button

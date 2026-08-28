@@ -169,6 +169,21 @@ class AIContextExporter:
                         lines.append("```")
                     lines.append("")
 
+        # ── Dependency Governance (Fase 8.1) ───────────────────────────────────
+        from app.module_engine.registry import registry as module_registry
+        from app.service_registry.registry import service_registry
+        from app.dependency_engine.graph import DependencyGraph
+
+        graph = DependencyGraph.build(module_registry, service_registry)
+        if graph.edges:
+            lines.append("---")
+            lines.append("## Dependency Governance")
+            lines.append("")
+            lines.append("```mermaid")
+            lines.append(graph.export_mermaid())
+            lines.append("```")
+            lines.append("")
+
         # ── Module documentation (overview + examples grouped per module) ─────
         wants_modules  = DocCategory.MODULE in categories
         wants_examples = DocCategory.MODULE_EXAMPLE in categories

@@ -785,3 +785,87 @@ class TestDependencyCLI:
         assert "dependents" in modules_cmd.commands
         assert "validate-dependencies" in modules_cmd.commands
         assert "graph" in modules_cmd.commands
+
+
+# ── Teste integrado completo (§30) — Provider + Consumer via tmp_path ──────────
+
+class TestFullLifecycleIntegration:
+    """
+    install -> resolve -> activate (ordem correta) -> tentar desativar
+    Provider -> bloqueado -> desativar Consumer -> desativar Provider ->
+    permitido -> remocao.
+    """
+
+    def test_full_provider_consumer_lifecycle(self, client, tmp_path, monkeypatch):
+        import asyncio
+        from datetime import datetime
+        from app.core.settings import settings
+        from app.module_engine.registry import registry, ModuleEntry
+        from app.package_manager.enums import RemoveStatus
+        from app.package_manager.manager import PackageManager
+        from app.dependency_engine.resolver import DependencyResolver
+        from app.dependency_engine.models import DependencyStatus
+
+        monkeypatch.setattr(settings, "MODULES_INSTALLED_PATH", tmp_path)
+
+        provider_id, consumer_id = "int_provider", "int_consumer"
+        for module_id, deps in ((provider_id, []),
+                                (consumer_id, [{"target": {"type": "module",
+                                                           "id": provider_id},
+                                                "required": True}])):
+            _make_full_module(tmp_path, module_id, dependencies=deps)
+            entry = ModuleEntry(
+                module_id=module_id, name=module_id, version="1.0.0",
+                category="C", vendor="V", author="A", description="D",
+                status=ModuleStatus.INSTALLED, install_date=datetime.now(),
+                manifest_raw={"dependencies": deps},
+            )
+            registry.register(entry)
+            (tmp_path / module_id / "data").mkdir(parents=True, exist_ok=True)
+
+        from app.service_registry.registry import service_registry
+
+        try:
+            # resolve: dependencia obrigatoria satisfeita (Provider INSTALLED)
+            deps = DependencyResolver.resolve(consumer_id, registry, service_registry)
+            assert deps[0].status == DependencyStatus.SATISFIED
+
+            async def _deactivate(module_id):
+                from app.db.database import AsyncSessionLocal
+                from app.package_manager.lifecycle import deactivate_module
+                async with AsyncSessionLocal() as db:
+                    return await deactivate_module(db, module_id)
+
+            async def _activate(module_id):
+                from app.db.database import AsyncSessionLocal
+                from app.package_manager.lifecycle import activate_module
+                async with AsyncSessionLocal() as db:
+                    return await activate_module(db, module_id)
+
+            # tentar desativar Provider com Consumer ativo -> bloqueado
+            result = asyncio.run(_deactivate(provider_id))
+            assert result["ok"] is False
+            assert registry.get(provider_id).status == ModuleStatus.INSTALLED
+
+            # desativar Consumer primeiro -> permitido
+            result = asyncio.run(_deactivate(consumer_id))
+            assert result["ok"] is True
+            assert registry.get(consumer_id).status == ModuleStatus.DISABLED
+
+            # agora desativar Provider funciona
+            result = asyncio.run(_deactivate(provider_id))
+            assert result["ok"] is True
+            assert registry.get(provider_id).status == ModuleStatus.DISABLED
+
+            # reativar Provider, depois Consumer (ordem correta)
+            assert asyncio.run(_activate(provider_id))["ok"] is True
+            assert asyncio.run(_activate(consumer_id))["ok"] is True
+
+            # remocao bloqueada com dependent ativo
+            pm = PackageManager(installed_path=tmp_path)
+            result = asyncio.run(pm.remove(provider_id))
+            assert result.status == RemoveStatus.BLOCKED
+
+        finally:
+            registry.deregister(provider_id)
+            registry.deregister(consumer_id)

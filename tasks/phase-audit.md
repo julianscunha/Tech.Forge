@@ -14,7 +14,7 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 | 6 | Launcher & Runtime | ✅ fechada | modo Desktop (backend serve dist/, zero node); `techforge logs`/`dev`; runtime status c/ uptime+DEGRADED — ver tasks/phase-06-report.md |
 | 7 | Documentation Compliance Checker | ✅ fechada | CLI validate-module c/ compliance (§12), notificações (§15), DoD no ai-context (§17), quality gate §9 (TODO/conteúdo vazio) e exemplo verificável §10 (hello_world+veeam_m365) — ver tasks/phase-07-report.md |
 | 8 | Service Registry | ✅ fechada | `app/service_registry/` (discovery, invocação, erros tipados, conflito) + API `/services*` + CLI `techforge services` + AI Context — ver tasks/phase-08-report.md |
-| 8.1 | Dependency Governance | ❌ | sem dependency graph/resolução; manifest não valida dependências |
+| 8.1 | Dependency Governance | ✅ fechada | `app/dependency_engine/` (parser, validator, graph+ciclos+Mermaid, resolver, lifecycle hooks) + API `/modules/{id}/dependencies\|dependents` + `/dependencies/validate\|graph` + CLI + Developer Center (grafo visual) + AI Context — ver tasks/phase-08.1-report.md |
 | 9 | Module Runtime Execution | ⚠️ mínimo | só runtime status + eventos startup/shutdown (fundação Fase 6) |
 | 10 | Security & Module Trust | ⚠️ rudimentar | apenas checksum SHA-256 + TrustLevel enum nunca populado; sem assinatura/publisher registry |
 | 11 | Marketplace Distribution | ⚠️ local-only | `RemoteRepositoryProvider` = NotImplementedError ×3 (`package_manager/repository.py:157-170`); marketplace/ vazio |
@@ -27,7 +27,6 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 - `RemoteRepositoryProvider.{list_available,get_package,fetch_mod_path}` — NotImplementedError (Fase 11)
 - `Header.tsx` bell placeholder — aguarda Notification Foundation (Fase 2)
 - `ModuleHost.tsx` — dynamic import de entry_frontend adiado (Fase 9)
-- Manifest sem campo `dependencies` (Fase 8.1)
 
 ## Nota para o plano da Fase 4 (decisão 2026-08-25)
 

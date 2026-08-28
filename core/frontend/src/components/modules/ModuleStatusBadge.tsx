@@ -6,6 +6,7 @@ const CONFIG: Record<ModuleStatus, { label: string; classes: string; dot: string
   DISABLED:     { label: 'Disabled',    classes: 'bg-[hsl(var(--text-subtle)/0.12)] text-[hsl(var(--text-muted))]', dot: 'bg-[hsl(var(--text-subtle))]' },
   INVALID:      { label: 'Invalid',     classes: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]',      dot: 'bg-[hsl(var(--danger))]' },
   INCOMPATIBLE: { label: 'Incompatible', classes: 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]',   dot: 'bg-[hsl(var(--warning))]' },
+  BLOCKED:      { label: 'Blocked',     classes: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]',      dot: 'bg-[hsl(var(--danger))]' },
 }
 
 interface Props {

@@ -151,3 +151,13 @@ export const servicesApi = {
   get:          (serviceId: string) => request<ServiceDescriptor>(`/services/${serviceId}`),
   capabilities: () => request<Record<string, string[]>>('/services/capabilities'),
 }
+
+// ── Fase 8.1 — Dependency Governance ─────────────────────────────────────────
+
+import type { Dependency } from '@/types'
+
+export const dependenciesApi = {
+  dependencies: (moduleId: string) => request<Dependency[]>(`/modules/${moduleId}/dependencies`),
+  dependents:   (moduleId: string) => request<string[]>(`/modules/${moduleId}/dependents`),
+  graph:        () => request<{ mermaid: string }>('/dependencies/graph'),
+}
