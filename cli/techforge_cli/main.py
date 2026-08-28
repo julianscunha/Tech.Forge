@@ -25,6 +25,7 @@ from techforge_cli.commands.module_trust   import (
     verify_module_cmd, integrity_cmd, publishers_cmd,
 )
 from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd, logs_cmd, dev_cmd
+from techforge_cli.commands.catalog         import build_index_cmd
 
 
 @click.group()
@@ -68,6 +69,7 @@ cli.add_command(stop_cmd)      # Phase 6
 cli.add_command(status_cmd)    # Phase 6
 cli.add_command(logs_cmd)      # Fase 6 §16 — techforge logs
 cli.add_command(dev_cmd)       # Fase 6 §17 — techforge dev
+cli.add_command(build_index_cmd)   # Fase 11 — catalog build-index
 
 
 def main():

@@ -25,6 +25,7 @@ from typing import Optional
 import yaml
 
 from app.core.settings import settings
+from app.package_manager.catalog_source import CatalogSource
 from app.package_manager.models import PackageInfo
 
 logger = logging.getLogger("techforge.repository")
@@ -136,6 +137,140 @@ class LocalRepositoryProvider(RepositoryProvider):
             return info
         except (zipfile.BadZipFile, yaml.YAMLError, KeyError) as exc:
             logger.warning("Could not read %s: %s", mod_path.name, exc)
+            return None
+
+
+# ── Official Catalog Provider (index.json) ────────────────────────────────────
+
+class OfficialCatalogProvider(RepositoryProvider):
+    """
+    Fetches module catalog from a remote index.json file.
+
+    Used by the official Tech.Forge Modules catalog and any compatible
+    index-based catalogs. Downloads only metadata (index.json), not the
+    full .mod files — those are downloaded on demand during installation.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        cache_path: Optional[Path] = None,
+    ) -> None:
+        """
+        Initialize the official catalog provider.
+
+        Args:
+            base_url: Base URL where index.json is located
+                      (e.g., https://raw.githubusercontent.com/owner/repo/main)
+            cache_path: Where to store downloaded .mod files (default: modules/cache/)
+        """
+        self._base_url = base_url.rstrip("/")
+        self._cache = cache_path or (settings.MODULES_REPOSITORY_PATH.parent / "cache")
+        self._cache.mkdir(parents=True, exist_ok=True)
+
+    async def list_available(self, platform_version: str) -> list[PackageInfo]:
+        """Fetch and parse index.json from the remote catalog."""
+        import httpx
+
+        index_url = f"{self._base_url}/index.json"
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(index_url, timeout=10.0)
+
+                # Check for HTTP errors
+                if response.status_code >= 400:
+                    logger.warning(
+                        "Failed to fetch catalog from %s: HTTP %d",
+                        index_url,
+                        response.status_code,
+                    )
+                    return []
+
+            index_data = response.json()
+            packages: list[PackageInfo] = []
+
+            for module_entry in index_data.get("modules", []):
+                info = PackageInfo.from_manifest_dict(
+                    module_entry,
+                    source_path=None,
+                    platform_version=platform_version,
+                )
+                info.source = CatalogSource.OFFICIAL_CATALOG
+                info.source_url = module_entry.get("mod_url")
+                packages.append(info)
+
+            return packages
+
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            logger.warning(
+                "Failed to fetch catalog from %s: %s",
+                index_url,
+                exc,
+            )
+            return []
+        except Exception as exc:
+            logger.warning(
+                "Unexpected error fetching catalog from %s: %s",
+                index_url,
+                exc,
+            )
+            return []
+
+    async def get_package(self, module_id: str, platform_version: str) -> Optional[PackageInfo]:
+        """Get a single package from the catalog by ID."""
+        packages = await self.list_available(platform_version)
+        for pkg in packages:
+            if pkg.module_id == module_id:
+                return pkg
+        return None
+
+    async def fetch_mod_path(self, module_id: str) -> Optional[Path]:
+        """Download the .mod file for a module and return its local path."""
+        import httpx
+
+        # Get the package metadata (which includes the mod_url)
+        pkg = await self.get_package(module_id, "1.0.0")
+        if not pkg or not pkg.source_url:
+            logger.warning("Package %s not found in catalog or has no mod_url", module_id)
+            return None
+
+        mod_url = pkg.source_url
+        # If the URL is relative (just a filename), prepend the base URL
+        if not mod_url.startswith("http"):
+            mod_url = f"{self._base_url}/{mod_url}"
+
+        # Extract filename from URL for local cache
+        cache_filename = mod_url.split("/")[-1]
+        cache_path = self._cache / cache_filename
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(mod_url, timeout=30.0)
+                response.raise_for_status()
+
+            cache_path.write_bytes(response.content)
+            logger.info(
+                "Downloaded module %s to cache: %s (%d bytes)",
+                module_id,
+                cache_path,
+                len(response.content),
+            )
+            return cache_path
+
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError) as exc:
+            logger.warning(
+                "Failed to download module %s from %s: %s",
+                module_id,
+                mod_url,
+                exc,
+            )
+            return None
+        except Exception as exc:
+            logger.warning(
+                "Unexpected error downloading module %s: %s",
+                module_id,
+                exc,
+            )
             return None
 
 

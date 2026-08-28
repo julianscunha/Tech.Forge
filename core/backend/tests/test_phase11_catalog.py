@@ -302,3 +302,244 @@ class TestDetectConflicts:
         assert set(result.keys()) == {"module_x", "module_y"}
         assert len(result["module_x"]) == 2
         assert len(result["module_y"]) == 2
+
+
+# ── Tests for Slice 2: OfficialCatalogProvider ────────────────────────────────
+
+class TestOfficialCatalogProvider:
+    """Test OfficialCatalogProvider for fetching from index.json."""
+
+    @pytest.mark.asyncio
+    async def test_list_available_parses_index_json(self, tmp_path):
+        """OfficialCatalogProvider.list_available() fetches and parses index.json."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import OfficialCatalogProvider
+
+        # Mock index.json response
+        index_data = {
+            "modules": [
+                {
+                    "id": "module_a",
+                    "name": "Module A",
+                    "version": "1.0.0",
+                    "category": "Utilities",
+                    "vendor": "VendorA",
+                    "author": "AuthorA",
+                    "description": "Module A description",
+                    "mod_url": "module_a-1.0.0.mod",
+                    "checksum": "abc123",
+                },
+                {
+                    "id": "module_b",
+                    "name": "Module B",
+                    "version": "2.0.0",
+                    "category": "Tools",
+                    "vendor": "VendorB",
+                    "author": "AuthorB",
+                    "description": "Module B description",
+                    "mod_url": "module_b-2.0.0.mod",
+                    "checksum": "def456",
+                },
+            ]
+        }
+
+        provider = OfficialCatalogProvider(
+            base_url="https://example.com/catalog",
+            cache_path=tmp_path,
+        )
+
+        # Mock httpx.AsyncClient
+        mock_response = MagicMock()
+        mock_response.json.return_value = index_data
+        mock_response.status_code = 200
+
+        async def mock_get(*args, **kwargs):
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert len(packages) == 2
+        assert packages[0].module_id == "module_a"
+        assert packages[0].name == "Module A"
+        assert packages[0].source == CatalogSource.OFFICIAL_CATALOG
+        assert packages[0].source_url == "module_a-1.0.0.mod"
+        assert packages[1].module_id == "module_b"
+
+    @pytest.mark.asyncio
+    async def test_list_available_network_error_returns_empty_list(self, tmp_path):
+        """OfficialCatalogProvider returns [] on network error, doesn't raise."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import OfficialCatalogProvider
+        import httpx
+
+        provider = OfficialCatalogProvider(
+            base_url="https://example.com/catalog",
+            cache_path=tmp_path,
+        )
+
+        # Mock httpx.AsyncClient to raise ConnectError
+        async def mock_get(*args, **kwargs):
+            raise httpx.ConnectError("Connection failed")
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert packages == []
+
+    @pytest.mark.asyncio
+    async def test_list_available_http_error_returns_empty_list(self, tmp_path):
+        """OfficialCatalogProvider returns [] on HTTP error (e.g., 404, 500)."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import OfficialCatalogProvider
+
+        provider = OfficialCatalogProvider(
+            base_url="https://example.com/catalog",
+            cache_path=tmp_path,
+        )
+
+        # Mock response with 404 status
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+
+        async def mock_get(*args, **kwargs):
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            packages = await provider.list_available("1.0.0")
+
+        assert packages == []
+
+    @pytest.mark.asyncio
+    async def test_get_package_filters_by_id(self, tmp_path):
+        """OfficialCatalogProvider.get_package() returns matching module or None."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import OfficialCatalogProvider
+
+        index_data = {
+            "modules": [
+                {
+                    "id": "target_module",
+                    "name": "Target Module",
+                    "version": "1.0.0",
+                    "category": "Test",
+                    "vendor": "Vendor",
+                    "author": "Author",
+                    "description": "Target",
+                    "mod_url": "target_module-1.0.0.mod",
+                    "checksum": "abc123",
+                },
+                {
+                    "id": "other_module",
+                    "name": "Other Module",
+                    "version": "1.0.0",
+                    "category": "Test",
+                    "vendor": "Vendor",
+                    "author": "Author",
+                    "description": "Other",
+                    "mod_url": "other_module-1.0.0.mod",
+                    "checksum": "def456",
+                },
+            ]
+        }
+
+        provider = OfficialCatalogProvider(
+            base_url="https://example.com/catalog",
+            cache_path=tmp_path,
+        )
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = index_data
+        mock_response.status_code = 200
+
+        async def mock_get(*args, **kwargs):
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            pkg = await provider.get_package("target_module", "1.0.0")
+
+        assert pkg is not None
+        assert pkg.module_id == "target_module"
+
+        # Non-existent module returns None
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            pkg = await provider.get_package("nonexistent_module", "1.0.0")
+
+        assert pkg is None
+
+    @pytest.mark.asyncio
+    async def test_fetch_mod_path_downloads_and_caches(self, tmp_path):
+        """OfficialCatalogProvider.fetch_mod_path() downloads .mod to cache."""
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import OfficialCatalogProvider
+
+        index_data = {
+            "modules": [
+                {
+                    "id": "download_module",
+                    "name": "Download Module",
+                    "version": "1.0.0",
+                    "category": "Test",
+                    "vendor": "Vendor",
+                    "author": "Author",
+                    "description": "For download",
+                    "mod_url": "https://example.com/download_module-1.0.0.mod",
+                    "checksum": "abc123",
+                },
+            ]
+        }
+
+        provider = OfficialCatalogProvider(
+            base_url="https://example.com/catalog",
+            cache_path=tmp_path,
+        )
+
+        # Mock the GET for index.json
+        index_response = MagicMock()
+        index_response.json.return_value = index_data
+        index_response.status_code = 200
+
+        # Mock the GET for the .mod file
+        mod_content = b"mock .mod content"
+        mod_response = MagicMock()
+        mod_response.content = mod_content
+        mod_response.status_code = 200
+
+        # Create responses for each call
+        responses = [index_response, mod_response]
+        response_iter = iter(responses)
+
+        async def mock_get(*args, **kwargs):
+            return next(response_iter)
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = await provider.fetch_mod_path("download_module")
+
+        assert result is not None
+        assert result.exists()
+        assert result.read_bytes() == mod_content
