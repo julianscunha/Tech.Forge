@@ -29,6 +29,8 @@ Services available via sdk.*:
     sdk.logger        — structured, tagged logging
     sdk.settings      — persistent key-value config
     sdk.notifications — push UI notifications
+    sdk.services      — discover Service Registry capabilities (read-only)
+    sdk.runtime       — read this module's own Runtime State (read-only)
 """
 from techforge_sdk.core import TechForgeSDK, create_sdk
 from techforge_sdk.contracts import ModuleContract, ModuleMetadata, HealthResult

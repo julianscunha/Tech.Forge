@@ -16,6 +16,8 @@ from techforge_sdk.storage       import StorageSDK
 from techforge_sdk.logger        import LoggerSDK
 from techforge_sdk.settings      import SettingsSDK
 from techforge_sdk.notifications import NotificationsSDK
+from techforge_sdk.services      import ServicesSDK
+from techforge_sdk.runtime       import RuntimeSDK
 
 
 class TechForgeSDK:
@@ -38,6 +40,8 @@ class TechForgeSDK:
         self.logger        = LoggerSDK(module_id)
         self.settings      = SettingsSDK(module_id, data_dir)
         self.notifications = NotificationsSDK(module_id)
+        self.services      = ServicesSDK(module_id)
+        self.runtime       = RuntimeSDK(module_id)
 
     def __repr__(self) -> str:
         return f"TechForgeSDK(module_id={self._module_id!r})"

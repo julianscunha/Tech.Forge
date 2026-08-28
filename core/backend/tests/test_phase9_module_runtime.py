@@ -12,6 +12,7 @@ import pytest
 
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
+sys.path.insert(0, str(ROOT / "sdk" / "python"))
 
 from app.module_engine.enums import ModuleStatus
 
@@ -436,3 +437,125 @@ module = _Instance()
             assert "enable boom" in runtime_entry.last_error
         finally:
             registry.deregister(module_id)
+
+
+# ── Slice 4 — ExecutionContext + SDK extension (§8/§9) ─────────────────────────
+
+class TestModuleExecutionContext:
+
+    def test_build_returns_none_for_unknown_module(self):
+        from app.module_runtime.context import ModuleExecutionContext
+        from app.module_engine.registry import registry as module_registry
+
+        ctx = ModuleExecutionContext.build("ghost_module_9x", module_registry)
+        assert ctx is None
+
+    def test_build_populates_fields_for_known_module(self, client):
+        from app.module_runtime.context import ModuleExecutionContext
+        from app.module_engine.registry import registry as module_registry
+
+        ctx = ModuleExecutionContext.build("hello_world", module_registry)
+        assert ctx is not None
+        assert ctx.module_id == "hello_world"
+        assert ctx.module_version
+        assert ctx.runtime_id
+        assert ctx.paths.name == "hello_world"
+        assert ctx.services is not None
+        assert ctx.cancellation is None
+        assert ctx.metadata == {}
+
+    def test_build_generates_distinct_runtime_id_per_call(self, client):
+        from app.module_runtime.context import ModuleExecutionContext
+        from app.module_engine.registry import registry as module_registry
+
+        ctx1 = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx2 = ModuleExecutionContext.build("hello_world", module_registry)
+        assert ctx1.runtime_id != ctx2.runtime_id
+
+
+# ── SDK: sdk.services / sdk.runtime (Fase 9 §9) ────────────────────────────────
+
+class _FakeHTTPResponse:
+    def __init__(self, payload: bytes):
+        self._payload = payload
+
+    def read(self):
+        return self._payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class TestSDKServices:
+
+    def test_find_capability_returns_parsed_json(self, monkeypatch):
+        import json as _json
+        from techforge_sdk.services import ServicesSDK
+        import urllib.request
+
+        def fake_urlopen(url, timeout=None):
+            assert "/services/capabilities/aws.cost.read" in url
+            return _FakeHTTPResponse(_json.dumps([{"service_id": "aws_cost_service"}]).encode())
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        sdk_services = ServicesSDK("consumer_mod")
+        result = sdk_services.find_capability("aws.cost.read")
+        assert result == [{"service_id": "aws_cost_service"}]
+
+    def test_find_capability_returns_empty_list_when_core_unreachable(self, monkeypatch):
+        import urllib.request
+
+        def fake_urlopen(url, timeout=None):
+            raise OSError("connection refused")
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        from techforge_sdk.services import ServicesSDK
+        assert ServicesSDK("consumer_mod").find_capability("x") == []
+
+    def test_get_returns_none_when_core_unreachable(self, monkeypatch):
+        import urllib.request
+
+        def fake_urlopen(url, timeout=None):
+            raise OSError("connection refused")
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        from techforge_sdk.services import ServicesSDK
+        assert ServicesSDK("consumer_mod").get("aws_cost_service") is None
+
+
+class TestSDKRuntime:
+
+    def test_state_returns_parsed_json(self, monkeypatch):
+        import json as _json
+        import urllib.request
+        from techforge_sdk.runtime import RuntimeSDK
+
+        def fake_urlopen(url, timeout=None):
+            assert "/runtime/modules/hello_world" in url
+            return _FakeHTTPResponse(_json.dumps({"state": "READY"}).encode())
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        assert RuntimeSDK("hello_world").state() == {"state": "READY"}
+
+    def test_state_returns_none_when_core_unreachable(self, monkeypatch):
+        import urllib.request
+        from techforge_sdk.runtime import RuntimeSDK
+
+        def fake_urlopen(url, timeout=None):
+            raise OSError("connection refused")
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        assert RuntimeSDK("hello_world").state() is None
+
+
+class TestSDKRootWiring:
+
+    def test_create_sdk_exposes_services_and_runtime(self):
+        from techforge_sdk import create_sdk
+
+        sdk = create_sdk("some_module")
+        assert hasattr(sdk, "services")
+        assert hasattr(sdk, "runtime")

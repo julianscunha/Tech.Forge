@@ -10,9 +10,11 @@ from app.module_runtime.state import (
     ModuleRuntimeEntry, ModuleRuntimeRegistry, RuntimeState, module_runtime_registry,
 )
 from app.module_runtime.lifecycle import on_activate, on_deactivate, health_check
+from app.module_runtime.context import ModuleExecutionContext
 
 __all__ = [
     "ModuleLoadError", "load_module_file",
     "ModuleRuntimeEntry", "ModuleRuntimeRegistry", "RuntimeState", "module_runtime_registry",
     "on_activate", "on_deactivate", "health_check",
+    "ModuleExecutionContext",
 ]
