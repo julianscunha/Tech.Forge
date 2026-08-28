@@ -559,3 +559,103 @@ class TestSDKRootWiring:
         sdk = create_sdk("some_module")
         assert hasattr(sdk, "services")
         assert hasattr(sdk, "runtime")
+
+
+# ── Slice 5 — ModuleExecutionResult + cancellation/progress (esqueleto) §16/§19/§21
+
+class TestModuleExecutionResult:
+
+    def test_success_builds_envelope_with_status_success(self):
+        from app.module_runtime.execution import ModuleExecutionResult
+
+        result = ModuleExecutionResult.success(data={"count": 3})
+        assert result.status == "SUCCESS"
+        assert result.data == {"count": 3}
+        assert result.errors == []
+        assert result.warnings == []
+        assert result.duration_seconds >= 0
+
+    def test_failure_builds_envelope_with_errors(self):
+        from app.module_runtime.execution import ModuleExecutionResult
+
+        result = ModuleExecutionResult.failure(errors=["boom"])
+        assert result.status == "FAILED"
+        assert result.errors == ["boom"]
+        assert result.data is None
+
+    def test_envelope_never_mixes_status_with_business_payload_shape(self):
+        """Metadata/data aceitam qualquer forma de negócio — só o envelope é padronizado."""
+        from app.module_runtime.execution import ModuleExecutionResult
+
+        result = ModuleExecutionResult.success(data=[1, 2, 3], warnings=["slow"])
+        assert result.data == [1, 2, 3]
+        assert result.warnings == ["slow"]
+
+
+class TestCancellationToken:
+
+    def test_starts_not_cancelled(self):
+        from app.module_runtime.execution import CancellationToken
+
+        token = CancellationToken()
+        assert token.is_cancelled is False
+
+    def test_cancel_sets_is_cancelled(self):
+        from app.module_runtime.execution import CancellationToken
+
+        token = CancellationToken()
+        token.cancel()
+        assert token.is_cancelled is True
+
+    def test_cancel_is_idempotent(self):
+        from app.module_runtime.execution import CancellationToken
+
+        token = CancellationToken()
+        token.cancel()
+        token.cancel()
+        assert token.is_cancelled is True
+
+    def test_raise_if_cancelled_noop_when_not_cancelled(self):
+        from app.module_runtime.execution import CancellationToken
+
+        token = CancellationToken()
+        token.raise_if_cancelled()  # não deve levantar
+
+    def test_raise_if_cancelled_raises_when_cancelled(self):
+        from app.module_runtime.execution import CancellationToken, ExecutionCancelledError
+
+        token = CancellationToken()
+        token.cancel()
+        with pytest.raises(ExecutionCancelledError):
+            token.raise_if_cancelled()
+
+
+class TestProgressState:
+
+    def test_valid_phase_values(self):
+        from app.module_runtime.execution import ProgressPhase
+
+        assert ProgressPhase.PREPARING.value == "PREPARING"
+        assert ProgressPhase.RUNNING.value == "RUNNING"
+        assert ProgressPhase.FINALIZING.value == "FINALIZING"
+
+    def test_progress_report_holds_phase_and_percent(self):
+        from app.module_runtime.execution import ProgressPhase, ProgressReport
+
+        report = ProgressReport(phase=ProgressPhase.RUNNING, percent=42)
+        assert report.phase == ProgressPhase.RUNNING
+        assert report.percent == 42
+
+    def test_progress_report_percent_defaults_to_none(self):
+        from app.module_runtime.execution import ProgressPhase, ProgressReport
+
+        report = ProgressReport(phase=ProgressPhase.PREPARING)
+        assert report.percent is None
+
+    def test_progress_report_rejects_percent_out_of_range(self):
+        from app.module_runtime.execution import ProgressPhase, ProgressReport
+
+        with pytest.raises(ValueError):
+            ProgressReport(phase=ProgressPhase.RUNNING, percent=101)
+        with pytest.raises(ValueError):
+            ProgressReport(phase=ProgressPhase.RUNNING, percent=-1)
