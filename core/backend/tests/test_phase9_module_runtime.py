@@ -444,18 +444,20 @@ module = _Instance()
 
 class TestModuleExecutionContext:
 
-    def test_build_returns_none_for_unknown_module(self):
+    @pytest.mark.asyncio
+    async def test_build_returns_none_for_unknown_module(self):
         from app.module_runtime.context import ModuleExecutionContext
         from app.module_engine.registry import registry as module_registry
 
-        ctx = ModuleExecutionContext.build("ghost_module_9x", module_registry)
+        ctx = await ModuleExecutionContext.build("ghost_module_9x", module_registry)
         assert ctx is None
 
-    def test_build_populates_fields_for_known_module(self, client):
+    @pytest.mark.asyncio
+    async def test_build_populates_fields_for_known_module(self, client):
         from app.module_runtime.context import ModuleExecutionContext
         from app.module_engine.registry import registry as module_registry
 
-        ctx = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx = await ModuleExecutionContext.build("hello_world", module_registry)
         assert ctx is not None
         assert ctx.module_id == "hello_world"
         assert ctx.module_version
@@ -466,12 +468,13 @@ class TestModuleExecutionContext:
         assert ctx.metadata == {}
         assert ctx.storage is not None  # Fase 12 §6 — Module Storage API
 
-    def test_build_generates_distinct_runtime_id_per_call(self, client):
+    @pytest.mark.asyncio
+    async def test_build_generates_distinct_runtime_id_per_call(self, client):
         from app.module_runtime.context import ModuleExecutionContext
         from app.module_engine.registry import registry as module_registry
 
-        ctx1 = ModuleExecutionContext.build("hello_world", module_registry)
-        ctx2 = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx1 = await ModuleExecutionContext.build("hello_world", module_registry)
+        ctx2 = await ModuleExecutionContext.build("hello_world", module_registry)
         assert ctx1.runtime_id != ctx2.runtime_id
 
 

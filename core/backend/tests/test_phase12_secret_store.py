@@ -147,7 +147,8 @@ def test_install_secret_redaction_filter_attaches_to_handler_not_logger():
     assert any(isinstance(f, SecretRedactionFilter) for f in handler.filters)
 
 
-def test_module_execution_context_build_exposes_secrets_bound_to_module_id():
+@pytest.mark.asyncio
+async def test_module_execution_context_build_exposes_secrets_bound_to_module_id():
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -155,7 +156,7 @@ def test_module_execution_context_build_exposes_secrets_bound_to_module_id():
     from app.module_engine.registry import registry as module_registry
 
     with TestClient(app):
-        ctx = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx = await ModuleExecutionContext.build("hello_world", module_registry)
 
     assert ctx is not None
     assert isinstance(ctx.secrets, ModuleSecretStore)

@@ -11,6 +11,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parent.parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 sys.path.insert(0, str(Path(__file__).parent))
@@ -52,7 +54,8 @@ def test_ensure_exist_is_idempotent(tmp_path):
     assert paths.data.is_dir()
 
 
-def test_module_execution_context_build_exposes_module_paths():
+@pytest.mark.asyncio
+async def test_module_execution_context_build_exposes_module_paths():
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -60,7 +63,7 @@ def test_module_execution_context_build_exposes_module_paths():
     from app.module_engine.registry import registry as module_registry
 
     with TestClient(app):
-        ctx = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx = await ModuleExecutionContext.build("hello_world", module_registry)
 
     assert ctx is not None
     assert ctx.paths.root.name == "hello_world"

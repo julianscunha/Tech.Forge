@@ -69,6 +69,51 @@ async def test_save_and_get_config_round_trips(db_session):
 
 
 @pytest.mark.asyncio
+async def test_module_execution_context_build_populates_configuration_from_persisted_values():
+    """Regressão: ModuleExecutionContext.configuration ficava sempre {}
+    (stub da Fase 9, nunca conectado). Fase 12 §6 exige que o módulo
+    consiga acessar sua própria config persistida via o contexto."""
+    from datetime import datetime
+
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from app.module_engine.enums import ModuleStatus
+    from app.module_engine.registry import ModuleEntry, registry
+    from app.module_runtime.context import ModuleExecutionContext
+
+    module_id = "ctx_config_test"
+    manifest_raw = {
+        "configuration": {"fields": [{"id": "retention_days", "type": "integer", "default": 30}]},
+    }
+    entry = ModuleEntry(
+        module_id=module_id, name="Ctx Config Test", version="1.0.0",
+        category="C", vendor="V", author="A", description="D",
+        status=ModuleStatus.INSTALLED, install_date=datetime.now(),
+        manifest_raw=manifest_raw,
+    )
+    try:
+        # Registra DEPOIS de entrar no TestClient — o lifespan de startup
+        # roda scan_installed() e reconstrói o registry, o que apagaria
+        # um registro feito antes.
+        with TestClient(app) as client:
+            registry.register(entry)
+            client.put(f"/api/v1/modules/{module_id}/config", json={"values": {"retention_days": 99}})
+            ctx = await ModuleExecutionContext.build(module_id, registry)
+        assert ctx is not None
+        assert ctx.configuration == {"retention_days": 99}
+    finally:
+        registry.deregister(module_id)
+        from app.db.database import AsyncSessionLocal
+        from app.models.module_configuration import ModuleConfiguration
+        async with AsyncSessionLocal() as db:
+            row = await db.get(ModuleConfiguration, module_id)
+            if row is not None:
+                await db.delete(row)
+                await db.commit()
+
+
+@pytest.mark.asyncio
 async def test_save_config_never_persists_invalid_values(db_session):
     with pytest.raises(ConfigValidationError):
         await save_config(db_session, "mod_b", FIELDS, {"retention_days": "bad"})

@@ -94,7 +94,8 @@ async def test_transaction_rolls_back_all_writes_on_exception(session_factory):
     assert await storage.get("x") == "original"
 
 
-def test_module_execution_context_build_binds_storage_to_own_module_id():
+@pytest.mark.asyncio
+async def test_module_execution_context_build_binds_storage_to_own_module_id():
     """`ModuleExecutionContext.build()` nunca deixa o módulo escolher seu
     próprio module_id no storage — isolamento é estrutural (Fase 12 §6)."""
     from fastapi.testclient import TestClient
@@ -104,7 +105,7 @@ def test_module_execution_context_build_binds_storage_to_own_module_id():
     from app.module_engine.registry import registry as module_registry
 
     with TestClient(app):
-        ctx = ModuleExecutionContext.build("hello_world", module_registry)
+        ctx = await ModuleExecutionContext.build("hello_world", module_registry)
     assert ctx is not None
     assert isinstance(ctx.storage, ModuleKVStorage)
     assert ctx.storage._module_id == "hello_world"
