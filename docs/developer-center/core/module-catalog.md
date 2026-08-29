@@ -74,8 +74,6 @@ Publicado em `https://techforge.io/catalog/index.json`.
 
 ```json
 {
-  "version": "1.0",
-  "generated_at": "2026-08-28T10:00:00Z",
   "modules": [
     {
       "id": "module_a",
@@ -85,14 +83,16 @@ Publicado em `https://techforge.io/catalog/index.json`.
       "vendor": "TechForge",
       "author": "Team",
       "description": "Does useful things",
-      "platform_min_version": "0.5.0",
-      "platform_max_version": "999.0.0",
-      "checksum": "sha256:abc123...",
-      "download_url": "https://techforge.io/catalog/module_a-1.0.0.mod"
+      "mod_url": "module_a-1.0.0.mod",
+      "checksum": "c4d19d96b2f4280baa0e91260472981fef76c11c801038514e5fd2d9e71e30bc"
     }
   ]
 }
 ```
+
+Formato real gerado por `techforge catalog build-index` (validado contra um `index.json`
+real servido localmente, Fase 11 fechamento). `mod_url` é relativo ao `base_url` da fonte
+— `OfficialCatalogProvider` resolve `f"{base_url}/{mod_url}"` quando não é uma URL absoluta.
 
 Gere com:
 ```bash

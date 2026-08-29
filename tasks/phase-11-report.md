@@ -137,16 +137,18 @@ conflict resolution, and asynchronous installation with progress tracking.
 - Slices 1–7: Covered by existing test files and manual smoke tests (build succeeds)
 - Slice 8: New tests in `test_phase11_source_unavailable.py` + `test_phase11_integration.py`
 
-### Post-closure: real end-to-end validation against the live official repo
+### Post-closure: real end-to-end validation, both source types
 
 `test_phase11_integration.py` proves the install pipeline against a locally-built `.mod`,
-but never exercises `CustomCatalogProvider` against a real network endpoint — every unit
-test for it mocks `httpx.AsyncClient` with a no-op `__aexit__`, which never reproduces what
-a real closed client does. Per explicit user request, the full online flow was run manually
-against the real, already-published `julianscunha/Tech.Forge.Modules` repo (module
-`system_information_service`): discovery via GitHub Contents API → `fetch_mod_path()`
-download+build → `PackageManager.install()`. This surfaced two real bugs invisible to the
-existing mocked test suite:
+but never exercises either network provider against a real endpoint — every unit test for
+them mocks `httpx.AsyncClient` directly (with a no-op `__aexit__`), which never reproduces
+what a real closed client does. Per explicit user request, both source types were validated
+manually end to end, each against real network I/O:
+
+**Custom catalog** (`CustomCatalogProvider`) — against the real, already-published
+`julianscunha/Tech.Forge.Modules` repo (module `system_information_service`): discovery via
+GitHub Contents API → `fetch_mod_path()` download+build → `PackageManager.install()`. This
+surfaced two real bugs invisible to the existing mocked test suite:
 
 1. **`CustomCatalogProvider.list_available()` used a closed `httpx.AsyncClient`.** The
    manifest-fetch loop lived outside the `async with httpx.AsyncClient() as client:` block
@@ -171,11 +173,24 @@ through the real `PackageBuilder.build()`, not a mock) — verified RED against 
 code, GREEN after. After the fix, the full online flow was re-run manually against the same
 live repo and completed successfully end to end.
 
+**Official catalog** (`OfficialCatalogProvider`) — no official `index.json` is published
+anywhere yet (the `Tech.Forge.Modules` repo has no packaging CI; §"Publishing" in this doc
+describes the intended workflow, not something already running), so this path cannot be
+validated against a live deployment. Instead: shallow-cloned the same real repo locally,
+ran the real `techforge catalog build-index` CLI against its `modules/` folder to generate
+a genuine `index.json` + `.mod` + checksum, served that output via a plain local
+`python -m http.server`, and pointed `OfficialCatalogProvider(base_url=...)` at it — real
+HTTP requests, real JSON parsing, real `.mod` download, real `PackageManager.install()`.
+This passed cleanly with no bugs found (confirmed the earlier `download_url` field name in
+this doc's example was wrong — the real generated field is `mod_url`; corrected above). No
+code change was needed for this path; only the doc example.
+
 **Lesson:** this is the same root pattern already flagged in Slices 5b/6 (mocks that assert
 against an invented or over-simplified shape instead of real behavior), but this time it
 survived through Slice 3's original review because mocking `httpx.AsyncClient` itself —
 rather than mocking at a business-logic boundary — hides transport-level bugs. A live smoke
-test against a real remote source is the only thing that would have caught it earlier.
+test against a real remote source (or a locally-served real artifact, for the official path)
+is the only thing that would have caught it earlier.
 
 ---
 

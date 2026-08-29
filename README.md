@@ -268,6 +268,23 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 | POST | `/api/v1/marketplace/import` | Importar .mod por upload |
 | POST | `/api/v1/marketplace/compatibility` | Verificação de compatibilidade |
 | GET | `/api/v1/marketplace/log` | Operation log |
+| POST | `/api/v1/marketplace/install-remote/:module_id` | Instalação remota assíncrona (retorna job) |
+| GET | `/api/v1/marketplace/install-jobs/:job_id` | Polling de progresso da instalação remota |
+
+</details>
+
+<details>
+<summary><b>Catálogo de Módulos (Fase 11 — multi-fonte)</b></summary>
+
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/catalog/modules` | Lista módulos de todas as fontes (local + oficial + custom), com filtros/paginação |
+| GET | `/api/v1/catalog/modules/:module_id` | Detalhe de um módulo do catálogo |
+| GET | `/api/v1/catalog/categories` | Categorias com contagem |
+| GET | `/api/v1/catalog/updates` | Módulos instalados com atualização disponível |
+| GET/POST | `/api/v1/catalog/sources` | Lista/adiciona fontes customizadas |
+| DELETE | `/api/v1/catalog/sources/:id` | Remove fonte customizada |
+| GET/POST/DELETE | `/api/v1/catalog/favorites` | Favoritos locais (sem avaliação pública) |
 
 </details>
 
@@ -320,13 +337,13 @@ gantt
     Fase 8.1 Dependency Governance ✓   :done, 2, 3
     Fase 9 Module Runtime ✓             :done, 3, 4
     Fase 10 Security & Trust ✓          :done, 4, 5
-    Fase 11-13 Distribution/Persistence :active, 5, 7
-    Fase 14-20 Release                  :7, 9
+    Fase 11 Marketplace Distribution ✓  :done, 5, 6
+    Fase 12-13 Persistence/Multi-User   :active, 6, 8
+    Fase 14-20 Release                  :8, 10
 ```
 
 **Próximos marcos** (decididos por auditoria contra código real,
 ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
-- Marketplace Distribution remota (Fase 11)
 - Configuration & Data Persistence (Fase 12)
 - Central Server Multi-User Readiness (Fase 13)
 
