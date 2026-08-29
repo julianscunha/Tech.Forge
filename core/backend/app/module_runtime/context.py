@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from app.core.settings import settings
+from app.services.module_storage import ModuleKVStorage
 
 
 @dataclass
@@ -28,6 +29,7 @@ class ModuleExecutionContext:
     services:       Any
     logger:         logging.Logger
     paths:          Path
+    storage:        ModuleKVStorage
     cancellation:   Optional[Any] = None
     metadata:       dict[str, Any] = field(default_factory=dict)
 
@@ -49,4 +51,5 @@ class ModuleExecutionContext:
             services=service_registry,
             logger=logging.getLogger(f"techforge.module.{module_id}"),
             paths=settings.MODULES_INSTALLED_PATH / module_id,
+            storage=ModuleKVStorage(module_id),
         )

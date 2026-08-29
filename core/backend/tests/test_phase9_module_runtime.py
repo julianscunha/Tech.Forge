@@ -464,6 +464,7 @@ class TestModuleExecutionContext:
         assert ctx.services is not None
         assert ctx.cancellation is None
         assert ctx.metadata == {}
+        assert ctx.storage is not None  # Fase 12 §6 — Module Storage API
 
     def test_build_generates_distinct_runtime_id_per_call(self, client):
         from app.module_runtime.context import ModuleExecutionContext
