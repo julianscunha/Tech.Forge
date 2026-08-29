@@ -1,3 +1,5 @@
+import asyncio
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from app.core.settings import settings
@@ -34,32 +36,12 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db() -> None:
-    """Create all tables on startup, then add columns missing from older DBs."""
+    """Create all tables on startup, then run pending Alembic migrations
+    (Fase 12 §14 — substitui a whitelist ad-hoc que existia aqui)."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    await _migrate()
-
-
-async def _migrate() -> None:
-    """Lightweight column migration (SQLite) — create_all won't alter existing tables."""
-    from sqlalchemy import text
-    # Whitelist literal — never interpolate table names from external input.
-    additions = {
-        "modules": [
-            ("source_type", "VARCHAR(16) NOT NULL DEFAULT 'local'"),
-            ("source_location", "VARCHAR(512)"),
-        ],
-    }
-    allowed_tables = {"modules"}
-    async with engine.begin() as conn:
-        for table, cols in additions.items():
-            if table not in allowed_tables:
-                continue
-            existing = {
-                row[1] for row in await conn.execute(text(f"PRAGMA table_info({table})"))
-            }
-            if not existing:
-                continue
-            for name, ddl in cols:
-                if name not in existing:
-                    await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+    from app.db import migrations
+    # upgrade_head() é síncrona (Alembic roda asyncio.run() internamente em
+    # alembic/env.py) — não pode ser chamada de dentro de um event loop já
+    # rodando, daí a thread separada.
+    await asyncio.to_thread(migrations.upgrade_head)
