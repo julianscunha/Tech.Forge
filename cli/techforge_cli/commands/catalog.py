@@ -259,7 +259,13 @@ def build_index_cmd(modules_dir, output):
 
     for mod_dir in modules_to_build:
         try:
-            result = PackageBuilder.build(module_path=mod_dir, output_dir=output_path)
+            # Nested per-module output (<output>/<id>/<id>-<version>.mod) —
+            # not flat — so every version ever built for a module stays on
+            # disk next to its siblings. A new PR/version never overwrites
+            # or orphans a previous one; the catalog keeps full history.
+            module_output_dir = output_path / mod_dir.name
+            module_output_dir.mkdir(parents=True, exist_ok=True)
+            result = PackageBuilder.build(module_path=mod_dir, output_dir=module_output_dir)
             print_success(f"Packaged: {result.module_id}-{result.version}.mod")
 
             # Read the original manifest to include all metadata
@@ -277,7 +283,7 @@ def build_index_cmd(modules_dir, output):
                 "vendor": manifest_data.get("vendor", ""),
                 "author": manifest_data.get("author", ""),
                 "description": manifest_data.get("description", ""),
-                "mod_url": f"{result.module_id}-{result.version}.mod",
+                "mod_url": f"{result.module_id}/{result.module_id}-{result.version}.mod",
                 "checksum": result.checksum,
             }
             index_entries.append(entry)

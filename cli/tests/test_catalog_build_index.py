@@ -111,11 +111,15 @@ def test_build_index_generates_mod_files(runner, modules_dir, tmp_path):
 
     assert result.exit_code == 0
 
-    # Check that .mod files were created
-    mod_files = list(output_dir.glob("*.mod"))
+    # .mod files nest under a per-module folder (output_dir/<id>/<id>-<version>.mod)
+    # so every version ever built for a module stays alongside its siblings —
+    # a new PR/version never overwrites or orphans the previous one.
+    mod_files = list(output_dir.glob("*/*.mod"))
     assert len(mod_files) == 2
     assert any("simple_module" in f.name for f in mod_files)
     assert any("another_module" in f.name for f in mod_files)
+    assert (output_dir / "simple_module" / "simple_module-1.0.0.mod").exists()
+    assert (output_dir / "another_module" / "another_module-2.0.0.mod").exists()
 
 
 def test_build_index_correct_module_metadata(runner, modules_dir, tmp_path):
@@ -184,7 +188,7 @@ def test_build_index_round_trip_validation(runner, modules_dir, tmp_path):
     assert result.exit_code == 0
 
     # Each .mod file should be a valid ZIP with manifest.yaml
-    for mod_file in output_dir.glob("*.mod"):
+    for mod_file in output_dir.glob("*/*.mod"):
         try:
             with zipfile.ZipFile(mod_file) as zf:
                 assert "manifest.yaml" in zf.namelist()
