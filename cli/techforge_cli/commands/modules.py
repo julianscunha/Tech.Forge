@@ -263,3 +263,89 @@ def graph_cmd():
     """Print the dependency graph as raw Mermaid flowchart syntax."""
     result = _core_get("/dependencies/graph")
     console.print(result.get("mermaid", ""))
+
+
+# ── Module Configuration (Fase 12 §29/§30) — delegates to Core API ──────────
+
+def _parse_set_values(pairs: tuple[str, ...]) -> dict:
+    values = {}
+    for pair in pairs:
+        if "=" not in pair:
+            print_error(f"--set precisa de 'chave=valor', recebido: {pair!r}")
+            raise SystemExit(1)
+        key, _, raw_value = pair.partition("=")
+        try:
+            values[key] = json.loads(raw_value)
+        except json.JSONDecodeError:
+            values[key] = raw_value  # string literal (ex.: --set nome=producao)
+    return values
+
+
+def _core_put_json(path: str, payload: dict) -> dict:
+    import urllib.request
+    import urllib.error
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"http://127.0.0.1:8000/api/v1{path}", data=body, method="PUT",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        print_error(exc.read().decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    except urllib.error.URLError as exc:
+        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
+        raise SystemExit(1)
+
+
+def _core_post_json(path: str, payload: dict) -> dict:
+    import urllib.request
+    import urllib.error
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"http://127.0.0.1:8000/api/v1{path}", data=body, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        print_error(exc.read().decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    except urllib.error.URLError as exc:
+        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
+        raise SystemExit(1)
+
+
+@modules_cmd.command("config")
+@click.argument("module_id")
+@click.option("--set", "set_pairs", multiple=True, metavar="CHAVE=VALOR",
+              help="Define um valor (repetível). Sem --set, apenas mostra a config atual.")
+def config_cmd(module_id, set_pairs):
+    """Show or update a module's configuration."""
+    if not set_pairs:
+        result = _core_get(f"/modules/{module_id}/config")
+    else:
+        result = _core_put_json(f"/modules/{module_id}/config", {"values": _parse_set_values(set_pairs)})
+    for key, value in result.get("values", {}).items():
+        console.print(f"  {key} = {value}")
+
+
+@modules_cmd.command("config-validate")
+@click.argument("module_id")
+@click.option("--set", "set_pairs", multiple=True, metavar="CHAVE=VALOR", required=True,
+              help="Valor a validar (repetível).")
+def config_validate_cmd(module_id, set_pairs):
+    """Validate a configuration payload without persisting it."""
+    result = _core_post_json(
+        f"/modules/{module_id}/config/validate", {"values": _parse_set_values(set_pairs)}
+    )
+    if result.get("valid"):
+        print_success("Configuração válida.")
+        for key, value in result.get("values", {}).items():
+            console.print(f"  {key} = {value}")
+    else:
+        print_error("Configuração inválida.")
+        raise SystemExit(1)

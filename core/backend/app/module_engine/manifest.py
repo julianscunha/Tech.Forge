@@ -142,7 +142,7 @@ def _version_tuple(v: str) -> tuple[int, ...]:
 _VALID_CONFIG_TYPES = {"string", "integer", "float", "boolean"}
 
 
-def _parse_configuration_fields(raw: dict) -> list[ConfigField]:
+def parse_configuration_fields(raw: dict) -> list[ConfigField]:
     """Parse optional configuration.fields block (Fase 12 §10)."""
     configuration = raw.get("configuration")
     if not configuration:
@@ -317,6 +317,6 @@ class ManifestParser:
             source_type=str(raw.get("source_type", "local")).strip().lower(),
             source_location=raw.get("source_location") or None,
             dependencies=list(raw.get("dependencies") or []),
-            configuration_fields=_parse_configuration_fields(raw),
+            configuration_fields=parse_configuration_fields(raw),
             raw=raw,
         )

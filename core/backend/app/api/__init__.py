@@ -17,6 +17,7 @@ from app.api.routes.publishers import router as publishers_router
 from app.api.routes.module_verification import router as module_verification_router
 from app.api.routes.catalog import router as catalog_router
 from app.api.routes.system import router as system_router
+from app.api.routes.module_config import router as module_config_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(platform_router)
@@ -40,3 +41,4 @@ api_router.include_router(dependencies_router)          # Fase 8.1 — Dependenc
 api_router.include_router(publishers_router)           # Fase 10 — Publisher Registry
 api_router.include_router(catalog_router)              # Fase 11 — Module Catalog
 api_router.include_router(system_router)               # Fase 12 — Storage & Persistence
+api_router.include_router(module_config_router)         # Fase 12 — Module Configuration
