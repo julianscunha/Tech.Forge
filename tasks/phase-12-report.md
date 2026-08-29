@@ -111,16 +111,50 @@ multiusuário, autenticação, RBAC, replicação, cluster, backup corporativo, 
   alteração — prova de que a extração não mudou comportamento.
 - **Teste:** `test_phase12_ttl_cache.py`
 
+### Slice 9 — Config migration no update de módulo ✅ (pendente commit)
+- **Arquivos:** `app/package_manager/config_migration.py`, `app/package_manager/manager.py`
+- **O quê:** Hook opcional `migrate_config(old_version, old_config) -> new_config`,
+  declarado pelo módulo (mesmo padrão de `enable`/`disable`/`health_check` da Fase 9:
+  objeto `module` no `entry_backend`). Chamado por `PackageManager.update()` depois de
+  extrair a versão nova, antes de ativar (regenerar integrity + hot-reload).
+- **Decisão-chave:** ao contrário dos hooks de lifecycle (best-effort), uma falha aqui
+  **é** um erro de update — reaproveita o mesmo bloco de rollback-por-exceção que
+  `update()` já usa para falha de extração, sem lógica de rollback nova. Nunca reusa o
+  cache de instância do `module_runtime.lifecycle` (aquele serve a versão ativa em
+  runtime; a migration precisa da versão NOVA recém-extraída) — carrega via
+  `load_module_file()` direto, com `import_name` próprio.
+- **Desvio encontrado (registrado, não implementado):** o exemplo do próprio spec §13
+  (`region` string → `regions` lista) não é representável no schema de configuração
+  hoje — `_VALID_CONFIG_TYPES` (Slice 3) só cobre `string/integer/float/boolean`, sem
+  tipo lista/array. Testado com um rename string→string equivalente em vez disso.
+  **Decisão para o usuário considerar em fase futura:** adicionar tipo `list`/`array`
+  ao schema de configuração de módulo, se algum módulo real precisar.
+- **Aceite:** migration bem-sucedida persiste a nova config; migration que levanta
+  exceção ou retorna algo não-dict/inválido faz rollback completo (arquivos E config
+  voltam pra versão anterior, nunca commitados parcialmente — o `save_config()` só
+  roda depois que `migrate()` retorna com sucesso, então uma falha no meio nunca
+  deixa a config nova meio-gravada).
+- **Teste:** `test_phase12_config_migration.py`
+
 ---
 
 ## Ainda pendente
 
-- **Slice 9** — Config migration no update de módulo (hook `migrate_config`, rollback).
 - **Slice 10** — Data portability (export JSON).
 - **Slice 11** — Frontend (Platform Settings, Module Settings, Storage/Migration Status).
 - **Slice 12** — Developer Center + AI Context + fechamento (auditoria dos 24 critérios
   do spec §35, `tasks/phase-audit.md`, contagem final de testes).
 
-## Contagem de testes (snapshot após Slice 8)
+## Limitações conhecidas registradas até aqui
 
-655 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).
+- Config de módulo não suporta tipo lista/array (só string/integer/float/boolean) —
+  ver Slice 9 acima.
+- Module Storage API cobre só key-value — módulo com necessidade de schema relacional
+  próprio continua livre de usar SQLAlchemy diretamente, sem API de provisionamento
+  assistida pelo Core (decisão original do plano, não uma lacuna nova).
+- Secret Store depende do backend nativo do SO via `keyring` — sem fallback definido
+  pra SO sem backend compatível (Linux headless sem D-Bus/Secret Service).
+
+## Contagem de testes (snapshot após Slice 9)
+
+659 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).

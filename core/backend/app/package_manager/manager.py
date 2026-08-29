@@ -425,6 +425,13 @@ class PackageManager:
             # faria a próxima verificação reportar falso MODIFIED).
             from app.module_trust.integrity import write_integrity_manifest
             write_integrity_manifest(target_dir)
+
+            # Fase 12 §13/§15 — migration de config declarada pelo módulo,
+            # roda ANTES de ativar a nova versão; falha aqui é tratada como
+            # falha de update (rollback do bloco except abaixo) — a spec
+            # veda deixar dados incompatíveis silenciosamente.
+            from app.package_manager.config_migration import run_config_migration
+            await run_config_migration(module_id, from_version, target_dir)
         except Exception as exc:
             # Attempt rollback from backup
             if backup.exists():
@@ -436,7 +443,7 @@ class PackageManager:
                 except Exception:
                     pass
             return self._fail_update(module_id, from_version, to_version,
-                                     f"Extraction failed: {exc}")
+                                     f"Update failed: {exc}")
 
         await self._hot_reload()
 
