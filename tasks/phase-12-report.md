@@ -136,11 +136,29 @@ multiusuário, autenticação, RBAC, replicação, cluster, backup corporativo, 
   deixa a config nova meio-gravada).
 - **Teste:** `test_phase12_config_migration.py`
 
+### Slice 10 — Data portability (export JSON) ✅ (pendente commit)
+- **Arquivos:** `app/api/routes/platform_config.py`, `cli/techforge_cli/commands/config.py`
+- **O quê:** `GET /api/v1/config` — configuração de plataforma efetiva como JSON
+  (`settings.model_dump(mode="json")`, converte `Path` pra string). `techforge config
+  export` no CLI.
+- **Gap fechado (não era desta slice, achado ao investigar):** `GET /api/v1/config`
+  estava no spec §29 desde o início e nunca tinha sido implementado em nenhuma slice
+  anterior (Slice 4 só cobriu config de MÓDULO, não de plataforma).
+- **Decisão-chave:** nenhum endpoint `/export` separado pra config de módulo —
+  `GET /modules/{id}/config` (Slice 4) já é exatamente esse contrato (reproduz os
+  valores exatos salvos via JSON); duplicar seria um endpoint idêntico sem motivo.
+  Config de plataforma também não precisa de endpoint `/export` distinto do `GET`
+  normal, porque `settings.py` nunca guarda segredo (§9 exige isso) — ler e exportar
+  são a mesma operação seguramente.
+- **Aceite:** validado contra backend real — `techforge config export` retorna JSON
+  completo sem nenhum segredo; export de módulo com config salva reproduz os valores
+  exatos.
+- **Teste:** `test_phase12_platform_config.py`
+
 ---
 
 ## Ainda pendente
 
-- **Slice 10** — Data portability (export JSON).
 - **Slice 11** — Frontend (Platform Settings, Module Settings, Storage/Migration Status).
 - **Slice 12** — Developer Center + AI Context + fechamento (auditoria dos 24 critérios
   do spec §35, `tasks/phase-audit.md`, contagem final de testes).
@@ -155,6 +173,6 @@ multiusuário, autenticação, RBAC, replicação, cluster, backup corporativo, 
 - Secret Store depende do backend nativo do SO via `keyring` — sem fallback definido
   pra SO sem backend compatível (Linux headless sem D-Bus/Secret Service).
 
-## Contagem de testes (snapshot após Slice 9)
+## Contagem de testes (snapshot após Slice 10)
 
-659 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).
+662 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).
