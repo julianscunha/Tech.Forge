@@ -155,15 +155,46 @@ multiusuário, autenticação, RBAC, replicação, cluster, backup corporativo, 
   exatos.
 - **Teste:** `test_phase12_platform_config.py`
 
+### Slice 11 — Frontend ✅ (pendente commit)
+- **Arquivos:** `SettingsPage.tsx` (reescrita), `ModuleConfigSection.tsx` (novo),
+  `ModuleDetailPanel.tsx` (+seção Configuração), `types/index.ts`, `lib/api.ts`
+- **O quê:** `SettingsPage` deixa de ser `ComingSoon` — vira Platform Settings leve
+  (Storage Status, Migration Status, export da configuração de plataforma). Module
+  Settings aparece dentro de `ModuleDetailPanel` → seção "Configuração" (só
+  renderizada se o manifesto declarar `configuration.fields`), não como página
+  separada (spec §31, decisão do plano).
+- **Gap fechado (achado ao construir esta slice, não estava em nenhum plano
+  anterior):** não existia `GET /api/v1/system/migrations/status` — só
+  `techforge migrations status` (CLI, acesso direto ao Python/DB). O frontend só
+  tem HTTP, então essa lacuna precisou ser fechada antes de montar a página
+  (commit `e2aa4c0`, backend).
+- **Verificação:** `npm run build` (tsc -b + vite build) limpo, zero erro de tipo.
+  `npm run lint` não roda — **achado, pré-existente, fora de escopo**: `eslint` é
+  referenciado em `package.json` mas nunca foi declarado como devDependency (bug
+  antigo, não introduzido nesta fase). Testado com os dois servidores reais rodando
+  juntos (backend real + `vite dev`): rota `/settings` responde 200, e a chamada
+  `GET /api/v1/config` funciona de ponta a ponta através do proxy do Vite.
+  **Limitação desta verificação:** sem ferramenta de browser automation disponível
+  nesta sessão (sem Playwright/chromium-cli) — build, proxy de API e tipos foram
+  confirmados; renderização visual e interação em runtime real (clicar, editar
+  campo, ver erro de validação) não foram confirmadas visualmente.
+- **Teste:** compilação TypeScript (não há suíte de testes de frontend no projeto,
+  confirmado em `tasks/phase-audit.md`: "Frontend: sem testes").
+
 ---
 
 ## Ainda pendente
 
-- **Slice 11** — Frontend (Platform Settings, Module Settings, Storage/Migration Status).
 - **Slice 12** — Developer Center + AI Context + fechamento (auditoria dos 24 critérios
   do spec §35, `tasks/phase-audit.md`, contagem final de testes).
 
 ## Limitações conhecidas registradas até aqui
+
+- `eslint` referenciado em `package.json` (`npm run lint`) mas nunca declarado como
+  devDependency — script quebrado desde antes desta fase, não corrigido (fora de
+  escopo da Fase 12).
+- Frontend da Fase 12 não foi verificado visualmente em navegador real (sem
+  ferramenta de browser automation disponível nesta sessão) — só build/tipos/API.
 
 - Config de módulo não suporta tipo lista/array (só string/integer/float/boolean) —
   ver Slice 9 acima.

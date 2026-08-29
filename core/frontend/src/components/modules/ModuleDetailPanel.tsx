@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { X, AlertCircle, AlertTriangle, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
+import { ModuleConfigSection } from './ModuleConfigSection'
 import { TrustBadge } from '@/components/marketplace/TrustBadge'
 import { dependenciesApi, moduleTrustApi } from '@/lib/api'
-import type { ModuleEntry, Dependency, ModuleTrust } from '@/types'
+import type { ModuleEntry, Dependency, ModuleTrust, ModuleConfigField } from '@/types'
 
 interface Props {
   module: ModuleEntry
@@ -21,6 +22,11 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
   const [dependencies, setDependencies] = useState<Dependency[]>([])
   const [dependents, setDependents] = useState<string[]>([])
   const [trust, setTrust] = useState<ModuleTrust | null>(null)
+
+  // Fase 12 §10/§31 — Configuração aparece dentro de Module Details, não
+  // como uma página própria; só se o manifesto declarar configuration.fields.
+  const configuration = module.manifest_raw?.configuration as { fields?: ModuleConfigField[] } | undefined
+  const configFields = configuration?.fields ?? []
 
   useEffect(() => {
     dependenciesApi.dependencies(module.module_id).then(setDependencies).catch(() => setDependencies([]))
@@ -114,6 +120,13 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
               ) : (
                 <Field label="Publisher" value="(não declarado)" />
               )}
+            </Section>
+          )}
+
+          {/* Configuration (Fase 12) */}
+          {configFields.length > 0 && (
+            <Section title="Configuração">
+              <ModuleConfigSection moduleId={module.module_id} fields={configFields} />
             </Section>
           )}
 

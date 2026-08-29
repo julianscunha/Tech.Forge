@@ -404,3 +404,29 @@ export interface ModuleTrust {
   signature_status: string
   publisher:        PublisherRead | null
 }
+
+// ── Configuration & Persistence (Fase 12) ───────────────────────────────────
+
+export interface ModuleConfigField {
+  id: string
+  type: 'string' | 'integer' | 'float' | 'boolean'
+  default: unknown
+}
+
+export interface ModuleConfigResponse {
+  module_id: string
+  values: Record<string, unknown>
+}
+
+export interface StorageStatus {
+  database: boolean
+  writable: boolean
+}
+
+export interface MigrationsStatus {
+  head: string | null
+  current: string | null
+  up_to_date: boolean
+}
+
+export type PlatformConfig = Record<string, unknown>

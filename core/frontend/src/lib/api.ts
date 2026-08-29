@@ -250,3 +250,25 @@ export const moduleTrustApi = {
   list: () => request<ModuleTrust[]>('/modules/trust'),
   get:  (moduleId: string) => request<ModuleTrust>(`/modules/${moduleId}/trust`),
 }
+
+// ── Fase 12 — Configuration & Persistence ────────────────────────────────────
+
+import type { ModuleConfigResponse, StorageStatus, MigrationsStatus, PlatformConfig } from '@/types'
+
+export const moduleConfigApi = {
+  get: (moduleId: string) => request<ModuleConfigResponse>(`/modules/${moduleId}/config`),
+  put: (moduleId: string, values: Record<string, unknown>) =>
+    request<ModuleConfigResponse>(`/modules/${moduleId}/config`, {
+      method: 'PUT',
+      body: JSON.stringify({ values }),
+    }),
+}
+
+export const systemApi = {
+  storageStatus:    () => request<StorageStatus>('/system/storage/status'),
+  migrationsStatus: () => request<MigrationsStatus>('/system/migrations/status'),
+}
+
+export const platformConfigApi = {
+  get: () => request<PlatformConfig>('/config'),
+}
