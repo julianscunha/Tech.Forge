@@ -45,7 +45,7 @@ class CatalogAggregator:
         self.cache = cache or catalog_cache
         self.local_provider = LocalRepositoryProvider(repository_path=settings.MODULES_REPOSITORY_PATH)
         self.official_provider = OfficialCatalogProvider(
-            base_url="https://techforge.io/catalog"  # placeholder
+            base_url=settings.OFFICIAL_CATALOG_BASE_URL
         )
         # Track source availability for detecting transitions
         # {source_id: bool} where True = last fetch was successful (non-empty)

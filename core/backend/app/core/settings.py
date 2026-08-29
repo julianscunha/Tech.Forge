@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     # CORS — frontend dev server
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
+    # Official module catalog (Fase 11) — index.json + .mod built by CI in
+    # julianscunha/Tech.Forge.Modules, committed under modules/ on main.
+    OFFICIAL_CATALOG_BASE_URL: str = (
+        "https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/main/modules"
+    )
+
     # Paths
     MODULES_INSTALLED_PATH: Path = BASE_DIR / "modules" / "installed"
     MODULES_REPOSITORY_PATH: Path = BASE_DIR / "modules" / "repository"
