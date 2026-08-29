@@ -166,6 +166,22 @@ These are documented as per spec §30 (Known Limitations):
    - Upgrade path: Fase 14 (Observability & Telemetry) + webhooks
    - Impact: Low (desktop scenario; team coordination is Fase 13+)
 
+5. **"Source unavailable" detection cannot distinguish "network down" from "zero modules"**
+   - Root cause: `OfficialCatalogProvider`/`CustomCatalogProvider.list_available()` deliberately
+     swallow network errors internally and return `[]` (Slices 2/3 — "fonte indisponível é
+     informação, não falha do Core"). By the time `CatalogAggregator._fetch_source()` sees the
+     result, an empty list is indistinguishable from a genuinely empty (but reachable) catalog.
+   - Current behavior: `_notify_source_unavailable()` fires on any transition from
+     "non-empty result" → "empty result", which is the closest available signal, but a custom
+     repo whose owner removes all modules (goes from N modules to 0, still perfectly reachable)
+     would trigger the same "fonte indisponível" notification as a real outage.
+   - Upgrade path: would require the provider contract to return a distinct
+     reachable-but-empty vs. unreachable signal (e.g. raise a typed exception instead of
+     swallowing it, caught at the aggregator level) — a provider-interface change out of
+     scope for a closing slice; revisit if this proves noisy in practice.
+   - Impact: Low (a legitimately-emptied custom catalog is a rare, self-inflicted scenario;
+     worst case is one extra notification, not a functional failure).
+
 ---
 
 ## Files Changed
