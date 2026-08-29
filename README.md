@@ -11,7 +11,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/tests-603%20passing-brightgreen)](#-testes)
+[![Tests](https://img.shields.io/badge/tests-664%20passing-brightgreen)](#-testes)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
@@ -124,7 +124,7 @@ TechForge/
 ├── sdk/python/                # SDK para desenvolvedores de módulos
 ├── docs/                      # INDEX.md · phases/ · developer-center/ · architecture.md
 ├── config/                    # .env
-└── tests/ → core/backend/tests/  # 603 testes pytest
+└── tests/ → core/backend/tests/  # 664 testes pytest
 ```
 
 ---
@@ -289,6 +289,19 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
+<summary><b>Configuration & Persistence (Fase 12)</b></summary>
+
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/system/storage/status` | Saúde do storage (leitura + escrita) |
+| GET | `/api/v1/system/migrations/status` | Head vs. revisão atual do Alembic |
+| GET | `/api/v1/config` | Configuração de plataforma efetiva (também serve de export) |
+| GET/PUT | `/api/v1/modules/:module_id/config` | Configuração de módulo (schema do manifest, validada) |
+| POST | `/api/v1/modules/:module_id/config/validate` | Valida sem persistir |
+
+</details>
+
+<details>
 <summary><b>Notifications</b></summary>
 
 | Method | Path | Descrição |
@@ -338,13 +351,13 @@ gantt
     Fase 9 Module Runtime ✓             :done, 3, 4
     Fase 10 Security & Trust ✓          :done, 4, 5
     Fase 11 Marketplace Distribution ✓  :done, 5, 6
-    Fase 12-13 Persistence/Multi-User   :active, 6, 8
-    Fase 14-20 Release                  :8, 10
+    Fase 12 Configuration & Persistence ✓ :done, 6, 7
+    Fase 13 Central Server Multi-User   :active, 7, 9
+    Fase 14-20 Release                  :9, 11
 ```
 
 **Próximos marcos** (decididos por auditoria contra código real,
 ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
-- Configuration & Data Persistence (Fase 12)
 - Central Server Multi-User Readiness (Fase 13)
 
 ---

@@ -2,7 +2,7 @@
 
 > Spec: `docs/phases/12-Fase-12-Configuration-Data-Persistence.md`
 > Plano: `tasks/phase12-plan.md`
-> **Status: EM ANDAMENTO** — atualizado a cada slice concluída, não só no fechamento.
+> **Status: FECHADA — 2026-08-29**
 
 ## Visão Geral
 
@@ -181,29 +181,78 @@ multiusuário, autenticação, RBAC, replicação, cluster, backup corporativo, 
 - **Teste:** compilação TypeScript (não há suíte de testes de frontend no projeto,
   confirmado em `tasks/phase-audit.md`: "Frontend: sem testes").
 
+### Slice 12 — Developer Center + AI Context + fechamento ✅ (commit `d36f0ab`)
+- **Arquivos:** `docs/developer-center/core/persistence.md` (novo), `docs/INDEX.md`,
+  `tasks/phase-audit.md`, `README.md`
+- **O quê:** Doc canônica cobrindo Storage API, migrations, module configuration,
+  config migration no update, Module Storage API, filesystem paths, Secret Store,
+  cache TTL, data portability e limitações conhecidas. Confirmado via
+  `GET /api/v1/docs/export/ai-context` que entra automaticamente no AI Context —
+  qualquer doc em `docs/developer-center/core/*.md` com `category: core-architecture`
+  é indexada pelo `doc_engine` sem passo manual adicional.
+- **Achado crítico na auditoria final (fechado nesta slice, commit `d36f0ab`):**
+  `ModuleExecutionContext.configuration` (Fase 9) ficava **sempre `{}`** — nunca
+  conectado a toda a infraestrutura de persistência construída nas Slices 3/4/9.
+  Um módulo, em runtime, nunca via o que o usuário configurou via API/CLI/UI.
+  `build()` virou `async` (zero chamadores em produção — só testes — risco baixo)
+  e agora busca a config persistida (com defaults aplicados) antes de montar o
+  contexto. Este era exatamente o tipo de lacuna que a auditoria contra os
+  critérios do spec §35 existe para pegar.
+- **README/phase-audit.md atualizados:** contagem de testes (664), roadmap
+  (Fase 12 marcada `done`, Fase 13 vira `active`), seção de API Reference com os
+  endpoints desta fase.
+
 ---
 
-## Ainda pendente
+## Auditoria final — critérios de aceitação (spec §35)
 
-- **Slice 12** — Developer Center + AI Context + fechamento (auditoria dos 24 critérios
-  do spec §35, `tasks/phase-audit.md`, contagem final de testes).
+| # | Critério | Status |
+|---|---|---|
+| 1 | Storage abstraction existir | ✅ `StorageProvider` |
+| 2 | SQLite funcionar para Desktop | ✅ (já funcionava, preservado) |
+| 3 | PostgreSQL futuro não exigir redesign dos módulos | ✅ APIs de módulo (config, KV, secrets) são agnósticas de dialeto SQL |
+| 4 | Core e Module Data tiverem ownership separado | ✅ tabelas Core-owned (`module_configurations`, `module_kv_store`) chaveadas por `module_id` opaco; módulo nunca acessa tabela do Core diretamente |
+| 5 | Module Storage API existir | ✅ `context.storage` |
+| 6 | Configuration hierarchy estiver definida | ⚠️ **Parcial** — Platform (`GET /config`) e Module (`context.configuration`, persistida) existem e estão conectadas; "Runtime Configuration"/"Execution Configuration" (spec §8, parâmetros de uma execução específica) não foram construídos como camadas distintas nesta fase — não havia um caso de uso concreto pedindo isso ainda |
+| 7 | Configuração de módulo for tipada e validável | ✅ |
+| 8 | Secrets não forem armazenados em locais inadequados | ✅ `keyring`, nunca em manifest/log/config |
+| 9 | Secret Store abstraction existir | ✅ |
+| 10 | Config migrations forem previstas | ✅ hook `migrate_config` |
+| 11 | Database migrations forem separadas entre Core e módulos | ✅ Alembic é só do Core; módulo com tabela própria usa SQLAlchemy direto, fora do Alembic do Core (ownership documentado, não um runner dedicado) |
+| 12 | Updates puderem executar migrations | ✅ `PackageManager.update()` chama `run_config_migration` |
+| 13 | Falhas de migration forem tratadas | ✅ rollback completo (arquivos + config) |
+| 14 | Cache for separado de dados persistentes | ✅ `TTLCache` |
+| 15 | Filesystem paths forem oficiais | ✅ `ModulePaths` |
+| 16 | Application files e user data forem separados | ✅ já eram (`core/` vs `config/`+`modules/`+`logs/`), agora documentado explicitamente |
+| 17 | Storage Health existir | ✅ |
+| 18 | APIs funcionarem | ✅ todos os endpoints testados (unit + manual contra backend real) |
+| 19 | CLI funcionar | ✅ `storage`, `migrations`, `modules config[-validate]`, `config export` |
+| 20 | Frontend de configuração for integrado | ✅ com ressalva — build/tipos/API confirmados, **sem verificação visual em navegador** (sem ferramenta de browser automation nesta sessão) |
+| 21 | Developer Center documentar persistência | ✅ `persistence.md` |
+| 22 | AI Context incluir regras | ✅ confirmado via export |
+| 23 | Todos os testes passarem | ✅ 664 passando, 3 skipped (pré-existentes) |
+| 24 | Core continuar leve | ✅ única dependência nova é `keyring` (leve, sem sub-dependências pesadas) |
 
-## Limitações conhecidas registradas até aqui
+**2 ressalvas, ambas documentadas, nenhuma bloqueante:** #6 (hierarquia de config
+Runtime/Execution não construída — sem caso de uso real ainda) e #20 (frontend sem
+verificação visual — ferramenta indisponível nesta sessão).
 
-- `eslint` referenciado em `package.json` (`npm run lint`) mas nunca declarado como
-  devDependency — script quebrado desde antes desta fase, não corrigido (fora de
-  escopo da Fase 12).
-- Frontend da Fase 12 não foi verificado visualmente em navegador real (sem
-  ferramenta de browser automation disponível nesta sessão) — só build/tipos/API.
+## Limitações conhecidas (consolidado)
 
-- Config de módulo não suporta tipo lista/array (só string/integer/float/boolean) —
-  ver Slice 9 acima.
-- Module Storage API cobre só key-value — módulo com necessidade de schema relacional
-  próprio continua livre de usar SQLAlchemy diretamente, sem API de provisionamento
-  assistida pelo Core (decisão original do plano, não uma lacuna nova).
-- Secret Store depende do backend nativo do SO via `keyring` — sem fallback definido
-  pra SO sem backend compatível (Linux headless sem D-Bus/Secret Service).
+1. Configuração de módulo não suporta tipo lista/array — decisão explícita do
+   usuário: deixar para quando um módulo real precisar (Slice 9).
+2. Module Storage API cobre só key-value — sem API de provisionamento de schema
+   relacional assistida pelo Core (decisão original do plano).
+3. Secret Store sem fallback para SO sem backend `keyring` compatível (Linux
+   headless sem D-Bus/Secret Service).
+4. `eslint` referenciado em `package.json` mas nunca declarado como devDependency
+   — bug pré-existente, não introduzido nesta fase, não corrigido (fora de escopo).
+5. Frontend desta fase não verificado visualmente em navegador real nesta sessão.
+6. "Runtime Configuration"/"Execution Configuration" (spec §8) não construídas como
+   camadas distintas — Platform e Module Configuration cobrem os casos reais atuais.
 
-## Contagem de testes (snapshot após Slice 10)
+## Contagem de testes (final)
 
-662 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).
+664 testes de backend passando, 3 skipped (pré-existentes, sem relação com a Fase 12).
+Frontend: `npm run build` limpo (tsc + vite); sem suíte de testes de frontend no
+projeto (pré-existente).
