@@ -234,6 +234,10 @@ class PackageManager:
             # recém-instalados, para detectar alteração depois.
             from app.module_trust.integrity import write_integrity_manifest
             write_integrity_manifest(target_dir)
+
+            # Fase 12 §20/§21 — paths oficiais de runtime (data/cache/exports/temp).
+            from app.module_runtime.paths import ModulePaths
+            ModulePaths.for_module(target_dir).ensure_exist()
         except Exception as exc:
             if extract_tmp.exists():
                 shutil.rmtree(extract_tmp, ignore_errors=True)

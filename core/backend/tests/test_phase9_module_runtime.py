@@ -460,7 +460,7 @@ class TestModuleExecutionContext:
         assert ctx.module_id == "hello_world"
         assert ctx.module_version
         assert ctx.runtime_id
-        assert ctx.paths.name == "hello_world"
+        assert ctx.paths.root.name == "hello_world"  # Fase 12 §20 — ModulePaths
         assert ctx.services is not None
         assert ctx.cancellation is None
         assert ctx.metadata == {}

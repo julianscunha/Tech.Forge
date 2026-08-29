@@ -19,8 +19,9 @@ from pathlib import Path
 INTEGRITY_FILENAME = "integrity.json"
 
 # Arquivos/diretórios nunca entram no hash: dados de runtime do módulo,
-# caches, o próprio integrity.json.
-_EXCLUDED_DIR_PREFIXES = ("data/", "__pycache__/")
+# caches, o próprio integrity.json. Fase 12 §20 — cache/exports/temp são
+# paths oficiais de runtime, não código do módulo.
+_EXCLUDED_DIR_PREFIXES = ("data/", "cache/", "exports/", "temp/", "__pycache__/")
 _EXCLUDED_SUFFIXES = (".pyc",)
 _EXCLUDED_NAMES = (INTEGRITY_FILENAME,)
 

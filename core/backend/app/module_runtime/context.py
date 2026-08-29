@@ -13,10 +13,10 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Optional
 
 from app.core.settings import settings
+from app.module_runtime.paths import ModulePaths
 from app.services.module_storage import ModuleKVStorage
 
 
@@ -28,7 +28,7 @@ class ModuleExecutionContext:
     configuration:  dict[str, Any]
     services:       Any
     logger:         logging.Logger
-    paths:          Path
+    paths:          ModulePaths
     storage:        ModuleKVStorage
     cancellation:   Optional[Any] = None
     metadata:       dict[str, Any] = field(default_factory=dict)
@@ -50,6 +50,6 @@ class ModuleExecutionContext:
             configuration={},
             services=service_registry,
             logger=logging.getLogger(f"techforge.module.{module_id}"),
-            paths=settings.MODULES_INSTALLED_PATH / module_id,
+            paths=ModulePaths.for_module(settings.MODULES_INSTALLED_PATH / module_id),
             storage=ModuleKVStorage(module_id),
         )

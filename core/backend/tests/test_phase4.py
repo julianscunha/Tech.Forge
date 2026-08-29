@@ -301,8 +301,9 @@ class TestUpdate:
         v1 = make_mod_file(tmp_path / "v1", MANIFEST_BASE.copy())
         asyncio.run(pm.install(v1))
 
+        # Fase 12 §20/§21 — install() já cria data/ (ModulePaths.ensure_exist).
         data_dir = tmp_path / "installed" / "test_pkg" / "data"
-        data_dir.mkdir()
+        data_dir.mkdir(exist_ok=True)
         (data_dir / "state.json").write_text('{"disabled": true, "user_note": "important"}')
 
         v2 = make_mod_file(tmp_path / "v2", {**MANIFEST_BASE, "version": "2.0.0"})
