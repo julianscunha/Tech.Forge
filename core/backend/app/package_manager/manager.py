@@ -407,6 +407,15 @@ class PackageManager:
             shutil.rmtree(target_dir)
             shutil.move(str(extract_tmp), str(target_dir))
 
+            # Preserva o estado proprio do modulo entre versoes — o .mod
+            # nunca contem data/ (so existe depois de instalado, em runtime),
+            # entao sem isso o update apagaria data/state.json (flag
+            # ativo/desativado, ver module_engine/loader.py:_is_disabled) e
+            # qualquer outro dado que o modulo tenha persistido ali.
+            old_data_dir = backup / "data"
+            if old_data_dir.is_dir():
+                shutil.copytree(str(old_data_dir), str(target_dir / "data"))
+
             # Fase 10 §5/§6 — regenera integrity.json com os arquivos da
             # NOVA versão (o antigo, da versão anterior, ficaria órfão e
             # faria a próxima verificação reportar falso MODIFIED).

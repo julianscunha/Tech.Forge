@@ -288,6 +288,31 @@ class TestUpdate:
         backup = tmp_path / "cache" / "test_pkg-1.0.0.bak"
         assert backup.exists()
 
+    def test_update_preserves_module_data_folder(self, tmp_path):
+        """
+        Regression: update() must not wipe data/ — it's where a module persists
+        its own state (e.g. data/state.json, the enable/disable flag written by
+        deactivate — see app/module_engine/loader.py:_is_disabled) and any data
+        the module itself saves at runtime. The .mod archive never contains
+        data/ (it's created after install), so a naive rmtree(target_dir) before
+        extracting the new version silently destroys it on every update.
+        """
+        pm = make_package_manager(tmp_path)
+        v1 = make_mod_file(tmp_path / "v1", MANIFEST_BASE.copy())
+        asyncio.run(pm.install(v1))
+
+        data_dir = tmp_path / "installed" / "test_pkg" / "data"
+        data_dir.mkdir()
+        (data_dir / "state.json").write_text('{"disabled": true, "user_note": "important"}')
+
+        v2 = make_mod_file(tmp_path / "v2", {**MANIFEST_BASE, "version": "2.0.0"})
+        result = asyncio.run(pm.update("test_pkg", v2))
+        assert result.success, result.message
+
+        preserved = tmp_path / "installed" / "test_pkg" / "data" / "state.json"
+        assert preserved.exists(), "data/ folder was wiped by update()"
+        assert "important" in preserved.read_text()
+
 
 # ── Package Manager query tests ───────────────────────────────────────────────
 
