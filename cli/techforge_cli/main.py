@@ -26,6 +26,7 @@ from techforge_cli.commands.module_trust   import (
 )
 from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd, logs_cmd, dev_cmd
 from techforge_cli.commands.catalog         import catalog_cmd
+from techforge_cli.commands.storage         import storage_cmd
 
 
 @click.group()
@@ -70,6 +71,7 @@ cli.add_command(status_cmd)    # Phase 6
 cli.add_command(logs_cmd)      # Fase 6 §16 — techforge logs
 cli.add_command(dev_cmd)       # Fase 6 §17 — techforge dev
 cli.add_command(catalog_cmd)   # Fase 11 Slice 6 — catalog (list/search/show/sources/build-index)
+cli.add_command(storage_cmd)   # Fase 12 Slice 1 — storage status
 
 
 def main():
