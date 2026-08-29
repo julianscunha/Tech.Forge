@@ -339,55 +339,55 @@ class CustomCatalogProvider(RepositoryProvider):
                     )
                     return []
 
-            contents = response.json()
-            packages: list[PackageInfo] = []
+                contents = response.json()
+                packages: list[PackageInfo] = []
 
-            # contents should be a list of directory entries
-            for entry in contents:
-                if entry.get("type") != "dir":
-                    continue
-
-                module_id = entry["name"]
-                manifest_url = (
-                    f"https://api.github.com/repos/{self._owner}/{self._repo}"
-                    f"/contents/modules/{module_id}/manifest.yaml?ref={self._branch}"
-                )
-
-                try:
-                    manifest_response = await client.get(manifest_url, timeout=10.0)
-                    if manifest_response.status_code >= 400:
-                        logger.warning(
-                            "Manifest not found for module %s in %s: HTTP %d",
-                            module_id,
-                            self._repo_url,
-                            manifest_response.status_code,
-                        )
+                # contents should be a list of directory entries
+                for entry in contents:
+                    if entry.get("type") != "dir":
                         continue
 
-                    manifest_data = manifest_response.json()
-                    # GitHub API returns file content as base64
-                    manifest_content = base64.b64decode(
-                        manifest_data.get("content", "")
-                    ).decode("utf-8")
-                    raw = yaml.safe_load(manifest_content) or {}
-
-                    info = PackageInfo.from_manifest_dict(
-                        raw,
-                        source_path=None,
-                        platform_version=platform_version,
+                    module_id = entry["name"]
+                    manifest_url = (
+                        f"https://api.github.com/repos/{self._owner}/{self._repo}"
+                        f"/contents/modules/{module_id}/manifest.yaml?ref={self._branch}"
                     )
-                    info.source = CatalogSource.CUSTOM_CATALOG
-                    info.source_url = self._repo_url
-                    packages.append(info)
 
-                except (yaml.YAMLError, KeyError, ValueError) as exc:
-                    logger.warning(
-                        "Could not parse manifest for module %s in %s: %s",
-                        module_id,
-                        self._repo_url,
-                        exc,
-                    )
-                    continue
+                    try:
+                        manifest_response = await client.get(manifest_url, timeout=10.0)
+                        if manifest_response.status_code >= 400:
+                            logger.warning(
+                                "Manifest not found for module %s in %s: HTTP %d",
+                                module_id,
+                                self._repo_url,
+                                manifest_response.status_code,
+                            )
+                            continue
+
+                        manifest_data = manifest_response.json()
+                        # GitHub API returns file content as base64
+                        manifest_content = base64.b64decode(
+                            manifest_data.get("content", "")
+                        ).decode("utf-8")
+                        raw = yaml.safe_load(manifest_content) or {}
+
+                        info = PackageInfo.from_manifest_dict(
+                            raw,
+                            source_path=None,
+                            platform_version=platform_version,
+                        )
+                        info.source = CatalogSource.CUSTOM_CATALOG
+                        info.source_url = self._repo_url
+                        packages.append(info)
+
+                    except (yaml.YAMLError, KeyError, ValueError) as exc:
+                        logger.warning(
+                            "Could not parse manifest for module %s in %s: %s",
+                            module_id,
+                            self._repo_url,
+                            exc,
+                        )
+                        continue
 
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
             logger.warning(
@@ -450,7 +450,7 @@ class CustomCatalogProvider(RepositoryProvider):
 
                 try:
                     # Write manifest to temp directory
-                    (temp_dir / "manifest.yaml").write_text(manifest_content)
+                    (temp_dir / "manifest.yaml").write_text(manifest_content, encoding="utf-8")
 
                     # Fetch module files (backend, frontend, docs)
                     directories_to_fetch = ["backend", "frontend", "docs"]

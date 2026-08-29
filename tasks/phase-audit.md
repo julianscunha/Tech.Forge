@@ -1,7 +1,7 @@
 # TechForge — Phase Audit (2026-08-28)
 
 Método: specs de docs/phases vs código real + execução de testes.
-Backend: 600 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
+Backend: 602 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
 Frontend: sem testes (vitest não encontra arquivos *.test.*).
 
 | Fase | Tema | Status | Lacunas principais |
@@ -24,7 +24,6 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*).
 
 ## Hooks/stubs ativos (próximos alvos naturais)
 
-- `RemoteRepositoryProvider.{list_available,get_package,fetch_mod_path}` — NotImplementedError (Fase 11)
 - `Header.tsx` bell placeholder — aguarda Notification Foundation (Fase 2)
 - `ModuleHost.tsx` — dynamic import de entry_frontend adiado (Fase 9)
 

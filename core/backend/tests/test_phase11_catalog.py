@@ -882,3 +882,103 @@ class TestCustomCatalogProvider:
         # Verify it's a valid zip
         with zipfile.ZipFile(result) as zf:
             assert "manifest.yaml" in zf.namelist()
+
+    @pytest.mark.asyncio
+    async def test_list_available_reuses_client_across_all_manifest_fetches(self, tmp_path):
+        """
+        Regression: list_available() must keep the httpx.AsyncClient open for every
+        manifest fetch, not just the initial directory listing.
+
+        A previous bug moved the manifest-fetch loop outside the `async with
+        httpx.AsyncClient()` block, so every fetch after the block exited hit a
+        closed client. Mocks with a no-op __aexit__ never catch this — this fake
+        client actually raises once "closed", like the real httpx client does.
+        """
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        import base64
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo", branch="main", cache_path=tmp_path
+        )
+
+        dir_response = MagicMock(status_code=200)
+        dir_response.json.return_value = [{"name": "module_a", "type": "dir"}]
+
+        manifest_response = MagicMock(status_code=200)
+        manifest_response.json.return_value = {
+            "content": base64.b64encode(
+                b"id: module_a\nname: A\nversion: 1.0.0\ncategory: C\nvendor: V\nauthor: Au\ndescription: D"
+            ).decode()
+        }
+
+        class FakeClosingClient:
+            def __init__(self):
+                self._closed = False
+
+            async def get(self, url, *args, **kwargs):
+                if self._closed:
+                    raise RuntimeError("Cannot send a request, as the client has been closed.")
+                return manifest_response if "manifest.yaml" in url else dir_response
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *exc_info):
+                self._closed = True
+
+        with patch("httpx.AsyncClient", return_value=FakeClosingClient()):
+            packages = await provider.list_available("1.0.0")
+
+        assert len(packages) == 1
+        assert packages[0].module_id == "module_a"
+
+    @pytest.mark.asyncio
+    async def test_fetch_mod_path_preserves_non_ascii_manifest_content(self, tmp_path):
+        """
+        Regression: fetch_mod_path() must write the fetched manifest.yaml as UTF-8.
+
+        A previous bug wrote it with Path.write_text()'s platform-default encoding
+        (cp1252 on Windows), while PackageBuilder.build() always reads manifest.yaml
+        back as UTF-8 — corrupting any non-ASCII content (accented pt-br text) and
+        raising UnicodeDecodeError. Uses the real PackageBuilder, not a mock, since
+        that's the only way this round-trip actually gets exercised.
+        """
+        from unittest.mock import AsyncMock, patch, MagicMock
+        from app.package_manager.repository import CustomCatalogProvider
+        import base64
+        import yaml
+        import zipfile
+
+        provider = CustomCatalogProvider(
+            repo_url="https://github.com/owner/repo", branch="main", cache_path=tmp_path
+        )
+
+        manifest_text = (
+            "id: sistema_info\nname: Sistema Info\nversion: 1.0.0\ncategory: System\n"
+            "vendor: V\nauthor: A\n"
+            "description: Fornece informações do sistema onde o TechForge está rodando.\n"
+        )
+        manifest_response = MagicMock(status_code=200)
+        manifest_response.json.return_value = {
+            "content": base64.b64encode(manifest_text.encode("utf-8")).decode()
+        }
+        empty_dir_response = MagicMock(status_code=200)
+        empty_dir_response.json.return_value = []
+
+        async def mock_get(url, *args, **kwargs):
+            return manifest_response if "manifest.yaml" in url else empty_dir_response
+
+        mock_client = MagicMock()
+        mock_client.get = mock_get
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = await provider.fetch_mod_path("sistema_info")
+
+        assert result is not None
+        with zipfile.ZipFile(result) as zf:
+            raw = zf.read("manifest.yaml").decode("utf-8")
+        parsed = yaml.safe_load(raw)
+        assert parsed["description"] == "Fornece informações do sistema onde o TechForge está rodando."

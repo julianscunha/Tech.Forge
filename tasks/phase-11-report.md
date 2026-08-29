@@ -131,11 +131,51 @@ conflict resolution, and asynchronous installation with progress tracking.
   - `test_catalog_to_activation_flow_custom_source`
   - `test_catalog_discovery_and_listing`
 
-**Total test count:** 600 tests (596 before + 4 new), all passing.
+**Total test count:** 602 tests (596 before Slice 8 + 4 + 2 post-closure regressions), all passing.
 
 **Test coverage by slice:**
 - Slices 1–7: Covered by existing test files and manual smoke tests (build succeeds)
 - Slice 8: New tests in `test_phase11_source_unavailable.py` + `test_phase11_integration.py`
+
+### Post-closure: real end-to-end validation against the live official repo
+
+`test_phase11_integration.py` proves the install pipeline against a locally-built `.mod`,
+but never exercises `CustomCatalogProvider` against a real network endpoint — every unit
+test for it mocks `httpx.AsyncClient` with a no-op `__aexit__`, which never reproduces what
+a real closed client does. Per explicit user request, the full online flow was run manually
+against the real, already-published `julianscunha/Tech.Forge.Modules` repo (module
+`system_information_service`): discovery via GitHub Contents API → `fetch_mod_path()`
+download+build → `PackageManager.install()`. This surfaced two real bugs invisible to the
+existing mocked test suite:
+
+1. **`CustomCatalogProvider.list_available()` used a closed `httpx.AsyncClient`.** The
+   manifest-fetch loop lived outside the `async with httpx.AsyncClient() as client:` block
+   that fetched the `modules/` directory listing, so every per-module manifest request ran
+   against an already-closed client. Existing tests never caught this because their mock
+   client's `__aexit__` was a no-op `AsyncMock` — it didn't actually invalidate `client.get`
+   the way real httpx does. Fixed by moving the loop inside the `async with` block.
+2. **`CustomCatalogProvider.fetch_mod_path()` wrote the downloaded manifest with the
+   platform-default encoding instead of UTF-8.** `(temp_dir / "manifest.yaml").write_text(manifest_content)`
+   used `Path.write_text()`'s default encoding (cp1252 on Windows), while
+   `PackageBuilder.build()` always reads it back with `encoding="utf-8"` explicitly —
+   corrupting any non-ASCII content. The real manifest (Portuguese, accented) reproduced it
+   immediately (`UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe7`); existing tests
+   never caught this because their fixture manifests were pure ASCII. Fixed by passing
+   `encoding="utf-8"` explicitly to `write_text()`.
+
+Both bugs are covered by new regression tests in `test_phase11_catalog.py`
+(`test_list_available_reuses_client_across_all_manifest_fetches`,
+`test_fetch_mod_path_preserves_non_ascii_manifest_content`) using fakes that actually
+reproduce the failure mode (a client that raises once "closed"; real non-ASCII content run
+through the real `PackageBuilder.build()`, not a mock) — verified RED against the pre-fix
+code, GREEN after. After the fix, the full online flow was re-run manually against the same
+live repo and completed successfully end to end.
+
+**Lesson:** this is the same root pattern already flagged in Slices 5b/6 (mocks that assert
+against an invented or over-simplified shape instead of real behavior), but this time it
+survived through Slice 3's original review because mocking `httpx.AsyncClient` itself —
+rather than mocking at a business-logic boundary — hides transport-level bugs. A live smoke
+test against a real remote source is the only thing that would have caught it earlier.
 
 ---
 
@@ -216,12 +256,18 @@ Created and documents all slices, decisions, tests, known issues.
 Fase 11 line updated from "⚠️ local-only" to full list of delivered components.
 
 ### Update README.md ✅
-Badge updated with final test count (600).
+Badge updated with final test count (602, after post-closure regression tests).
 
 ### Git Cleanup ✅
 - All 4 new tests committed together
 - Docs committed together
 - Final commit message notes "Fase 11 complete"
+
+### Real online E2E validation ✅
+Ran the full catalog→install flow manually against the live official
+`julianscunha/Tech.Forge.Modules` repo (not mocked); found and fixed 2 real bugs in
+`CustomCatalogProvider` invisible to the mocked test suite — see "Post-closure: real
+end-to-end validation" above. Added 2 regression tests (602 total).
 
 ---
 
@@ -249,7 +295,8 @@ Fase 12 (Configuration & Persistence) can build on Fase 11 without changes:
 
 ## QA Checklist
 
-- ✅ All tests pass (600 total)
+- ✅ All tests pass (602 total)
+- ✅ Real online flow validated end-to-end against the live official repo (not just mocks)
 - ✅ Frontend build succeeds without warnings (`npm run build`)
 - ✅ CLI commands work (`techforge catalog list`, etc.)
 - ✅ No security issues introduced (notifications only use public metada, no credentials exposed)
