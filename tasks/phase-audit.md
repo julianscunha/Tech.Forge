@@ -1,7 +1,7 @@
 # TechForge — Phase Audit (2026-08-28)
 
 Método: specs de docs/phases vs código real + execução de testes.
-Backend: 602 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
+Backend: 603 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
 Frontend: sem testes (vitest não encontra arquivos *.test.*).
 
 | Fase | Tema | Status | Lacunas principais |

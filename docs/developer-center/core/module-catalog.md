@@ -70,7 +70,8 @@ class CatalogSourceConfig(Base):
 
 ## Catálogo Oficial: formato do `index.json`
 
-Publicado em `https://techforge.io/catalog/index.json`.
+Publicado em `https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/main/modules/index.json`
+(`settings.OFFICIAL_CATALOG_BASE_URL`).
 
 ```json
 {
@@ -83,7 +84,7 @@ Publicado em `https://techforge.io/catalog/index.json`.
       "vendor": "TechForge",
       "author": "Team",
       "description": "Does useful things",
-      "mod_url": "module_a-1.0.0.mod",
+      "mod_url": "module_a/module_a-1.0.0.mod",
       "checksum": "c4d19d96b2f4280baa0e91260472981fef76c11c801038514e5fd2d9e71e30bc"
     }
   ]
@@ -93,6 +94,9 @@ Publicado em `https://techforge.io/catalog/index.json`.
 Formato real gerado por `techforge catalog build-index` (validado contra um `index.json`
 real servido localmente, Fase 11 fechamento). `mod_url` é relativo ao `base_url` da fonte
 — `OfficialCatalogProvider` resolve `f"{base_url}/{mod_url}"` quando não é uma URL absoluta.
+O caminho é aninhado por módulo (`<id>/<id>-<versão>.mod`, não um arquivo solto) — cada
+versão já publicada de um módulo fica empilhada na mesma pasta, para sempre; `index.json`
+sempre aponta só para a mais recente.
 
 Gere com:
 ```bash
@@ -299,10 +303,14 @@ techforge catalog build-index <source_dir> --output <catalog_dir>
 
 ### Publicando no Catálogo Oficial
 
-1. Contribua seu módulo para o [tech-forge-modules](https://github.com/techforge-org/tech-forge-modules)
-   (repositório a definir).
-2. Envie um PR com sua pasta `modules/<id>/`.
-3. O CI constrói o `.mod` e regenera o `index.json`.
+1. Contribua seu módulo para o [Tech.Forge.Modules](https://github.com/julianscunha/Tech.Forge.Modules)
+   — veja o [CONTRIBUTING.md](https://github.com/julianscunha/Tech.Forge.Modules/blob/main/CONTRIBUTING.md)
+   de lá pro passo a passo completo.
+2. Envie um PR com sua pasta `submissions/<id>/` (transitória — nunca em
+   `modules/`, que é gerenciada só pela automação do repositório).
+3. O CI valida, e depois do merge constrói o `.mod` (aninhado em
+   `modules/<id>/<id>-<versão>.mod`, preservando versões anteriores) e
+   regenera o `index.json`.
 4. Merge → disponível na próxima sincronização da plataforma.
 
 ### Publicando em Catálogo Customizado

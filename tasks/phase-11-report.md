@@ -131,7 +131,7 @@ integridade, resolução de conflitos e instalação assíncrona com acompanhame
   - `test_catalog_to_activation_flow_custom_source`
   - `test_catalog_discovery_and_listing`
 
-**Total de testes:** 602 testes (596 antes do Slice 8 + 4 + 2 regressões pós-fechamento), todos passando.
+**Total de testes:** 708 testes (603 backend + 105 CLI), todos passando — inclui as regressões pós-fechamento (client HTTP fechado, encoding, `data/` preservado no update, merge de `index.json`).
 
 **Cobertura de teste por slice:**
 - Slices 1–7: cobertos pelos arquivos de teste existentes e smoke tests manuais (build passa)
@@ -197,41 +197,84 @@ caso do caminho oficial) é a única coisa que teria pego isso antes.
 
 ---
 
-## CI de Empacotamento do Catálogo Oficial (pendência do plano original, fechada agora)
+## CI de Empacotamento do Catálogo Oficial (pendência do plano original, fechada e validada ao vivo)
 
 O plano da Fase 11 (`tasks/phase11-plan.md`, decisão confirmada com o usuário antes da
 implementação) previa explicitamente: *"a CI do próprio repositório [Tech.Forge.Modules]
 (já existente, `update-modules-readme.yml`) ganha um passo a mais — depois do merge,
 empacota cada módulo em `.mod` e regrava um `index.json`"*. Essa etapa nunca tinha sido
-implementada durante os Slices 1–8 — o repositório `Tech.Forge.Modules` real só tinha
-`validate-modules.yml` (validação em PR) e `update-modules-readme.yml` (README), nenhum dos
-dois gera `.mod` ou `index.json`. Isso foi identificado pelo usuário após o fechamento
-inicial da fase e corrigido nesta rodada:
+implementada durante os Slices 1–8. Isso foi identificado pelo usuário após o fechamento
+inicial da fase; a versão final, depois de várias rodadas de validação real (não só local),
+ficou assim:
 
-- Estendido `update-modules-readme.yml` (workflow real, no repositório
-  `julianscunha/Tech.Forge.Modules`) com passos adicionais que, após gerar o README, instalam
-  o `techforge` CLI real (mesmo padrão de `validate-modules.yml`: checkout do `Tech.Forge`
-  como `_core`, `pip install -e _core/cli`) e rodam `techforge catalog build-index modules
-  --output modules`, escrevendo `.mod` + `.mod.sha256` + `index.json` dentro da própria pasta
-  `modules/`.
-- **Poda da pasta-fonte após empacotar** (`scripts/prune_packaged_sources.py`, novo) — decisão
-  explícita do usuário: manter a pasta-fonte (`manifest.yaml` + `backend/`/`frontend/`) ao lado
-  do `.mod` pra sempre não escala pra "centenas de milhares de módulos" (`main` acumularia os
-  dois formatos indefinidamente, e quem clona o repo baixaria pasta-fonte redundante). A CI
-  remove a pasta-fonte de cada módulo já presente no `index.json` gerado; pra atualizar um
-  módulo, o autor reenvia a pasta-fonte completa numa nova PR, e o merge reempacota e poda de
-  novo. Guard `if: github.actor != 'github-actions[bot]'` no job evita que o próprio commit
-  automático (que deleta `manifest.yaml` ao podar) dispare a workflow de novo em loop.
+**Arquitetura final (`julianscunha/Tech.Forge.Modules`):**
+- `submissions/<id>/` — transitório. É onde o contribuidor sobe `manifest.yaml` +
+  `backend/`/`frontend/`/`docs/` na PR. Some assim que a CI empacota.
+- `modules/<id>/` — permanente, gerenciada só pela CI. Acumula um `.mod` por versão já
+  publicada (`<id>-<versão>.mod`, nunca sobrescrito) + `modules/index.json` (uma entrada por
+  módulo, sempre a versão mais recente).
+- As duas pastas são deliberadamente separadas: se a fonte da PR e o `.mod` histórico
+  morassem na mesma pasta, um contribuidor que "recriasse a pasta do zero" localmente antes
+  de editar poderia, sem saber que havia binários de produção ali, incluir a deleção deles
+  no próprio PR (achado real do usuário, corrigido no PR #8 do repo externo).
+- `update-modules-readme.yml`: build-index (submissions → modules) → regenera README (a
+  partir de `modules/index.json`, não mais escaneando manifest solto — ver bug abaixo) →
+  poda `submissions/` → remove sidecars `.mod.sha256` (nada os lê de volta, checksum já está
+  no índice) → abre um PR com o resultado, espera o check `validate` passar, e mergeia via
+  squash (branch `main` é protegida; nem o bot dá push direto).
 - `settings.OFFICIAL_CATALOG_BASE_URL` adicionado ao Core, apontando para
   `https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/main/modules` — o
-  placeholder `https://techforge.io/catalog` usado em `CatalogAggregator.__init__` desde o
-  Slice 4 nunca tinha sido substituído pelo endereço real.
-- Entregue como PR, não push direto em `main` (bloqueado pelo classificador de permissões do
-  harness — consistente com o próprio modelo de contribuição do catálogo, onde ninguém push
-  direto em `main`): **https://github.com/julianscunha/Tech.Forge.Modules/pull/2** — aguardando
-  merge do usuário.
+  placeholder `https://techforge.io/catalog` usado desde o Slice 4 nunca tinha sido
+  substituído pelo endereço real.
 
-Ver commit desta correção para o diff exato do workflow e do settings.py.
+**Bugs reais achados só ao rodar a CI de verdade (não em simulação local) e corrigidos, um a
+um, cada um bloqueando o anterior:**
+
+1. `ModuleNotFoundError: No module named 'app'` no passo de build-index — o shim
+   `cli/techforge_cli/packager/builder.py` (Core) fazia `from app.package_manager.builder
+   import ...` sem garantir que `app` estivesse no `sys.path`; só funcionava no ambiente de
+   dev por acidente (`cwd=core/backend`). Fix: resolve o caminho de `core/backend` relativo
+   ao próprio arquivo, não ao `cwd`.
+2. Push direto em `main` bloqueado: `Required status check "validate" is expected` — `main`
+   é protegida e o check só roda em `pull_request`, nunca em `push`. Fix: a job passou a
+   abrir PR + esperar + mergear sozinha, em vez de dar push.
+3. `GITHUB_TOKEN` não pode criar/aprovar PR — restrição do próprio GitHub contra abuso de
+   supply-chain. Fix: PAT fine-grained dedicado (`CATALOG_BOT_PAT`, secret do repo,
+   `contents` + `pull_requests` em read-write) só para essa etapa.
+4. Corrida entre `gh pr create` e `gh pr checks --watch` (`no checks reported`, o GitHub
+   ainda não tinha registrado o check run) — fix: poll até aparecer pelo menos 1 check antes
+   de assistir.
+5. **`techforge catalog build-index` sobrescrevia `index.json` inteiro em vez de fazer
+   merge** — o mais sério dos cinco. Cada execução real só vê o que está em `submissions/`
+   no momento (uma PR por vez); sobrescrever apagaria do catálogo todo módulo publicado
+   anteriormente que não fizesse parte dessa PR. Achado simulando localmente **antes** de
+   publicar (não em produção). Fix: lê o `index.json` existente e funde por `id`; 2 testes de
+   regressão (`test_build_index_merges_with_existing_index_instead_of_overwriting`,
+   `test_build_index_replaces_entry_for_updated_module`).
+
+**Bug relacionado, latente, achado por inspeção (não por falha de CI):** a poda (item 2 da
+lista de decisões acima) já em produção fazia `generate_modules_readme.py` (que escaneava
+`manifest.yaml` solto) perder módulos do README assim que fossem podados — só não tinha se
+manifestado ainda por só haver 1 módulo publicado. Fix: passou a ler `modules/index.json`
+(registro durável) em vez de escanear pasta-fonte transitória.
+
+**Validação real de ponta a ponta (não simulação), feita depois de todos os fixes acima:**
+uma PR de teste real tocando `submissions/e2e_test_module/` foi aberta, validada (`validate`
+passou), mergeada, e a CI publicou sozinha até o fim — build-index (merge preservando
+`system_information_service`), poda, sha256 removido, PR automático aberto e mergeado
+sozinho, guard anti-loop confirmado (`skipped`, 0s na run seguinte). O módulo de teste foi
+removido do catálogo depois, numa PR de limpeza separada. Ver PRs #8, #9, #10, #11 no
+`Tech.Forge.Modules`.
+
+Também validado, já com a estrutura final: `OfficialCatalogProvider` contra o
+`raw.githubusercontent.com` real (não servidor local) com o novo `mod_url` aninhado —
+descoberta, download, `PackageManager.install()`, tudo real. E, pela primeira vez nesta
+fase, o fluxo **via HTTP de verdade**: servidor `uvicorn` real rodando, `POST
+/api/v1/marketplace/install-remote/{id}` → polling de `GET
+/api/v1/marketplace/install-jobs/{id}` até `DONE` → confirmado em `GET
+/api/v1/registry/modules` → removido via `DELETE /api/v1/marketplace/remove/{id}`. Fecha a
+lacuna, identificada mais cedo nesta fase, de nunca ter testado os endpoints reais (só
+serviços internos).
 
 ---
 
@@ -284,29 +327,42 @@ Documentados conforme spec §30 (Known Limitations):
 
 ## Arquivos Alterados
 
-### Código
+### Código (`Tech.Forge`)
 - `app/package_manager/catalog_aggregator.py` — Agregador com rastreamento de disponibilidade + notificações
 - `app/api/routes/marketplace.py` — Endpoints de instalação remota (Slice 8 parte 1; já presente)
 - `app/package_manager/repository.py` — 2 correções em `CustomCatalogProvider` (client fechado; encoding não-UTF-8), achadas na validação online real
+- `app/package_manager/manager.py` — `update()` preserva `data/` do módulo entre versões (bug de perda de dado, achado na revisão do fluxo de update)
 - `app/core/settings.py` — `OFFICIAL_CATALOG_BASE_URL` real (substitui placeholder)
+- `cli/techforge_cli/packager/builder.py` — shim resolve `core/backend` relativo ao arquivo, não ao `cwd` (quebrava fora de um dev venv)
+- `cli/techforge_cli/commands/catalog.py` — `build-index` aninha `.mod` por módulo (histórico de versões) e faz merge com `index.json` existente em vez de sobrescrever (bug crítico)
 
 ### Testes
 - `tests/test_phase11_source_unavailable.py` (NOVO) — 2 testes
 - `tests/test_phase11_integration.py` (NOVO) — 2 testes
-- `tests/test_phase11_catalog.py` — +2 testes de regressão pós-fechamento
-- Todos os testes existentes passando (sem regressões)
+- `tests/test_phase11_catalog.py` — +2 testes de regressão (client fechado, encoding)
+- `core/backend/tests/test_phase4.py` — +1 teste (`data/` preservado no update)
+- `cli/tests/test_catalog_build_index.py` — +2 testes (merge de índice, nested output)
+- Todos os testes existentes passando (sem regressões) — 708 no total (backend + CLI)
 
 ### Documentação
-- `docs/developer-center/core/module-catalog.md` (NOVO, traduzido pra pt-br) — Documentação completa do catálogo
+- `docs/developer-center/core/module-catalog.md` (traduzido pra pt-br, atualizado pra `submissions/` + `mod_url` aninhado) — Documentação completa do catálogo
 - `docs/INDEX.md` — Link adicionado pro novo doc
 - `app/doc_engine/__init__.py` — Seção "## Module Catalog" adicionada ao export de contexto de IA
+- `README.md` (`Tech.Forge`) — badge de testes, roadmap, seção de endpoints `/catalog/*`
 
 ### Repositório externo `julianscunha/Tech.Forge.Modules`
-- `.github/workflows/update-modules-readme.yml` — Estendido com o passo de `build-index`
+- `.github/workflows/update-modules-readme.yml` — build-index + poda + PR automático + PAT + retry de checks
+- `.github/workflows/validate-modules.yml` — paths/loop migrados pra `submissions/**`
+- `scripts/generate_modules_readme.py` — lê `modules/index.json` em vez de escanear manifest solto
+- `scripts/preview_pr_modules.py` — funde índice publicado + `submissions/` da PR
+- `scripts/check_manifest_quality.py`, `scripts/prune_packaged_sources.py` — apontam pra `submissions/`
+- `scripts/prune_packaged_sources.py` (novo, depois simplificado) — poda `submissions/<id>/`
+- `.gitignore` (novo — não existia)
+- `CONTRIBUTING.md`, `README.md` — fluxo completo `submissions/` → `modules/` documentado
+- Migração do `system_information_service` pro layout aninhado
 
 ### Sem Mudanças Necessárias
 - Frontend (Slice 7 já completo; nenhuma feature nova necessária)
-- CLI (Slice 6 já completo; nenhuma feature nova necessária)
 - Spec de manifest (nenhum campo novo necessário)
 
 ---
@@ -324,8 +380,8 @@ removida entrada obsoleta sobre `RemoteRepositoryProvider` (superado pelos provi
 Fase 11).
 
 ### Atualização de README.md ✅
-Badge atualizado com a contagem final de testes (602); roadmap (gantt) corrigido — Fase 11
-estava marcada como "active" mesmo já fechada; seção de endpoints `/api/v1/catalog/*` e
+Badge atualizado com a contagem final de testes; roadmap (gantt) corrigido — Fase 11 estava
+marcada como "active" mesmo já fechada; seção de endpoints `/api/v1/catalog/*` e
 `install-remote`/`install-jobs` adicionada à API Reference.
 
 ### Limpeza de Git ✅
@@ -334,16 +390,19 @@ estava marcada como "active" mesmo já fechada; seção de endpoints `/api/v1/ca
 - Commit final da fase menciona "Fase 11 complete"
 
 ### Validação online real ponta a ponta ✅
-Rodado o fluxo completo catálogo→instalação manualmente contra os dois tipos de fonte real:
-custom (repositório `julianscunha/Tech.Forge.Modules` já publicado) e oficial (`index.json`
-real gerado localmente e servido via HTTP local, já que a CI de empacotamento ainda não
-existia). Achados e corrigidos 2 bugs reais em `CustomCatalogProvider`, invisíveis à suíte
-mockada — ver "Pós-fechamento: validação real ponta a ponta" acima. Adicionados 2 testes de
-regressão (602 no total).
+Rodado o fluxo completo contra os dois tipos de fonte real: custom (repositório
+`julianscunha/Tech.Forge.Modules`) e oficial (`raw.githubusercontent.com` real, com o
+`mod_url` aninhado final, não mais servidor local). Além disso — pela primeira vez nesta
+fase — validado via **HTTP de verdade**: servidor `uvicorn` real, `POST
+/api/v1/marketplace/install-remote/{id}` → polling até `DONE` → confirmado em `GET
+/api/v1/registry/modules` → removido via `DELETE /api/v1/marketplace/remove/{id}`. E uma PR
+de teste real (`submissions/e2e_test_module/`) foi aberta, validada, mergeada e publicada
+pela CI sozinha, do zero até o fim, sem intervenção manual em nenhum passo intermediário.
 
-### CI de empacotamento do catálogo oficial ⏳ PR aberto
-Extensão de CI planejada e nunca entregue durante os Slices 1–8 — implementada e submetida
-como PR (não mergeada ainda; ver "CI de Empacotamento do Catálogo Oficial" acima para o link).
+### CI de empacotamento do catálogo oficial ✅
+Extensão de CI planejada e nunca entregue durante os Slices 1–8 — implementada, testada com
+uma PR real de ponta a ponta, e com a arquitetura `submissions/` + `modules/` final (ver
+"CI de Empacotamento do Catálogo Oficial" acima). PRs #2–#11 no `Tech.Forge.Modules`.
 
 ---
 
@@ -355,7 +414,11 @@ como PR (não mergeada ainda; ver "CI de Empacotamento do Catálogo Oficial" aci
 4. ❌ Adapters GitLab/Gitea/genéricos (Fase 18.1)
 5. ❌ Daemon de polling em background (Fase 13)
 6. ❌ Notificações via webhook (Fase 14)
-7. ❌ Histórico de versionamento de módulo (Fase 15)
+7. ⚠️ Instalar/consultar uma versão antiga específica de um módulo (Fase 15) — o **armazenamento**
+   de histórico já existe (todo `.mod` publicado fica em `modules/<id>/`, nunca sobrescrito),
+   mas nada no Core ou na API expõe ou instala uma versão que não seja a listada em
+   `index.json` (sempre a mais recente). A base para a Fase 15 já está no lugar; falta só a
+   camada de consulta/instalação por versão.
 
 ---
 
@@ -366,19 +429,23 @@ A Fase 12 (Configuration & Persistence) pode construir sobre a Fase 11 sem mudan
 - URLs de fonte de catálogo são armazenadas em SQLite (persistem entre restarts)
 - Cache é em memória (sem necessidade de persistência conforme spec)
 - Nenhuma migração de dados necessária
+- `PackageManager.update()` agora preserva `data/` do módulo entre versões — relevante pra
+  qualquer decisão futura de persistência por módulo
 
 ---
 
 ## Checklist de QA
 
-- ✅ Todos os testes passam (602 no total)
+- ✅ Todos os testes passam (708 no total — backend + CLI)
 - ✅ Fluxo online real validado ponta a ponta contra as duas fontes reais (custom e oficial), não só mocks
+- ✅ Fluxo validado via HTTP real (`uvicorn` rodando, endpoints reais, não só nível de serviço)
+- ✅ PR real de contribuidor validada ponta a ponta no `Tech.Forge.Modules` (abertura → validate → merge → publicação automática)
 - ✅ Build do frontend passa sem warnings (`npm run build`)
 - ✅ Comandos de CLI funcionam (`techforge catalog list`, etc.)
-- ✅ Nenhum problema de segurança introduzido (notificações só usam metadado público, nenhuma credencial exposta)
-- ✅ Documentação completa (Developer Center + AI context), em pt-br
+- ✅ Nenhum problema de segurança introduzido (notificações só usam metadado público, nenhuma credencial exposta; PAT do bot é fine-grained, escopo mínimo, só nesse repo)
+- ✅ Documentação completa (Developer Center + AI context + CONTRIBUTING.md/README.md do repo externo), em pt-br
 - ✅ Limitações conhecidas documentadas
-- ⏳ CI de empacotamento do catálogo oficial: PR aberto (pendência do plano original), aguardando merge do usuário
+- ✅ CI de empacotamento do catálogo oficial implementada e validada ao vivo
 - ✅ Commits atômicos e bem descritos
 
 ---
