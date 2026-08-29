@@ -17,6 +17,7 @@ from typing import Any, Optional
 
 from app.core.settings import settings
 from app.module_runtime.paths import ModulePaths
+from app.security.secret_store import ModuleSecretStore
 from app.services.module_storage import ModuleKVStorage
 
 
@@ -30,6 +31,7 @@ class ModuleExecutionContext:
     logger:         logging.Logger
     paths:          ModulePaths
     storage:        ModuleKVStorage
+    secrets:        ModuleSecretStore
     cancellation:   Optional[Any] = None
     metadata:       dict[str, Any] = field(default_factory=dict)
 
@@ -52,4 +54,5 @@ class ModuleExecutionContext:
             logger=logging.getLogger(f"techforge.module.{module_id}"),
             paths=ModulePaths.for_module(settings.MODULES_INSTALLED_PATH / module_id),
             storage=ModuleKVStorage(module_id),
+            secrets=ModuleSecretStore(module_id),
         )

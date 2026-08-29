@@ -11,11 +11,25 @@ from app.module_engine import journal as loader_journal
 from app.module_engine.plugin_loader import mount_module_routers
 from app.runtime import runtime
 from app.doc_engine import doc_indexer
+from app.security.redaction import SecretRedactionFilter
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+
+
+def _install_secret_redaction_filter(logger: logging.Logger | None = None) -> None:
+    """Fase 12 §28 — filtro no Handler (não no Logger): registros propagados
+    de loggers filhos (techforge.module.*) só passam pelos filtros do
+    Handler, nunca pelo Logger.filter() de um ancestral."""
+    target = logger or logging.getLogger()
+    for handler in target.handlers:
+        handler.addFilter(SecretRedactionFilter())
+
+
+_install_secret_redaction_filter()
+
 logger = logging.getLogger("techforge.core")
 
 
