@@ -1,8 +1,10 @@
 """techforge migrations — Alembic status/run CLI (Fase 12 §14/§30).
 
-Consome a API do Core (/api/v1/system/migrations/status) e o próprio
-Alembic (upgrade head roda contra o mesmo banco do Core, mesma URL de
-`app.core.settings`) — nenhuma lógica de migration duplicada aqui.
+Acesso direto ao Alembic/SQLite (não via HTTP) — de propósito: precisa
+funcionar mesmo com a plataforma parada (ex.: logo após clonar o repo,
+antes do primeiro `techforge platform start`). O frontend, que só tem
+acesso HTTP, consome `GET /api/v1/system/migrations/status` em vez disso
+(mesma lógica, exposta como API — ver app/api/routes/system.py).
 """
 from __future__ import annotations
 
@@ -29,7 +31,6 @@ def status_cmd():
     from app.db import migrations as db_migrations
     from app.db.database import settings
     import sqlite3
-    from urllib.parse import urlparse
 
     head = db_migrations.head_revision()
     current = None
