@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -23,6 +23,16 @@ import yaml
 
 class ManifestError(Exception):
     """Raised when a manifest.yaml is missing, malformed, or invalid."""
+
+
+# ── Module configuration fields (Fase 12 §10) ───────────────────────────────────
+
+@dataclass
+class ConfigField:
+    """Um campo de `configuration.fields` do manifest — tipado e validável."""
+    id: str
+    type: str
+    default: Optional[Any] = None
 
 
 # ── Parsed Manifest dataclass ─────────────────────────────────────────────────
@@ -77,6 +87,9 @@ class ParsedManifest:
     # ── Dependency Governance (Fase 8.1 §16) — raw, typed by DependencyParser ─
     dependencies: list[dict] = field(default_factory=list)
 
+    # ── Module configuration (Fase 12 §10) ────────────────────────────────────
+    configuration_fields: list[ConfigField] = field(default_factory=list)
+
     # ── Raw YAML — preserved for Developer Mode ─────────────────────────────
     raw: dict = field(default_factory=dict, repr=False)
 
@@ -124,6 +137,41 @@ def _parse_documentation_versioning(raw: dict) -> dict:
 
 def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(int(p) for p in v.split("."))
+
+
+_VALID_CONFIG_TYPES = {"string", "integer", "float", "boolean"}
+
+
+def _parse_configuration_fields(raw: dict) -> list[ConfigField]:
+    """Parse optional configuration.fields block (Fase 12 §10)."""
+    configuration = raw.get("configuration")
+    if not configuration:
+        return []
+    if not isinstance(configuration, dict):
+        raise ManifestError("Field 'configuration' must be a mapping with a 'fields' list.")
+    fields_raw = configuration.get("fields") or []
+    if not isinstance(fields_raw, list):
+        raise ManifestError("Field 'configuration.fields' must be a list.")
+
+    seen_ids: set[str] = set()
+    fields: list[ConfigField] = []
+    for entry in fields_raw:
+        if not isinstance(entry, dict) or not entry.get("id") or not entry.get("type"):
+            raise ManifestError(
+                f"Each configuration field needs 'id' and 'type', got: {entry!r}"
+            )
+        field_id = str(entry["id"]).strip()
+        field_type = str(entry["type"]).strip().lower()
+        if field_type not in _VALID_CONFIG_TYPES:
+            raise ManifestError(
+                f"configuration field {field_id!r} has unknown type {field_type!r}; "
+                f"must be one of {sorted(_VALID_CONFIG_TYPES)}"
+            )
+        if field_id in seen_ids:
+            raise ManifestError(f"Duplicate configuration field id: {field_id!r}")
+        seen_ids.add(field_id)
+        fields.append(ConfigField(id=field_id, type=field_type, default=entry.get("default")))
+    return fields
 
 
 # ── Required fields ───────────────────────────────────────────────────────────
@@ -269,5 +317,6 @@ class ManifestParser:
             source_type=str(raw.get("source_type", "local")).strip().lower(),
             source_location=raw.get("source_location") or None,
             dependencies=list(raw.get("dependencies") or []),
+            configuration_fields=_parse_configuration_fields(raw),
             raw=raw,
         )
