@@ -297,15 +297,34 @@ def build_index_cmd(modules_dir, output):
     # ── Write index.json ───────────────────────────────────────────────────────
 
     print_info("Writing catalog index…")
-    index_data = {"modules": sorted(index_entries, key=lambda m: m["id"])}
+
+    # Merge with whatever index.json already exists at --output, keyed by
+    # id — never overwrite wholesale. A single run only ever sees the
+    # modules currently present in the *source* dir (e.g. Tech.Forge.Modules'
+    # submissions/, which only holds what's in-flight for one PR/merge);
+    # blindly replacing index.json would silently drop every
+    # previously-published module not part of this run.
     index_file = output_path / "index.json"
+    existing_entries: dict[str, dict] = {}
+    if index_file.exists():
+        try:
+            existing_data = json.loads(index_file.read_text(encoding="utf-8"))
+            existing_entries = {m["id"]: m for m in existing_data.get("modules", [])}
+        except (json.JSONDecodeError, KeyError):
+            print_muted(f"  Ignoring unreadable existing {index_file.name}")
+
+    for entry in index_entries:
+        existing_entries[entry["id"]] = entry
+
+    index_data = {"modules": sorted(existing_entries.values(), key=lambda m: m["id"])}
     index_file.write_text(
         json.dumps(index_data, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 
     print_section("Catalog Complete")
-    print_muted(f"Modules:   {len(index_entries)}")
+    print_muted(f"Built this run: {len(index_entries)}")
+    print_muted(f"Total in catalog: {len(index_data['modules'])}")
     print_muted(f"Location:  {output_path}")
     print_success(f"Index:     {index_file.name}")
     console.print()

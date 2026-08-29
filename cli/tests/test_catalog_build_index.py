@@ -197,3 +197,101 @@ def test_build_index_round_trip_validation(runner, modules_dir, tmp_path):
                 assert len(manifest_content) > 0
         except zipfile.BadZipFile:
             pytest.fail(f"{mod_file.name} is not a valid ZIP archive")
+
+
+def test_build_index_merges_with_existing_index_instead_of_overwriting(runner, tmp_path):
+    """
+    Regression: a single build-index run only ever sees the modules currently
+    present in the source dir (e.g. Tech.Forge.Modules' submissions/, which
+    only holds whatever is in-flight for this PR/merge). Overwriting
+    index.json wholesale from that partial view would silently drop every
+    previously-published module from the catalog. New entries must merge
+    into (add/update by id), never replace, whatever index.json already had.
+    """
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+
+    # Pre-existing published module — nested layout, as build-index itself
+    # would have produced it in an earlier run.
+    (output_dir / "already_published").mkdir()
+    (output_dir / "already_published" / "already_published-1.0.0.mod").write_bytes(b"fake")
+    (output_dir / "index.json").write_text(
+        json.dumps({"modules": [{
+            "id": "already_published",
+            "name": "Already Published",
+            "version": "1.0.0",
+            "category": "Old",
+            "vendor": "V",
+            "author": "A",
+            "description": "Published in a previous run.",
+            "mod_url": "already_published/already_published-1.0.0.mod",
+            "checksum": "0" * 64,
+        }]}),
+        encoding="utf-8",
+    )
+
+    # This run only has ONE module to build — a different one, as would
+    # happen when only one module is currently in submissions/.
+    source_dir = tmp_path / "submissions"
+    source_dir.mkdir()
+    new_mod = source_dir / "brand_new"
+    (new_mod / "backend").mkdir(parents=True)
+    (new_mod / "frontend").mkdir(parents=True)
+    (new_mod / "manifest.yaml").write_text(
+        "id: brand_new\nname: Brand New\nversion: 1.0.0\n"
+        "description: A fresh module\ncategory: New\nvendor: V\nauthor: A\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        catalog_cmd,
+        ["build-index", str(source_dir), "--output", str(output_dir)],
+    )
+    assert result.exit_code == 0, result.output
+
+    index_data = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
+    ids = {m["id"] for m in index_data["modules"]}
+    assert ids == {"already_published", "brand_new"}, (
+        "build-index must merge with the existing index.json, not overwrite it"
+    )
+    # The untouched module's own .mod file must still be there too.
+    assert (output_dir / "already_published" / "already_published-1.0.0.mod").exists()
+
+
+def test_build_index_replaces_entry_for_updated_module(runner, tmp_path):
+    """A module rebuilt with a newer version replaces its own index entry
+    (by id) but leaves other modules' entries untouched."""
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "my_mod").mkdir()
+    (output_dir / "index.json").write_text(
+        json.dumps({"modules": [{
+            "id": "my_mod", "name": "My Mod", "version": "1.0.0",
+            "category": "C", "vendor": "V", "author": "A", "description": "D",
+            "mod_url": "my_mod/my_mod-1.0.0.mod", "checksum": "0" * 64,
+        }]}),
+        encoding="utf-8",
+    )
+
+    source_dir = tmp_path / "submissions"
+    mod_dir = source_dir / "my_mod"
+    (mod_dir / "backend").mkdir(parents=True)
+    (mod_dir / "frontend").mkdir(parents=True)
+    (mod_dir / "manifest.yaml").write_text(
+        "id: my_mod\nname: My Mod\nversion: 1.0.1\n"
+        "description: Updated\ncategory: C\nvendor: V\nauthor: A\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        catalog_cmd,
+        ["build-index", str(source_dir), "--output", str(output_dir)],
+    )
+    assert result.exit_code == 0, result.output
+
+    index_data = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
+    assert len(index_data["modules"]) == 1
+    assert index_data["modules"][0]["version"] == "1.0.1"
+    # Old version's .mod file is untouched (history preserved on disk),
+    # even though index.json now points at the new one.
+    assert (output_dir / "my_mod" / "my_mod-1.0.1.mod").exists()
