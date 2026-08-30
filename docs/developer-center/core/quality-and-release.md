@@ -139,7 +139,13 @@ Passo a passo pra cortar uma release nova do Core:
    não força seção vazia) + `Known Issues` com as limitações que
    realmente importam pra quem vai usar a release (não é o lugar pra
    despejar todo débito técnico interno — isso fica em
-   `tasks/phase-audit.md`).
+   `tasks/phase-audit.md`). **Cada bullet/parágrafo numa linha só, sem
+   quebra manual no meio do texto** — o corpo do GitHub Release usa o
+   modo "gfm" de renderização (igual issue/PR/comentário), onde toda
+   quebra de linha simples vira `<br>` literal; isso NÃO acontece com
+   arquivos do repositório (README, Developer Center — esses usam outro
+   modo, quebra de linha é só espaço). Wrap manual no `CHANGELOG.md` faz
+   o texto do release aparecer com linhas curtas paradas no meio da tela.
 2. Atualizar `PLATFORM_VERSION` em `app/core/settings.py` e `"version"`
    em `core/frontend/package.json` pro mesmo valor (§24 — fonte única;
    há um teste de guarda que trava se divergirem).
