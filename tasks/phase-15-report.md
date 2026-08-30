@@ -197,4 +197,4 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `pytest tests -q` → 720 passed, 3 skipped (era 718 — 2 novos: e2e + smoke).
 
-**Commit**: (a seguir)
+**Commit**: `a9a503c`
