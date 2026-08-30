@@ -161,4 +161,4 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `pytest tests -q` → 712 passed, 3 skipped (era 710 — 2 novos); `npm run build` confirmado gerando o artefato.
 
-**Commit**: (a seguir)
+**Commit**: `b110879`
