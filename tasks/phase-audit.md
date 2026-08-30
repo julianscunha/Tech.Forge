@@ -59,22 +59,3 @@ pra avaliar viabilidade de resolver, sem reabrir 15 arquivos toda vez.
 
 **Já resolvidas** (mantido aqui só pra registrar que a busca as considerou, sem preencher a lista de pendências): `eslint` ausente do frontend (Fases 2/3/5/12 → resolvido na Fase 15); "Discovery em escala" do Service Registry sem busca (Fase 8 → resolvido no mesmo ciclo, ver `tasks/phase8-followup-capability-search.md`); `Header.tsx` bell placeholder (aguardava Fase 2 → `NotificationBell` real, confirmado em código); `ModuleHost.tsx` dynamic import de `entry_frontend` (aguardava Fase 9 → mecanismo real implementado, confirmado em código — só o item da Fase 3 acima, sobre o hello_world não estar compilado, continua aberto).
 
-## Nota para o plano da Fase 4 (decisão 2026-08-25)
-
-Incluir no escopo da Fase 4 a integração `NotificationsSDK.push()` (sdk/python)
-→ `NotificationService` do Core (`POST /api/v1/notifications`, campo module_id),
-pois nenhuma fase atribui explicitamente esse canal. A Fase 4 é a primeira
-consumidora da Notification Foundation (spec §20: install/fail/incompatibility/
-activate/deactivate/remove devem notificar — "não criar um segundo sistema").
-Logs de módulo (contexto de log próprio) ficam cobertos pela Fase 9 §22.
-
-## Diretrizes do usuário para a Fase 4 (decisão 2026-08-25, confirmadas)
-
-1. Semântica do disable = POUPAR RECURSOS: módulo DISABLED não carrega entry_backend
-   no startup (lazy loading), não loga, não aparece na navegação, rotas não respondem.
-2. Hot-disable em runtime: decidir no plano se entra ou fica para depois
-   (desmontagem quente é mais complexa — imports já feitos).
-3. Activate/deactivate via API + UI (botões Marketplace/Modules) + notificações
-   via Notification Foundation (spec Fase 4 §20).
-4. Remove JÁ EXISTE (manager.remove + DELETE /marketplace/remove + hook uninstall);
-   não reimplementar.
