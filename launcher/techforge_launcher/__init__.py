@@ -170,14 +170,35 @@ def _terminate(pid: int) -> bool:
             import signal
             os.kill(pid, signal.SIGTERM)
             for _ in range(30):
-                if not _pid_alive(pid):
+                if _reap_if_child(pid) or not _pid_alive(pid):
                     return True
                 time.sleep(0.2)
             os.kill(pid, signal.SIGKILL)
+            _reap_if_child(pid)
     except Exception as exc:
         logger.warning("Failed to terminate PID %s: %s", pid, exc)
         return False
     return not _pid_alive(pid)
+
+
+def _reap_if_child(pid: int) -> bool:
+    """
+    POSIX only: after SIGTERM/SIGKILL, a child becomes a zombie until its
+    parent calls wait() — `os.kill(pid, 0)` still succeeds on a zombie, so
+    `_pid_alive()` would wrongly report it as alive. Reap it if we are the
+    parent (e.g. our own test/launcher spawned it via subprocess.Popen);
+    no-op if we aren't (e.g. `techforge stop` invoked as a separate process
+    targeting a PID from the state file) — nothing we can do about that
+    zombie's reaping from outside anyway.
+
+    Returns True if the process was confirmed gone (reaped or already
+    reaped by someone else).
+    """
+    try:
+        reaped_pid, _ = os.waitpid(pid, os.WNOHANG)
+        return reaped_pid == pid
+    except ChildProcessError:
+        return False
 
 
 def _spawn(cmd: list[str], cwd: Path, log_file: Path, env: dict | None = None) -> int:
