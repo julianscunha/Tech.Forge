@@ -117,4 +117,20 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `2e9ad25`
 
+### Slice 9 — Release Readiness Report
+
+**Arquivos**: `core/backend/app/services/release_readiness.py`, `core/backend/app/api/routes/release.py` (novos), `core/backend/app/api/__init__.py` (registro), `cli/techforge_cli/commands/release.py` (novo), `cli/techforge_cli/main.py` (registro + fix), `core/backend/tests/test_phase15_release_readiness.py`, `cli/tests/test_phase15_release_check_command.py` (novos).
+
+**O quê**: `compute_release_readiness()` agrega 5 checks vivos reaproveitando serviços já existentes (não recalcula nada em paralelo, spec §2): `version_consistency` (SemVer, Slice 7), `changelog` (formato + versão atual documentada, Slice 8), `documentation` (DocCompletenessChecker, Fase 7), `migrations` (Fase 12), `storage` (Fase 12). `GET /api/v1/release/readiness` expõe isso. **Tests e Build ficam fora do agregador vivo** — rodar a suíte pytest inteira (~70s) ou `npm run build` dentro do processo do próprio servidor avaliado é pesado e circular; `techforge release-check` (CLI) roda os dois via `subprocess`, soma ao relatório vivo (obtido via HTTP) e decide READY/BLOCKED (spec §37), com `--skip-tests`/`--skip-build` para iteração rápida.
+
+**Achados reais corrigidos nesta slice**:
+1. `_check_documentation()` inicialmente contava módulos `INVALID` (pastas `some_module/test_module/unknown` — lixo de `data/` deixado por execuções de teste anteriores contra o dev DB real, sem manifest) como "documentação incompleta" — falso negativo. Corrigido pra só avaliar módulos `INSTALLED`/`DISABLED` (um módulo que nem carrega já é bloqueado por outro gate, não faz sentido cobrar doc dele).
+2. `cli/techforge_cli/main.py` tinha `@click.version_option("1.0.0", ...)` **hardcoded**, uma segunda fonte de verdade divergente de `PLATFORM_VERSION` (violação direta do §24: "evitar múltiplas fontes de verdade"). Corrigido pra usar `settings.PLATFORM_VERSION`.
+
+**Aceite**: baseline atual reporta `ready: True`; CLI sai com código != 0 quando qualquer check (vivo, tests ou build) falha ou a plataforma está inacessível.
+
+**Teste**: backend `pytest tests -q` → 703 passed, 3 skipped (era 701 — 2 novos); cli `pytest tests -q` → 110 passed (era 106 — 4 novos); `ruff check` limpo.
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)

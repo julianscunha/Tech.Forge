@@ -12,6 +12,12 @@ Usage:
     techforge --help
     techforge create-module --help
 """
+# app.core.settings.PLATFORM_VERSION é a única fonte de versão (spec Fase 15
+# §24) — os módulos de comando acima já inserem core/backend em sys.path
+# como efeito colateral, mas fazemos de novo aqui por robustez.
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+
 import click
 
 from techforge_cli.commands.catalog import catalog_cmd
@@ -19,7 +25,6 @@ from techforge_cli.commands.config import config_cmd
 from techforge_cli.commands.create_module import create_module_cmd
 from techforge_cli.commands.docs import docs_cmd
 from techforge_cli.commands.migrations import migrations_cmd
-from techforge_cli.commands.version import version_cmd
 from techforge_cli.commands.module_trust import (
     integrity_cmd,
     publishers_cmd,
@@ -28,15 +33,23 @@ from techforge_cli.commands.module_trust import (
 from techforge_cli.commands.modules import modules_cmd
 from techforge_cli.commands.package_module import package_module_cmd
 from techforge_cli.commands.platform import dev_cmd, logs_cmd, start_cmd, status_cmd, stop_cmd
+from techforge_cli.commands.release import release_check_cmd
 from techforge_cli.commands.runtime import runtime_cmd
 from techforge_cli.commands.services import services_cmd
 from techforge_cli.commands.storage import storage_cmd
 from techforge_cli.commands.validate_module import validate_module_cmd
+from techforge_cli.commands.version import version_cmd
 from techforge_cli.console import print_banner
+
+_CORE_BACKEND = Path(__file__).resolve().parents[2] / "core" / "backend"
+if str(_CORE_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_CORE_BACKEND))
+
+from app.core.settings import settings  # noqa: E402
 
 
 @click.group()
-@click.version_option("1.0.0", prog_name="TechForge CLI")
+@click.version_option(settings.PLATFORM_VERSION, prog_name="TechForge CLI")
 def cli():
     """
     TechForge Module Development CLI
@@ -81,6 +94,7 @@ cli.add_command(storage_cmd)   # Fase 12 Slice 1 — storage status
 cli.add_command(migrations_cmd)  # Fase 12 Slice 2 — migrations status/run
 cli.add_command(config_cmd)      # Fase 12 Slice 10 — config export
 cli.add_command(version_cmd)     # Fase 15 Slice 7 — version
+cli.add_command(release_check_cmd)  # Fase 15 Slice 9 — release-check
 
 
 def main():

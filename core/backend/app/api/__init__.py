@@ -17,6 +17,7 @@ from app.api.routes.platform import router as platform_router
 from app.api.routes.platform_config import router as platform_config_router
 from app.api.routes.publishers import router as publishers_router
 from app.api.routes.registry import router as registry_router
+from app.api.routes.release import router as release_router
 from app.api.routes.services import router as services_router
 from app.api.routes.system import router as system_router
 from app.runtime.routes import router as runtime_router
@@ -45,3 +46,4 @@ api_router.include_router(catalog_router)              # Fase 11 — Module Cata
 api_router.include_router(system_router)               # Fase 12 — Storage & Persistence
 api_router.include_router(module_config_router)         # Fase 12 — Module Configuration
 api_router.include_router(platform_config_router)       # Fase 12 — Platform Configuration (GET /config)
+api_router.include_router(release_router)               # Fase 15 — Release Readiness Report
