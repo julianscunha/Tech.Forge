@@ -252,4 +252,4 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste final**: `pytest tests -q` → 721 passed, 3 skipped (era 720 — 1 novo); `cli pytest tests -q` → 113 passed; `ruff check` limpo; `npm run lint`/`build` limpos.
 
-**Commit**: (a seguir)
+**Commit**: `34a4c47`
