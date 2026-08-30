@@ -80,22 +80,27 @@ planos por fase em [`tasks/`](../tasks/).
 | 8.1 | [phases/08.1](phases/08.1-Fase-08.1-Dependency-Governance.md) | Dependency Governance: declaração, direção, ciclos, lifecycle |
 | 9 | [phases/09](phases/09-Fase-09-Module-Runtime-Execution.md) | Module Runtime & Execution: lifecycle hooks reais, ExecutionContext, Focus Mode |
 | 10 | [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust: hash por-arquivo, publisher, trust level |
+| 11 | [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace Distribution |
+| 12 | [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration & Persistence |
+| 15 | [phases/15](phases/15-Fase-15-Platform-Quality-Testing-Release-Engineering.md) | Quality, Testing & Release |
 
-### Pendentes
+### Adiadas (decisão do usuário — sem prioridade de multiusuário/servidor/ecossistema externo agora)
 
 | Fase | Spec | Tema |
 |---|---|---|
-| 11 | [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace Distribution |
-| 12 | [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration & Persistence |
 | 13 | [phases/13](phases/13-Fase-13-Central-Server-Multi-User-Readiness.md) | Central Server Readiness (Linux) |
-| 14 | [phases/14](phases/14-Fase-14-Observability-Telemetry-Diagnostics.md) | Observability & Diagnostics |
-| 15 | [phases/15](phases/15-Fase-15-Platform-Quality-Testing-Release-Engineering.md) | Quality, Testing & Release |
-| 16 | [phases/16](phases/16-Fase-16-Desktop-Distribution-User-Experience.md) | Desktop Distribution & UX |
-| 17 | [phases/17](phases/17-Fase-17-Platform-Security-Trust-Hardening.md) | Security Hardening |
-| 18 | [phases/18](phases/18-Fase-18-Platform-Finalization-Architecture-Consolidation.md) | Finalização & Consolidação |
 | 18.1 | [phases/18.1](phases/18.1-Fase-18.1-External-Module-Sources-Module-Declaration.md) | External Module Sources |
 | 19 | [phases/19](phases/19-Fase-19-Public-Release-Readiness-Open-Ecosystem.md) | Public Release Readiness |
 | 20 | [phases/20](phases/20-Fase-20-Long-Term-Core-Governance-Ecosystem-Maintenance.md) | Governança de longo prazo |
+
+### Pendentes (ordem recomendada: 14 → 16 → 17 → 18)
+
+| Fase | Spec | Tema |
+|---|---|---|
+| 14 | [phases/14](phases/14-Fase-14-Observability-Telemetry-Diagnostics.md) | Observability & Diagnostics |
+| 16 | [phases/16](phases/16-Fase-16-Desktop-Distribution-User-Experience.md) | Desktop Distribution & UX |
+| 17 | [phases/17](phases/17-Fase-17-Platform-Security-Trust-Hardening.md) | Security Hardening |
+| 18 | [phases/18](phases/18-Fase-18-Platform-Finalization-Architecture-Consolidation.md) | Finalização & Consolidação |
 
 ## 6. Exemplos de módulos (referência)
 
