@@ -31,4 +31,20 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `pytest tests -q` → 672 passed, 3 skipped (era 666 — 6 testes novos de fixture).
 
+**Commit**: `29ced73`
+
+### Slice 3 — Architecture tests
+
+**Arquivos**: `core/backend/tests/test_phase15_architecture.py` (novo).
+
+**O quê**: 3 regras via `ast-grep` (chamado por `subprocess`, path resolvido com `shutil.which` + wrapper `cmd /c` no Windows porque `ast-grep.cmd` — shim npm — não é invocável direto via `CreateProcess`): (1) módulo instalado nunca importa `app.*` (interno do Core) — deve usar o SDK; (2) módulo instalado nunca importa outro módulo diretamente (`modules.installed.<outro>`); (3) `ModuleKVStorage.get/set/transaction` nunca aceita `module_id` como parâmetro de chamada (guarda de regressão da decisão estrutural da Fase 12, via `inspect.signature`, sem depender de ast-grep). As regras de tipo de dependência (Application→Service permitido, Service→Application bloqueado) **já existem** em `test_phase8_1_dependency_governance.py` (Fase 8.1) — não duplicadas aqui.
+
+**Decisão-chave**: `ast-grep` via subprocess, não `import-linter` — evita dependência Python nova, reaproveita ferramenta já mandatória (CLAUDE.md). Testes usam `skipif` se `ast-grep` não estiver no PATH (não quebra CI/dev sem a ferramenta instalada, mas roda de verdade quando disponível — confirmado nesta máquina).
+
+**Aceite**: baseline atual (hello_world, veeam_m365 e demais `modules/installed/`) já está limpo — 0 violações. Detecção real confirmada manualmente injetando um `import app` num diretório temporário fora do repo e vendo o ast-grep reportar o match antes de remover o teste manual.
+
+**Teste**: `pytest tests -q` → 678 passed, 3 skipped (era 672 — 6 testes novos).
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)
