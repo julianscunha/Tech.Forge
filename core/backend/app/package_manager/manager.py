@@ -212,6 +212,8 @@ class PackageManager:
             if failed:
                 msg = "Invalid dependencies: " + "; ".join(f"{c.name}: {c.detail}" for c in failed)
                 operation_log.record("install", module_id, version, "invalid_dependencies", msg)
+                from app.observability.errors import capture_error_async
+                await capture_error_async("dependency", msg, module_id=module_id)
                 return self._fail_install(module_id, version, msg)
 
         # ── 5. Extract ────────────────────────────────────────────────────────

@@ -17,6 +17,7 @@ import uuid
 from app.core.settings import settings
 from app.module_runtime.loader import ModuleLoadError, load_module_file
 from app.observability.context import bind_log_context
+from app.observability.errors import capture_error
 from app.observability.metrics import metric_emitter
 from app.service_registry.descriptor import ServiceStatus
 from app.service_registry.errors import (
@@ -132,6 +133,8 @@ def invoke(service_id: str, export_name: str, **kwargs):
             metric_emitter.counter("execution_failures").inc()
             metric_emitter.histogram("execution_duration").observe(duration)
             _persist_execution_history(execution_id, descriptor.module_id, "FAILED", duration, str(exc))
+            capture_error("execution", f"Execution of {service_id}.{export_name} failed",
+                         module_id=descriptor.module_id, execution_id=execution_id, detail=str(exc))
             # §15 — não expor stack trace interno de outro módulo ao chamador;
             # o detalhe fica só no log do Core.
             logger.warning("Execution of %s.%s failed: %s", service_id, export_name, exc)

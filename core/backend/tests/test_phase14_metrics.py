@@ -80,13 +80,20 @@ class TestHistogram:
 
 class TestTimer:
 
-    def test_records_duration_into_histogram(self):
+    def test_records_duration_into_histogram(self, monkeypatch):
+        # Tempo determinístico — sleep() real é sujeito a jitter do SO
+        # (observado em CI/execução sob carga: elapsed às vezes arredonda
+        # pra 0.0 com sleeps curtos), o que tornava esse teste instável.
+        import app.observability.metrics as metrics_module
+        ticks = iter([100.0, 100.25])
+        monkeypatch.setattr(metrics_module.time, "monotonic", lambda: next(ticks))
+
         emitter = MetricEmitter()
         with emitter.timer("op"):
-            time.sleep(0.01)
+            pass
         snap = emitter.histogram("op").snapshot()
         assert snap["count"] == 1
-        assert snap["min"] > 0
+        assert snap["min"] == 0.25
 
 
 class TestMetricEmitterSnapshot:

@@ -33,6 +33,6 @@ def test_migrations_status_reports_head_and_current_up_to_date(client):
     resp = client.get("/api/v1/system/migrations/status")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["head"] == "0004"
-    assert data["current"] == "0004"
+    assert data["head"] == "0005"
+    assert data["current"] == "0005"
     assert data["up_to_date"] is True

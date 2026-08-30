@@ -20,6 +20,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Callable, Optional
 
+from app.observability.errors import capture_error
 from app.observability.events import event_bus
 from app.observability.metrics import metric_emitter
 
@@ -155,6 +156,7 @@ class TechForgeRuntime:
                 self.events.append(RuntimeEvent("degraded", detail))
                 event_bus.publish("runtime.degraded", component=name, pid=pid, detail=detail)
                 metric_emitter.counter("runtime_errors").inc()
+                capture_error("runtime", f"Component '{name}' is no longer running", detail=detail)
         return result
 
     # ── Status ────────────────────────────────────────────────────────────────

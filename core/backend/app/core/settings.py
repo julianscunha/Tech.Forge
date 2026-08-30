@@ -24,6 +24,7 @@ class Settings(BaseSettings):
         "DEBUG": 7, "INFO": 30, "WARNING": 30, "ERROR": 90, "CRITICAL": 90,
     }
     EXECUTION_HISTORY_RETENTION_DAYS: int = 90
+    ERROR_REGISTRY_RETENTION_DAYS: int = 90
 
     # Launcher (Phase 6)
     FRONTEND_PORT: int = 5173
