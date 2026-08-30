@@ -13,6 +13,7 @@ from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
 from app.observability.logging_setup import configure_logging
 from app.observability.retention import cleanup_old_logs
+from app.observability.startup_diagnostics import time_step
 from app.runtime import runtime
 from app.security.redaction import SecretRedactionFilter
 
@@ -46,66 +47,74 @@ async def lifespan(app: FastAPI):
     """
     logger.info("TechForge %s starting up…", settings.PLATFORM_VERSION)
 
-    await init_db()
+    with time_step("database_init"):
+        await init_db()
     logger.info("Database initialized.")
 
     from app.db.database import AsyncSessionLocal
     from app.services.error_registry import ErrorRegistryService
     from app.services.execution_history import ExecutionHistoryService
-    async with AsyncSessionLocal() as db:
-        removed = await ExecutionHistoryService.cleanup_old(db, settings.EXECUTION_HISTORY_RETENTION_DAYS)
-        if removed:
-            logger.info("Execution history cleanup: %d old entries removed.", removed)
-        removed_errors = await ErrorRegistryService.cleanup_old(db, settings.ERROR_REGISTRY_RETENTION_DAYS)
-        if removed_errors:
-            logger.info("Error registry cleanup: %d old entries removed.", removed_errors)
+    with time_step("history_cleanup"):
+        async with AsyncSessionLocal() as db:
+            removed = await ExecutionHistoryService.cleanup_old(db, settings.EXECUTION_HISTORY_RETENTION_DAYS)
+            if removed:
+                logger.info("Execution history cleanup: %d old entries removed.", removed)
+            removed_errors = await ErrorRegistryService.cleanup_old(db, settings.ERROR_REGISTRY_RETENTION_DAYS)
+            if removed_errors:
+                logger.info("Error registry cleanup: %d old entries removed.", removed_errors)
 
-    loader = ModuleLoader()
-    result = await loader.scan_installed()
-    loader_journal.store(result)
+    with time_step("module_loader_scan"):
+        loader = ModuleLoader()
+        result = await loader.scan_installed()
+        loader_journal.store(result)
     logger.info(
         "Module Loader: %d installed, %d invalid, %d incompatible.",
         result.installed, result.invalid, result.incompatible,
     )
 
     # Phase 2+ — Plugin Loader: mount backend routers of INSTALLED modules
-    mounted = mount_module_routers(app)
+    with time_step("plugin_loader_mount"):
+        mounted = mount_module_routers(app)
     logger.info(
         "Plugin Loader: %d router(s) mounted, %d failed.",
         len(mounted.mounted), len(mounted.failed),
     )
 
     # Phase 5 — Documentation Engine
-    count = doc_indexer.rebuild()
+    with time_step("doc_indexer"):
+        count = doc_indexer.rebuild()
     logger.info("Documentation Engine: %d documents indexed.", count)
 
     # Fase 4 §21 — sync registry in-memory → DB (dashboard counters)
     from app.db.database import AsyncSessionLocal
     from app.services.registry_sync import sync_registry_to_db
-    async with AsyncSessionLocal() as db:
-        await sync_registry_to_db(db)
+    with time_step("registry_sync_and_integrity"):
+        async with AsyncSessionLocal() as db:
+            await sync_registry_to_db(db)
 
-        # Fase 10 §15/§28 — verificação de integridade no startup
-        # (event-driven, não é polling — roda uma vez, no boot)
-        from app.module_engine.enums import ModuleStatus
-        from app.module_engine.registry import registry as startup_module_registry
-        from app.module_trust.verification import verify_module_integrity
-        for entry in startup_module_registry.all():
-            if entry.status == ModuleStatus.INSTALLED:
-                try:
-                    await verify_module_integrity(entry.module_id, db)
-                except Exception as exc:
-                    logger.warning("Startup integrity check failed for %s: %s",
-                                   entry.module_id, exc)
+            # Fase 10 §15/§28 — verificação de integridade no startup
+            # (event-driven, não é polling — roda uma vez, no boot)
+            from app.module_engine.enums import ModuleStatus
+            from app.module_engine.registry import registry as startup_module_registry
+            from app.module_trust.verification import verify_module_integrity
+            for entry in startup_module_registry.all():
+                if entry.status == ModuleStatus.INSTALLED:
+                    try:
+                        await verify_module_integrity(entry.module_id, db)
+                    except Exception as exc:
+                        logger.warning("Startup integrity check failed for %s: %s",
+                                       entry.module_id, exc)
 
     # Fase 8 §26 — Discover Service Modules → Register Services
     from app.service_registry import sync as sync_service_registry
-    await sync_service_registry()
+    with time_step("service_registry_sync"):
+        await sync_service_registry()
 
     # Fase 9 §4/§29 — Runtime State reconstruído a partir do Administrative State
     from app.module_engine.registry import registry as module_registry
     from app.module_runtime import module_runtime_registry
-    module_runtime_registry.rebuild(module_registry.all())
+    with time_step("runtime_state_rebuild"):
+        module_runtime_registry.rebuild(module_registry.all())
 
     # Phase 6 — Runtime: platform is READY
     await runtime.fire_startup("platform ready")
