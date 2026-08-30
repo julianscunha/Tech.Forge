@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     # Observability (Fase 14)
     LOG_LEVEL: str = "INFO"
+    LOG_FILE_LEVEL: str | None = None   # None = mesmo nível de LOG_LEVEL
 
     # Launcher (Phase 6)
     FRONTEND_PORT: int = 5173

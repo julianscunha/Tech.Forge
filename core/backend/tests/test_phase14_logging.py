@@ -115,3 +115,22 @@ class TestConfigureLogging:
         assert len(console_handlers) == 1
         assert not isinstance(console_handlers[0].formatter, JsonLogFormatter)
         root.handlers.clear()
+
+    def test_console_and_file_levels_can_diverge(self, tmp_path):
+        configure_logging(level="WARNING", logs_path=tmp_path / "logs", file_level="DEBUG")
+        root = logging.getLogger()
+        console = next(h for h in root.handlers
+                       if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler))
+        file_handler = next(h for h in root.handlers if isinstance(h, logging.FileHandler))
+        assert console.level == logging.WARNING
+        assert file_handler.level == logging.DEBUG
+        # root precisa aceitar DEBUG pra o file handler poder filtrar por conta própria
+        assert root.level == logging.DEBUG
+        root.handlers.clear()
+
+    def test_file_level_defaults_to_console_level(self, tmp_path):
+        configure_logging(level="ERROR", logs_path=tmp_path / "logs")
+        root = logging.getLogger()
+        file_handler = next(h for h in root.handlers if isinstance(h, logging.FileHandler))
+        assert file_handler.level == logging.ERROR
+        root.handlers.clear()

@@ -15,7 +15,8 @@ from app.observability.logging_setup import configure_logging
 from app.runtime import runtime
 from app.security.redaction import SecretRedactionFilter
 
-configure_logging(level=settings.LOG_LEVEL, logs_path=settings.LOGS_PATH)
+configure_logging(level=settings.LOG_LEVEL, logs_path=settings.LOGS_PATH,
+                   file_level=settings.LOG_FILE_LEVEL)
 
 
 def _install_secret_redaction_filter(logger: logging.Logger | None = None) -> None:
