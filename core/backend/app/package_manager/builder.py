@@ -70,6 +70,7 @@ class BuildResult:
     file_count:  int
     size_bytes:  int
     checksum:    str    # SHA-256 of the .mod file — Phase 5: signed over this
+    built_at:    str = ""  # ISO 8601 UTC — Fase 15 §41
 
     @property
     def size_human(self) -> str:
@@ -140,10 +141,11 @@ class PackageBuilder:
             )
 
             # ── META-INF/BUILD ────────────────────────────────────────────────
+            built_at = datetime.now(timezone.utc).isoformat()
             build_meta = {
                 "module_id":   module_id,
                 "version":     version,
-                "built_at":    datetime.now(timezone.utc).isoformat(),
+                "built_at":    built_at,
                 "file_count":  file_count,
                 "format":      "techforge-mod-v1",
                 # Phase 5: add "signature" and "signer" fields here
@@ -165,4 +167,5 @@ class PackageBuilder:
             file_count=file_count,
             size_bytes=archive_path.stat().st_size,
             checksum=sha256,
+            built_at=built_at,
         )

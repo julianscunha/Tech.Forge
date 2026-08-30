@@ -146,3 +146,19 @@ Plano: `tasks/phase15-plan.md`.
 **Teste**: backend `pytest tests -q` → 710 passed, 3 skipped (era 703 — 7 novos); cli `pytest tests -q` → 113 passed (era 110 — 3 novos); `ruff check` limpo.
 
 **Commit**: `5952881`
+
+### Slice 11 — Build artifacts & integrity
+
+**Arquivos**: `core/backend/app/package_manager/builder.py` (modificado), `core/frontend/scripts/generate-build-info.mjs` (novo), `core/frontend/package.json` (postbuild), `core/backend/tests/test_phase15_build_artifacts.py` (novo).
+
+**O quê**: Module Package (.mod) já tinha `checksum`+`version` (Fase 4/5) — `built_at` adicionado ao `BuildResult` (já existia dentro do `META-INF/BUILD` do zip, só não estava exposto no retorno da função). Frontend Build ganhou `dist/build-info.json` (version + checksum sha256 do `index.html` + timestamp) gerado por um script Node puro (sem dependência nova) como postbuild do `npm run build`.
+
+**Achado real corrigido**: `core/frontend/package.json` tinha `"version": "1.0.0"` **hardcoded, independente** de `PLATFORM_VERSION` — mais uma segunda fonte de verdade de versão (mesma categoria do achado da Slice 9 no CLI). Por coincidência os valores já batiam; adicionado teste de guarda pra travar isso antes que divirjam silenciosamente.
+
+**Decisão-chave**: Backend Package (spec §28) e Desktop Distribution não existem como artefato hoje — o backend roda direto de fonte via `uvicorn`, sem etapa de empacotamento. Inventar isso agora seria antecipar a Fase 16 (Desktop Distribution) sem necessidade real — CLAUDE.md proíbe explicitamente antecipar fases futuras.
+
+**Aceite**: `npm run build` gera `dist/build-info.json` válido; teste de guarda do `package.json` passa.
+
+**Teste**: `pytest tests -q` → 712 passed, 3 skipped (era 710 — 2 novos); `npm run build` confirmado gerando o artefato.
+
+**Commit**: (a seguir)
