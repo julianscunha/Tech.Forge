@@ -49,13 +49,14 @@ export function HelpDrawer({ contextId }: { contextId?: string }) {
       <button
         onClick={() => setOpen(true)}
         aria-label={`Ajuda: ${doc.title}`}
+        title="Ajuda"
         className={cn(
-          'flex items-center gap-1 px-2 py-1 rounded text-xs',
+          'flex items-center justify-center w-7 h-7 rounded',
           'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
           'hover:bg-[hsl(var(--bg-subtle))] transition-colors'
         )}
       >
-        <BookOpen size={13} /> Ajuda
+        <BookOpen size={14} />
       </button>
 
       {open && (
