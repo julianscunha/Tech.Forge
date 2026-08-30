@@ -14,6 +14,7 @@ import logging
 
 from app.core.settings import settings
 from app.module_runtime.loader import ModuleLoadError, load_module_file
+from app.observability.metrics import metric_emitter
 from app.service_registry.descriptor import ServiceStatus
 from app.service_registry.errors import (
     CapabilityNotFoundError,
@@ -111,12 +112,15 @@ def invoke(service_id: str, export_name: str, **kwargs):
             f"{descriptor.module_id}/backend/main.py"
         )
 
+    metric_emitter.counter("module_executions").inc()
     try:
-        result = func(**kwargs)
-        if asyncio.iscoroutine(result):
-            result = asyncio.run(result)
+        with metric_emitter.timer("execution_duration"):
+            result = func(**kwargs)
+            if asyncio.iscoroutine(result):
+                result = asyncio.run(result)
         return result
     except Exception as exc:
+        metric_emitter.counter("execution_failures").inc()
         # §15 — não expor stack trace interno de outro módulo ao chamador;
         # o detalhe fica só no log do Core.
         logger.warning("Execution of %s.%s failed: %s", service_id, export_name, exc)

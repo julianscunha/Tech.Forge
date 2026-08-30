@@ -13,6 +13,7 @@ from typing import Optional
 
 from app.module_engine.loader import LoaderResult
 from app.observability.events import event_bus
+from app.observability.metrics import metric_emitter
 
 _last_result: Optional[LoaderResult] = None
 
@@ -23,6 +24,8 @@ def store(result: LoaderResult) -> None:
     event_bus.publish("module_loader.scan", scanned=result.scanned, installed=result.installed,
                       disabled=result.disabled, invalid=result.invalid,
                       incompatible=result.incompatible)
+    if result.installed:
+        metric_emitter.counter("module_loads").inc(result.installed)
 
 
 def get() -> Optional[LoaderResult]:

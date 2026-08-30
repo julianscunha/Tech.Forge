@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from app.dependency_engine.models import TargetType
 from app.dependency_engine.parser import DependencyParseError, DependencyParser
+from app.observability.metrics import metric_emitter
 
 
 @dataclass
@@ -58,6 +59,10 @@ class DependencyValidator:
 
             if dep.target_type == TargetType.MODULE:
                 checks.append(_check_direction(module_type, dep.target_id, module_registry))
+
+        failed_required = sum(1 for c in checks if not c.passed and c.required)
+        if failed_required:
+            metric_emitter.counter("dependency_failures").inc(failed_required)
 
         return checks
 

@@ -21,6 +21,7 @@ from enum import Enum
 from typing import Callable, Optional
 
 from app.observability.events import event_bus
+from app.observability.metrics import metric_emitter
 
 
 def current_frontend_mode(dist_path: Optional["object"] = None) -> str:
@@ -97,6 +98,7 @@ class TechForgeRuntime:
         event = RuntimeEvent("startup", detail)
         self.events.append(event)
         event_bus.publish("runtime.startup", detail=detail)
+        metric_emitter.counter("platform_startups").inc()
         if self.state is RuntimeState.BOOTSTRAPPING:
             self.state = RuntimeState.READY
             self.started_at = event.timestamp
@@ -152,6 +154,7 @@ class TechForgeRuntime:
                 detail = f"{name} (pid {pid}) não está mais em execução"
                 self.events.append(RuntimeEvent("degraded", detail))
                 event_bus.publish("runtime.degraded", component=name, pid=pid, detail=detail)
+                metric_emitter.counter("runtime_errors").inc()
         return result
 
     # ── Status ────────────────────────────────────────────────────────────────
