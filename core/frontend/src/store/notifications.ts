@@ -21,10 +21,12 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
   loading: false,
 
   fetchAll: async () => {
+    // Só não-lidas — uma vez lida, a notificação sai da lista em vez de
+    // ficar acumulando indefinidamente no sino.
     set({ loading: true })
     try {
       const [items, unread] = await Promise.all([
-        fetch('/api/v1/notifications?limit=50').then((r) => r.json()),
+        fetch('/api/v1/notifications?unread_only=true&limit=50').then((r) => r.json()),
         fetch('/api/v1/notifications/unread-count').then((r) => r.json()),
       ])
       set({ items, unreadCount: unread.count })
@@ -38,7 +40,7 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
     const item = get().items.find((n) => n.id === id)
     if (item && !item.read) {
       set({
-        items: get().items.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        items: get().items.filter((n) => n.id !== id),
         unreadCount: Math.max(0, get().unreadCount - 1),
       })
     }
@@ -46,10 +48,7 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
 
   markAllRead: async () => {
     await fetch('/api/v1/notifications/read-all', { method: 'POST' })
-    set({
-      items: get().items.map((n) => ({ ...n, read: true })),
-      unreadCount: 0,
-    })
+    set({ items: [], unreadCount: 0 })
   },
 }))
 

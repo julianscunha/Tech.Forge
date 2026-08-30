@@ -102,13 +102,14 @@ export function NotificationBell() {
                 const meta = LEVEL_META[n.level]
                 const Icon = meta.icon
                 return (
+                  // Lista mostra só não-lidas — marcar como lida remove o
+                  // item daqui (evita acumular indefinidamente no sino).
                   <button
                     key={n.id}
-                    onClick={() => !n.read && void markRead(n.id)}
+                    onClick={() => void markRead(n.id)}
                     className={cn(
                       'w-full text-left flex gap-2 px-3 py-2 border-b border-[hsl(var(--border-subtle))] last:border-b-0',
-                      'hover:bg-[hsl(var(--bg-subtle))] transition-colors',
-                      !n.read && 'bg-[hsl(var(--bg-subtle))]/40'
+                      'hover:bg-[hsl(var(--bg-subtle))] transition-colors bg-[hsl(var(--bg-subtle))]/40'
                     )}
                   >
                     <Icon size={13} className={cn('mt-0.5 flex-shrink-0', meta.color)} />
@@ -123,9 +124,7 @@ export function NotificationBell() {
                         {formatDateTime(n.created_at, timezone)}
                       </span>
                     </span>
-                    {!n.read && (
-                      <Check size={11} className="mt-1 flex-shrink-0 text-[hsl(var(--text-subtle))]" aria-label="Não lida" />
-                    )}
+                    <Check size={11} className="mt-1 flex-shrink-0 text-[hsl(var(--text-subtle))]" aria-label="Marcar como lida" />
                   </button>
                 )
               })
