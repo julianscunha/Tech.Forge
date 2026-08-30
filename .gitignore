@@ -43,6 +43,9 @@ modules/installed/*/data/settings.json
 # Agent tooling (config/skills locais — não fazem parte do produto)
 .claude/
 .agents/
+.mcp.json
+AGENTS.md
+skills-lock.json
 
 # Test/lint caches
 .pytest_cache/
