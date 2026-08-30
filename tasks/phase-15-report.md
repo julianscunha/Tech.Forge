@@ -101,6 +101,6 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: backend `pytest tests -q` → 695 passed, 3 skipped (era 690 — 5 novos); `cli pytest tests -q` → 106 passed (era 105 — 1 novo).
 
-**Commit**: (a seguir)
+**Commit**: `2da287c`
 
 **Commit**: (a seguir)
