@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 
 from app.core.settings import settings
 from app.module_runtime.loader import ModuleLoadError, load_module_file
+from app.observability.context import bind_log_context
 from app.observability.metrics import metric_emitter
 from app.service_registry.descriptor import ServiceStatus
 from app.service_registry.errors import (
@@ -113,17 +115,19 @@ def invoke(service_id: str, export_name: str, **kwargs):
         )
 
     metric_emitter.counter("module_executions").inc()
-    try:
-        with metric_emitter.timer("execution_duration"):
-            result = func(**kwargs)
-            if asyncio.iscoroutine(result):
-                result = asyncio.run(result)
-        return result
-    except Exception as exc:
-        metric_emitter.counter("execution_failures").inc()
-        # §15 — não expor stack trace interno de outro módulo ao chamador;
-        # o detalhe fica só no log do Core.
-        logger.warning("Execution of %s.%s failed: %s", service_id, export_name, exc)
-        raise ServiceExecutionFailedError(
-            f"Execution of '{service_id}.{export_name}' failed"
-        ) from None
+    execution_id = str(uuid.uuid4())
+    with bind_log_context(module_id=descriptor.module_id, execution_id=execution_id):
+        try:
+            with metric_emitter.timer("execution_duration"):
+                result = func(**kwargs)
+                if asyncio.iscoroutine(result):
+                    result = asyncio.run(result)
+            return result
+        except Exception as exc:
+            metric_emitter.counter("execution_failures").inc()
+            # §15 — não expor stack trace interno de outro módulo ao chamador;
+            # o detalhe fica só no log do Core.
+            logger.warning("Execution of %s.%s failed: %s", service_id, export_name, exc)
+            raise ServiceExecutionFailedError(
+                f"Execution of '{service_id}.{export_name}' failed"
+            ) from None

@@ -479,6 +479,19 @@ class TestModuleExecutionContext:
         ctx2 = await ModuleExecutionContext.build("hello_world", module_registry)
         assert ctx1.runtime_id != ctx2.runtime_id
 
+    @pytest.mark.asyncio
+    async def test_build_populates_distinct_execution_id(self, client):
+        """Fase 14 §6/§13 — execution_id é um campo novo, separado de
+        runtime_id (mantido como estava pra não quebrar os testes acima)."""
+        from app.module_runtime.context import ModuleExecutionContext
+        from app.module_engine.registry import registry as module_registry
+
+        ctx1 = await ModuleExecutionContext.build("hello_world", module_registry)
+        ctx2 = await ModuleExecutionContext.build("hello_world", module_registry)
+        assert ctx1.execution_id
+        assert ctx1.execution_id != ctx2.execution_id
+        assert ctx1.execution_id != ctx1.runtime_id
+
 
 # ── SDK: sdk.services / sdk.runtime (Fase 9 §9) ────────────────────────────────
 

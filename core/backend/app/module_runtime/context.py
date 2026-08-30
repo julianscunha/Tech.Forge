@@ -26,6 +26,7 @@ class ModuleExecutionContext:
     module_id:      str
     module_version: str
     runtime_id:     str
+    execution_id:   str
     configuration:  dict[str, Any]
     services:       Any
     logger:         logging.Logger
@@ -61,6 +62,7 @@ class ModuleExecutionContext:
             module_id=module_id,
             module_version=entry.version,
             runtime_id=str(uuid.uuid4()),
+            execution_id=str(uuid.uuid4()),
             configuration=configuration,
             services=service_registry,
             logger=logging.getLogger(f"techforge.module.{module_id}"),
