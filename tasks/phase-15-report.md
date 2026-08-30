@@ -18,3 +18,17 @@ Plano: `tasks/phase15-plan.md`.
 **Teste**: `cd core/backend && .venv/Scripts/python.exe -m pytest tests -q` → 666 passed, 3 skipped. `cd cli && pytest tests -q` (mesmo `.venv`) → 105 passed.
 
 **Commit**: `16ed826`
+
+### Slice 2 — Fixtures centralizadas
+
+**Arquivos**: `core/backend/tests/conftest.py` (novo), `core/backend/tests/test_phase15_fixtures.py` (novo).
+
+**O quê**: `module_dir_factory` (factory fixture que monta um diretório de módulo instalável completo — backend/frontend/docs/tests/assets + manifest.yaml — com overrides), `valid_manifest`, `invalid_manifest` (parametrizado: falta de `version`/`id`/`category`).
+
+**Decisão-chave**: **não retrofita os 13 arquivos existentes** que já constroem seu próprio diretório de módulo manualmente — são testes estáveis, já passando, e a duplicação ali é puramente interna sem valor de correção real; reescrever 13 arquivos só por DRY introduziria risco de regressão sem ganho observável. As fixtures centralizadas servem os testes **novos** desta fase (Slices 3, 4, 5, 10) daqui pra frente, cumprindo §13 sem violar escopo cirúrgico.
+
+**Aceite**: fixtures produzem estrutura válida e manifests inválidos coerentes; nenhuma regressão.
+
+**Teste**: `pytest tests -q` → 672 passed, 3 skipped (era 666 — 6 testes novos de fixture).
+
+**Commit**: (a seguir)
