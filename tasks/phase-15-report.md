@@ -132,3 +132,17 @@ Plano: `tasks/phase15-plan.md`.
 **Teste**: backend `pytest tests -q` → 703 passed, 3 skipped (era 701 — 2 novos); cli `pytest tests -q` → 110 passed (era 106 — 4 novos); `ruff check` limpo.
 
 **Commit**: `5d8e9cc`
+
+### Slice 10 — Module quality/release-readiness
+
+**Arquivos**: `core/backend/app/services/module_quality.py`, `core/backend/app/api/routes/module_quality.py` (novos), `core/backend/app/api/__init__.py` (registro), `cli/techforge_cli/commands/modules.py` (comandos `quality`/`release-check`), `core/backend/tests/test_phase15_module_quality.py`, `cli/tests/test_phase15_modules_quality_command.py` (novos).
+
+**O quê**: `compute_module_quality(module_id)` — 4 checks por módulo, todos reaproveitando serviços existentes: `status` (registry — INSTALLED/DISABLED vs INVALID/INCOMPATIBLE/BLOCKED), `documentation` (DocCompletenessChecker, Fase 7), `compatibility` (`check_compatibility`, Slice 5), `contract` (reusa `extract_example_calls`+`invoke` da Slice 4 — só executa se o módulo declarar `api.yaml` E estiver ACTIVE no service registry; caso contrário passa trivialmente, não é falha). `GET /modules/{id}/quality` e `GET /modules/{id}/release-readiness` — **mesma computação**, dois endpoints (spec pede os dois explicitamente) porque são enquadramentos diferentes (informativo vs. gate), não lógica duplicada. CLI: `techforge modules quality|release-check <id>`.
+
+**Decisão-chave**: `/release-readiness` não reimplementa nada — chama a mesma `compute_module_quality()` que `/quality`, evitando "critérios paralelos de qualidade" (spec §2).
+
+**Aceite**: `hello_world` e `veeam_m365` reportam `ready: True`; contract check de `veeam_m365` executa os 2 exemplos reais da Slice 4 e confirma sucesso; 404 pra módulo inexistente.
+
+**Teste**: backend `pytest tests -q` → 710 passed, 3 skipped (era 703 — 7 novos); cli `pytest tests -q` → 113 passed (era 110 — 3 novos); `ruff check` limpo.
+
+**Commit**: (a seguir)

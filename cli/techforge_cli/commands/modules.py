@@ -336,6 +336,31 @@ def config_cmd(module_id, set_pairs):
         console.print(f"  {key} = {value}")
 
 
+def _print_quality_report(result: dict) -> None:
+    for check in result.get("checks", []):
+        mark = "PASS" if check["passed"] else "FAIL"
+        console.print(f"  {check['name']}: {mark} — {check['detail']}")
+    if result.get("ready"):
+        print_success(f"{result['module_id']}: READY")
+    else:
+        print_error(f"{result['module_id']}: BLOCKED")
+        raise SystemExit(1)
+
+
+@modules_cmd.command("quality")
+@click.argument("module_id")
+def quality_cmd(module_id):
+    """Show the Module Quality Report (spec Fase 15 §44)."""
+    _print_quality_report(_core_get(f"/modules/{module_id}/quality"))
+
+
+@modules_cmd.command("release-check")
+@click.argument("module_id")
+def module_release_check_cmd(module_id):
+    """Check whether a module is ready for release (spec Fase 15 §45)."""
+    _print_quality_report(_core_get(f"/modules/{module_id}/release-readiness"))
+
+
 @modules_cmd.command("config-validate")
 @click.argument("module_id")
 @click.option("--set", "set_pairs", multiple=True, metavar="CHAVE=VALOR", required=True,

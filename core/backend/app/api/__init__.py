@@ -10,6 +10,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.marketplace import router as marketplace_router
 from app.api.routes.module_assets import router as module_assets_router
 from app.api.routes.module_config import router as module_config_router
+from app.api.routes.module_quality import router as module_quality_router
 from app.api.routes.module_verification import router as module_verification_router
 from app.api.routes.modules import router as modules_router
 from app.api.routes.notifications import router as notifications_router
@@ -47,3 +48,4 @@ api_router.include_router(system_router)               # Fase 12 — Storage & P
 api_router.include_router(module_config_router)         # Fase 12 — Module Configuration
 api_router.include_router(platform_config_router)       # Fase 12 — Platform Configuration (GET /config)
 api_router.include_router(release_router)               # Fase 15 — Release Readiness Report
+api_router.include_router(module_quality_router)        # Fase 15 — Module Quality / Release Readiness
