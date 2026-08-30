@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Static checks (ruff)
+        working-directory: .
+        run: python -m ruff check core/backend/app cli sdk
+
+      - name: Unit tests
+        run: python -m pytest tests -m unit -q
+
+      - name: Integration tests
+        run: python -m pytest tests -m integration -q
+
+      - name: Contract tests
+        run: python -m pytest tests -m contract -q
+
+      - name: E2E tests
+        run: python -m pytest tests -m e2e -q
+
+      - name: Smoke tests
+        run: python -m pytest tests -m smoke -q
+
+      - name: Module validation (techforge validate-module)
+        working-directory: .
+        run: |
+          pip install -e cli
+          techforge validate-module modules/installed/hello_world
+          techforge validate-module modules/installed/veeam_m365
+
+      - name: CLI test suite
+        working-directory: cli
+        run: python -m pytest tests -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: core/frontend/dist

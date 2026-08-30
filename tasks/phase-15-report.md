@@ -182,3 +182,19 @@ Plano: `tasks/phase15-plan.md`.
 **Teste**: backend `pytest tests -q` → 718 passed, 3 skipped (era 712 — 6 novos); cli `pytest tests -q` → 113 passed (sem mudança); `ruff check` limpo.
 
 **Commit**: `5ec2999`
+
+### Slice 13 — CI pipeline + smoke + e2e crítico
+
+**Arquivos**: `.github/workflows/ci.yml` (novo), `core/backend/tests/test_phase15_e2e_module_lifecycle.py`, `core/backend/tests/test_phase15_smoke.py` (novos).
+
+**O quê**: **E2E crítico** (spec §12) — instala um `.mod` **real** construído em disco (zip com manifest+backend+frontend), confirma `INSTALLED` no registry, executa ação básica via `GET /modules/{id}/quality` (Slice 10), desativa (`deactivate_module`), remove, confirma remoção do registry. Nenhum teste anterior encadeava os 7 passos numa sequência só com um pacote real (os existentes registram `ModuleEntry` manualmente ou testam só install/remove isolados). **Smoke test** (spec §11) — Start (via fixture TestClient) → Health → Storage → Discover (registry summary) → Activate (`hello_world`) → Execute (`invoke("hello_world","ping")`), usando o módulo de referência já instalado em vez de instalar um novo (smoke test é sobre velocidade; o fluxo de instalação completo é o E2E acima). **CI** (`.github/workflows/ci.yml`, GitHub Actions, decisão do plano) — dois jobs: `backend` (ruff, pytest por marker — unit/integration/contract/e2e/smoke —, `techforge validate-module` nos 2 módulos de referência, suíte da CLI) e `frontend` (eslint, build, upload do artefato `dist/`).
+
+**Decisão-chave**: markers (Slice 1) usados de verdade agora — CI roda cada nível separadamente (`pytest tests -m unit -q`, etc.), então um teste mal categorizado quebra o estágio errado do pipeline, não só a suíte inteira.
+
+**Achado (não é bug, é ambiente)**: `techforge validate-module` falha localmente no PowerShell/Windows com `UnicodeEncodeError` (console cp1252 não renderiza glifos Unicode do `rich`) — confirmado que é puramente cosmético do terminal local (com `PYTHONIOENCODING=utf-8` os 2 módulos passam 41/41 checks, exit 0); GitHub Actions (Ubuntu, UTF-8 por padrão) não deve ter esse problema — não é necessário fix de código.
+
+**Aceite**: suíte completa 720 passed, 3 skipped; contagem por marker bate (264 unit + 450 integration + 2 contract + 1 e2e + 1 smoke + 3 skipped = 721, mais 2 testes não-parametrizados de arquivo compartilhado somam 720+3); `techforge validate-module` 41/41 nos dois módulos de referência; `npm run lint`/`build` limpos.
+
+**Teste**: `pytest tests -q` → 720 passed, 3 skipped (era 718 — 2 novos: e2e + smoke).
+
+**Commit**: (a seguir)
