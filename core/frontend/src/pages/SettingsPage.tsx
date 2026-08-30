@@ -1,8 +1,22 @@
 import { useEffect, useState } from 'react'
-import { Settings, Database, GitBranch, CheckCircle2, XCircle } from 'lucide-react'
+import { Settings, Database, GitBranch, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { systemApi, platformConfigApi } from '@/lib/api'
+import { useTimezoneStore } from '@/store/timezone'
 import type { StorageStatus, MigrationsStatus, PlatformConfig } from '@/types'
+
+// Fallback pra navegadores sem Intl.supportedValuesOf (Safari < 17) — a
+// lista real usa a API nativa quando disponível.
+const FALLBACK_TIMEZONES = [
+  'UTC', 'America/Sao_Paulo', 'America/New_York', 'America/Los_Angeles',
+  'Europe/Lisbon', 'Europe/London', 'Europe/Berlin', 'Asia/Tokyo',
+]
+
+function listTimezones(): string[] {
+  const supportedValuesOf = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] })
+    .supportedValuesOf
+  return supportedValuesOf ? supportedValuesOf('timeZone') : FALLBACK_TIMEZONES
+}
 
 /** Platform Settings (Fase 12 §31) — página leve, sem painel administrativo
  * grande: Storage Status, Migration Status, configuração efetiva (export). */
@@ -10,6 +24,7 @@ export function SettingsPage() {
   const [storage, setStorage] = useState<StorageStatus | null>(null)
   const [migrations, setMigrations] = useState<MigrationsStatus | null>(null)
   const [config, setConfig] = useState<PlatformConfig | null>(null)
+  const { timezone, setTimezone } = useTimezoneStore()
 
   useEffect(() => {
     systemApi.storageStatus().then(setStorage).catch(() => setStorage(null))
@@ -23,6 +38,26 @@ export function SettingsPage() {
         <Settings size={18} className="text-[hsl(var(--accent))]" />
         <h1 className="text-lg font-semibold text-[hsl(var(--text))]">Configurações</h1>
       </div>
+
+      <Card icon={Clock} title="Fuso horário">
+        <p className="text-xs text-[hsl(var(--text-muted))] mb-2">
+          Usado para exibir datas e horas em Diagnostics e Notificações. Os
+          dados continuam armazenados em UTC — isso muda só a exibição.
+        </p>
+        <select
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
+          className={cn(
+            'w-full text-xs rounded px-2.5 py-1.5',
+            'bg-[hsl(var(--bg))] border border-[hsl(var(--border-subtle))]',
+            'text-[hsl(var(--text))]'
+          )}
+        >
+          {listTimezones().map((tz) => (
+            <option key={tz} value={tz}>{tz}</option>
+          ))}
+        </select>
+      </Card>
 
       <Card icon={Database} title="Storage Status">
         {storage ? (

@@ -5,7 +5,8 @@ import {
   startNotificationsPolling,
 } from '@/store/notifications'
 import type { NotificationLevel } from '@/types'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
+import { useTimezoneStore } from '@/store/timezone'
 
 const LEVEL_META: Record<NotificationLevel, { icon: typeof Info; color: string }> = {
   info:    { icon: Info,           color: 'text-[hsl(var(--info,#3b82f6))]' },
@@ -18,6 +19,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { items, unreadCount, fetchAll, markRead, markAllRead } = useNotificationsStore()
+  const timezone = useTimezoneStore((s) => s.timezone)
 
   useEffect(() => {
     startNotificationsPolling()
@@ -118,7 +120,7 @@ export function NotificationBell() {
                         </span>
                       )}
                       <span className="block text-[10px] text-[hsl(var(--text-subtle))] mt-0.5">
-                        {new Date(n.created_at).toLocaleString()}
+                        {formatDateTime(n.created_at, timezone)}
                       </span>
                     </span>
                     {!n.read && (

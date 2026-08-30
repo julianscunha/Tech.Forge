@@ -4,11 +4,13 @@ import {
 } from 'lucide-react'
 import { diagnosticsApi } from '@/lib/api'
 import type { DiagnosticsHealth, DiagnosticError, ExecutionEntry } from '@/types'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
+import { useTimezoneStore } from '@/store/timezone'
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error'
 
 export function DiagnosticsPage() {
+  const timezone = useTimezoneStore((s) => s.timezone)
   const [health, setHealth] = useState<DiagnosticsHealth | null>(null)
   const [errors, setErrors] = useState<DiagnosticError[]>([])
   const [executions, setExecutions] = useState<ExecutionEntry[]>([])
@@ -133,7 +135,7 @@ export function DiagnosticsPage() {
                   <span className="text-[hsl(var(--text))] flex-1 min-w-0 truncate">{e.message}</span>
                   <span className="text-[hsl(var(--text-subtle))] flex-shrink-0">{e.module_id ?? '—'}</span>
                   <span className="text-[hsl(var(--text-subtle))] flex-shrink-0 font-mono">
-                    {e.created_at ? new Date(e.created_at).toLocaleString('pt-BR') : '—'}
+                    {formatDateTime(e.created_at, timezone)}
                   </span>
                 </div>
               ))}
@@ -163,7 +165,7 @@ export function DiagnosticsPage() {
                     {ex.duration_seconds.toFixed(3)}s
                   </span>
                   <span className="text-[hsl(var(--text-subtle))] flex-shrink-0 font-mono">
-                    {ex.created_at ? new Date(ex.created_at).toLocaleString('pt-BR') : '—'}
+                    {formatDateTime(ex.created_at, timezone)}
                   </span>
                 </div>
               ))}
