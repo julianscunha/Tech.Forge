@@ -10,13 +10,20 @@ Returns CompatibilityLevel:
 """
 from __future__ import annotations
 
+from packaging.version import InvalidVersion, Version
+
 from app.package_manager.enums import CompatibilityLevel
 
 
 def _vt(v: str) -> tuple[int, ...]:
+    """Tupla (major, minor, micro) — usa `packaging.version.Version` para
+    lidar corretamente com pre-release (ex.: '1.5.0-rc.1', canais de
+    pre-release da Fase 15 §35). Cai para (0, 0, 0) só em string realmente
+    inválida (defesa extra — manifests já são validados na Fase 1)."""
     try:
-        return tuple(int(p) for p in str(v).split("."))
-    except (ValueError, TypeError):
+        parsed = Version(str(v))
+        return (parsed.major, parsed.minor, parsed.micro)
+    except InvalidVersion:
         return (0, 0, 0)
 
 

@@ -61,4 +61,18 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `65bac37`
 
+### Slice 5 — Compatibility matrix tests
+
+**Arquivos**: `core/backend/app/package_manager/compatibility.py` (modificado), `core/backend/tests/test_phase15_compatibility_matrix.py` (novo).
+
+**O quê**: bug real encontrado e corrigido — `check_compatibility()` (Core×Module, usado desde a Fase 4) usava um parser de versão ingênuo (`str.split(".")` + `int()`) que quebrava silenciosamente em qualquer versão pre-release (`"1.5.0-rc.1"` → componente `"0-rc"` não converte, cai em `(0,0,0)`, julgado INCOMPATIBLE mesmo dentro do range declarado). Corrigido para usar `packaging.version.Version` (já dependência da Fase 12) — mesma assinatura, mesmos 6 call sites intocados. O eixo Module×Dependency Version já usa `packaging` corretamente desde a Fase 8.1 (`Dependency.satisfies_version`) — não duplicado.
+
+**Decisão-chave**: achado real via RED test (não hipotético) — relevante porque a Fase 15 Slice 12 introduz canais de pre-release (`1.5.0-rc.1`), que teriam colidido com esse bug latente se não corrigido agora.
+
+**Aceite**: versão pre-release dentro do range declarado é COMPATIBLE; lógica de WARNING perto do boundary preservada; string malformada não propaga exceção.
+
+**Teste**: `pytest tests -q` → 690 passed, 3 skipped (era 685 — 5 testes novos).
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)
