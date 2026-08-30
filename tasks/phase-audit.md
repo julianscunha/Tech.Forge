@@ -1,9 +1,12 @@
-# TechForge — Phase Audit (2026-08-29)
+# TechForge — Phase Audit (2026-08-30)
 
 Método: specs de docs/phases vs código real + execução de testes.
-Backend: 664 testes passando (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
-Frontend: sem testes (vitest não encontra arquivos *.test.*); `npm run lint` quebrado
-(eslint referenciado em package.json, nunca declarado como devDependency — pré-existente).
+Backend: 721 testes passando, organizados por nível via pytest markers —
+unit/integration/contract/e2e/smoke/regression (`cd core/backend && .venv/Scripts/python.exe -m pytest tests -q`).
+CLI: 113 testes passando. Frontend: sem testes automatizados (vitest não
+encontra arquivos *.test.*) — `npm run lint`/`npm run build` funcionam
+(gap do `eslint` ausente do `package.json`, pré-existente desde antes da
+Fase 12, fechado na Fase 15).
 
 | Fase | Tema | Status | Lacunas principais |
 |---|---|---|---|
@@ -21,7 +24,8 @@ Frontend: sem testes (vitest não encontra arquivos *.test.*); `npm run lint` qu
 | 11 | Marketplace Distribution | ✅ fechada | `CatalogAggregator` (múltiplas fontes, cache TTL, detecção de conflitos), `OfficialCatalogProvider` (index.json), `CustomCatalogProvider` (GitHub API), `CatalogSourceConfig` CRUD, API `/catalog/*` com paginação/filtros, CLI `techforge catalog`, UI Catálogo 3-zona (sidebar + filtro + grid), Remote install jobs (ACQUIRING/VALIDATING/INSTALLING), Notificações (transição de fonte, instalação), Developer Center docs, AI Context — ver tasks/phase-11-report.md |
 | 12 | Configuration & Persistence | ✅ fechada | Migrations via Alembic (substitui whitelist ad-hoc), `configuration.fields` no manifest + validação tipada (pydantic dinâmico) + persistência (`module_configurations`) + API/CLI/UI, Module Storage API key-value (`context.storage`, isolamento estrutural por module_id), `ModulePaths` (data/cache/exports/temp) + exclusão de integridade, Secret Store via `keyring` (`context.secrets`) + redação em log, `TTLCache` genérico extraído do Catálogo, config migration no update (`migrate_config` hook, rollback), `GET /api/v1/config` (gap do §29 nunca fechado antes), `context.configuration` conectado à config persistida (gap real encontrado na auditoria final — Fase 9 nunca conectou). Limitação conhecida, decisão do usuário: sem tipo lista/array na config de módulo — ver tasks/phase-12-report.md |
 | 13 | Central Server Multi-User | ⏸️ adiada | decisão do usuário (2026-08-29): sem prioridade de multiusuário/servidor agora; foco é otimizar a experiência single-user. Nada além de settings básicos implementado. Revisitar só quando houver necessidade real de deployment centralizado. |
-| 14–20 | Observability / Quality / Desktop dist / Security hardening / Finalization / Public release / Governance | ❌ não iniciadas | fragmentos herdados: logging básico, single-instance launcher, PLATFORM_VERSION única. Ordem recomendada (decisão 2026-08-30, foco single-user): 15→14→16→17→18; 18.1/19/20 condicionadas a decisão futura sobre ecossistema externo público (mesmo racional da Fase 13 adiada) |
+| 14, 16–20 | Observability / Desktop dist / Security hardening / Finalization / Public release / Governance | ❌ não iniciadas | fragmentos herdados: logging básico, single-instance launcher. Ordem recomendada (decisão 2026-08-30, foco single-user): 15→**14**→16→17→18; 18.1/19/20 condicionadas a decisão futura sobre ecossistema externo público (mesmo racional da Fase 13 adiada) |
+| 15 | Platform Quality, Testing & Release Engineering | ✅ fechada | pytest markers (unit/integration/contract/e2e/smoke/regression) em ~600 testes + fixtures centralizadas para testes novos, architecture tests via `ast-grep`, contract tests genéricos (`extract_example_calls` executa exemplos reais de `api.yaml` contra `service_registry.invoker`), correção real do compatibility checker (quebrava em versão pre-release) e do `_assert_semver` do manifest (mesma causa raiz), `ruff` (backend) + `eslint` (frontend, gap pré-existente fechado) com 2 bugs reais corrigidos (`NameError` latente, `F821`), `GET /system/version` + `techforge version` (fecha versão hardcoded divergente no CLI e no `package.json` do frontend), `CHANGELOG.md` (Keep a Changelog, validado), Release Readiness Report (`GET /release/readiness`, `techforge release-check`) + Module Quality/Release Readiness por módulo (`GET /modules/{id}/quality\|release-readiness`, `techforge modules quality\|release-check`), `built_at` em `BuildResult` + `build-info.json` do frontend, canais de pre-release no manifest (`channel: stable\|beta\|development`, mecanismo apenas), CI (`.github/workflows/ci.yml`, 2 jobs) + smoke test + e2e crítico real (install→validate→activate→execute→deactivate→remove com `.mod` construído em disco), Developer Center + AI Context (Definition of Done) — ver tasks/phase-15-report.md |
 
 ## Hooks/stubs ativos (próximos alvos naturais)
 

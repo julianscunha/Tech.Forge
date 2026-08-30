@@ -11,7 +11,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/tests-664%20passing-brightgreen)](#-testes)
+[![Tests](https://img.shields.io/badge/tests-721%20passing-brightgreen)](#-testes)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
@@ -124,7 +124,7 @@ TechForge/
 ├── sdk/python/                # SDK para desenvolvedores de módulos
 ├── docs/                      # INDEX.md · phases/ · developer-center/ · architecture.md
 ├── config/                    # .env
-└── tests/ → core/backend/tests/  # 664 testes pytest
+└── tests/ → core/backend/tests/  # 721 testes pytest (unit/integration/contract/e2e/smoke)
 ```
 
 ---
@@ -302,6 +302,21 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
+<summary><b>Quality & Release Engineering (Fase 15)</b></summary>
+
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/system/version` | Versão da plataforma (fonte única: `PLATFORM_VERSION`) |
+| GET | `/api/v1/release/readiness` | Release Readiness Report (versão, changelog, docs, migrations, storage) |
+| GET | `/api/v1/modules/:module_id/quality` | Module Quality Report (status, docs, compatibilidade, contrato) |
+| GET | `/api/v1/modules/:module_id/release-readiness` | Mesmo dado do quality, framing de gate |
+
+CLI: `techforge version` · `techforge release-check [--skip-tests] [--skip-build]` ·
+`techforge modules quality <id>` · `techforge modules release-check <id>`.
+
+</details>
+
+<details>
 <summary><b>Notifications</b></summary>
 
 | Method | Path | Descrição |
@@ -352,13 +367,17 @@ gantt
     Fase 10 Security & Trust ✓          :done, 4, 5
     Fase 11 Marketplace Distribution ✓  :done, 5, 6
     Fase 12 Configuration & Persistence ✓ :done, 6, 7
-    Fase 13 Central Server Multi-User   :active, 7, 9
-    Fase 14-20 Release                  :9, 11
+    Fase 15 Quality & Release Engineering ✓ :done, 7, 8
+    section Adiado / condicionado
+    Fase 13 Central Server Multi-User (adiada) :7, 9
+    Fase 14 Observability                 :active, 8, 9
+    Fase 16-20                            :9, 11
 ```
 
 **Próximos marcos** (decididos por auditoria contra código real,
 ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
-- Central Server Multi-User Readiness (Fase 13)
+- Observability, Telemetry & Diagnostics (Fase 14) — ordem recomendada 15→**14**→16→17→18
+- Fase 13 (Central Server/Multi-User) e 18.1/19/20 (ecossistema externo público) ficam adiadas até decisão explícita de negócio — foco atual é otimizar a experiência single-user/Desktop
 
 ---
 
