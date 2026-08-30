@@ -430,3 +430,47 @@ export interface MigrationsStatus {
 }
 
 export type PlatformConfig = Record<string, unknown>
+
+// ── Fase 14 — Observability / Diagnostics ────────────────────────────────────
+
+export interface DiagnosticError {
+  id: number
+  source: string
+  code: string | null
+  message: string
+  detail: string | null
+  module_id: string | null
+  execution_id: string | null
+  created_at: string | null
+}
+
+export interface ExecutionEntry {
+  execution_id: string
+  module_id: string
+  status: string
+  duration_seconds: number
+  error_summary?: string | null
+  created_at: string | null
+}
+
+export interface ResourceUsage {
+  cpu_percent: number
+  memory_rss_bytes: number
+  disk_used_bytes: number
+  disk_total_bytes: number
+}
+
+export interface HeaviestModule {
+  module_id: string
+  disk_bytes: number
+  avg_duration_seconds: number
+  execution_count: number
+  failure_rate: number
+}
+
+export interface DependencyCheck {
+  name: string
+  passed: boolean
+  required: boolean
+  detail: string
+}

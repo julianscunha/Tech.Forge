@@ -16,6 +16,8 @@ from app.db.database import get_db
 from app.services.diagnostic_export import DiagnosticExportService
 from app.services.error_registry import ErrorRegistryService
 from app.services.execution_history import ExecutionHistoryService
+from app.services.heaviest_modules import HeaviestModulesService
+from app.services.resource_usage import ResourceUsageService
 from app.services.support_bundle import SupportBundleService
 from app.services.system_diagnostics import SystemDiagnosticService
 
@@ -60,6 +62,19 @@ async def get_diagnostics_executions(
          "created_at": e.created_at.isoformat() if e.created_at else None}
         for e in entries
     ]
+
+
+@diagnostics_router.get("/resources", summary="CPU/memory/disk usage of the Core process")
+async def get_diagnostics_resources() -> dict:
+    return ResourceUsageService.snapshot()
+
+
+@diagnostics_router.get("/heaviest-modules", summary="Modules ranked by disk footprint")
+async def get_heaviest_modules(
+    limit: int = Query(default=5, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    return await HeaviestModulesService.snapshot(db, limit=limit)
 
 
 @diagnostics_router.post("/export", summary="Export a Diagnostic Report or Support Bundle")

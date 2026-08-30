@@ -226,12 +226,13 @@ export const servicesApi = {
 
 // ── Fase 8.1 — Dependency Governance ─────────────────────────────────────────
 
-import type { Dependency } from '@/types'
+import type { Dependency, DependencyCheck } from '@/types'
 
 export const dependenciesApi = {
   dependencies: (moduleId: string) => request<Dependency[]>(`/modules/${moduleId}/dependencies`),
   dependents:   (moduleId: string) => request<string[]>(`/modules/${moduleId}/dependents`),
   graph:        () => request<{ mermaid: string }>('/dependencies/graph'),
+  validateAll:  () => request<Record<string, DependencyCheck[]>>('/dependencies/validate'),
 }
 
 // ── Fase 9 — Module Runtime ───────────────────────────────────────────────────
@@ -271,4 +272,21 @@ export const systemApi = {
 
 export const platformConfigApi = {
   get: () => request<PlatformConfig>('/config'),
+}
+
+// ── Fase 14 — Observability / Diagnostics ────────────────────────────────────
+
+import type { DiagnosticError, ExecutionEntry, ResourceUsage, HeaviestModule } from '@/types'
+
+export const diagnosticsApi = {
+  errors:          (limit = 50)  => request<DiagnosticError[]>(`/diagnostics/errors?limit=${limit}`),
+  executions:      (limit = 50)  => request<ExecutionEntry[]>(`/diagnostics/executions?limit=${limit}`),
+  resources:       ()            => request<ResourceUsage>('/diagnostics/resources'),
+  heaviestModules: (limit = 5)   => request<HeaviestModule[]>(`/diagnostics/heaviest-modules?limit=${limit}`),
+  moduleDiagnostics: (moduleId: string) => request<{
+    module_id: string
+    runtime: { state: string; since: string; last_error: string | null; last_execution: string | null } | null
+    recent_errors: Pick<DiagnosticError, 'id' | 'code' | 'message' | 'created_at'>[]
+    recent_executions: Pick<ExecutionEntry, 'execution_id' | 'status' | 'duration_seconds' | 'created_at'>[]
+  }>(`/modules/${moduleId}/diagnostics`),
 }

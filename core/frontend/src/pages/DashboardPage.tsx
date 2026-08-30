@@ -3,6 +3,14 @@ import { Boxes, LayoutGrid, LayoutDashboard, Server, Database, RefreshCw, AlertC
 import { platformApi, servicesApi } from '@/lib/api'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { DraggableCard } from '@/components/dashboard/DraggableCard'
+import { CardVisibilityMenu } from '@/components/dashboard/CardVisibilityMenu'
+import { ModuleFailuresCard } from '@/components/dashboard/ModuleFailuresCard'
+import { BlockedDependenciesCard } from '@/components/dashboard/BlockedDependenciesCard'
+import { RecentCriticalEventsCard } from '@/components/dashboard/RecentCriticalEventsCard'
+import { ResourceUsageCard } from '@/components/dashboard/ResourceUsageCard'
+import { HeaviestModuleCard } from '@/components/dashboard/HeaviestModuleCard'
+import { useDashboardLayoutStore, getEffectiveOrder, type DashboardCardId } from '@/store/dashboardLayout'
 import type { PlatformStatus } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +21,7 @@ export function DashboardPage() {
   const [loadState, setLoadState] = useState<LoadState>('idle')
   const [error, setError] = useState<string | null>(null)
   const [serviceCounts, setServiceCounts] = useState<{ active: number; unavailable: number } | null>(null)
+  const { order, hidden } = useDashboardLayoutStore()
 
   const fetchStatus = async () => {
     setLoadState('loading')
@@ -38,6 +47,43 @@ export function DashboardPage() {
     fetchStatus()
   }, [])
 
+  const cardRenderers: Record<DashboardCardId, React.ReactNode> = {
+    'modules-installed': (
+      <StatCard
+        label="Módulos Instalados"
+        value={status?.modules_installed ?? '—'}
+        icon={Boxes}
+        description={status ? `${status.modules_enabled} habilitados` : undefined}
+      />
+    ),
+    'modules-active': (
+      <StatCard label="Módulos Ativos" value={status?.modules_enabled ?? '—'} icon={Boxes} />
+    ),
+    'categories': (
+      <StatCard
+        label="Categorias"
+        value={status?.categories_registered ?? '—'}
+        icon={LayoutGrid}
+        description="Registradas no core"
+      />
+    ),
+    'services-active': serviceCounts ? (
+      <StatCard
+        label="Serviços Ativos"
+        value={serviceCounts.active}
+        icon={Plug}
+        description={serviceCounts.unavailable > 0 ? `${serviceCounts.unavailable} indisponível(is)` : undefined}
+      />
+    ) : <StatCard label="Serviços Ativos" value="—" icon={Plug} />,
+    'module-failures': <ModuleFailuresCard />,
+    'blocked-dependencies': <BlockedDependenciesCard />,
+    'recent-events': <RecentCriticalEventsCard />,
+    'resource-usage': <ResourceUsageCard />,
+    'heaviest-module': <HeaviestModuleCard />,
+  }
+
+  const visibleOrder = getEffectiveOrder(order).filter((id) => !hidden.includes(id))
+
   return (
     <div className="px-6 pt-4 pb-6 space-y-6 max-w-4xl">
       {/* Page header */}
@@ -52,20 +98,23 @@ export function DashboardPage() {
           </p>
         </div>
 
-        <button
-          onClick={fetchStatus}
-          disabled={loadState === 'loading'}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium',
-            'bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border))]',
-            'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
-            'hover:bg-[hsl(var(--bg-subtle))] transition-colors',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
-          )}
-        >
-          <RefreshCw size={12} className={loadState === 'loading' ? 'animate-spin' : ''} />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={fetchStatus}
+            disabled={loadState === 'loading'}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium',
+              'bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border))]',
+              'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
+              'hover:bg-[hsl(var(--bg-subtle))] transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            <RefreshCw size={12} className={loadState === 'loading' ? 'animate-spin' : ''} />
+            Atualizar
+          </button>
+          <CardVisibilityMenu />
+        </div>
       </div>
 
       {/* Platform identity */}
@@ -122,35 +171,20 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {/* Counters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatCard
-              label="Módulos Instalados"
-              value={status?.modules_installed ?? '—'}
-              icon={Boxes}
-              description={status ? `${status.modules_enabled} habilitados` : undefined}
-            />
-            <StatCard
-              label="Módulos Ativos"
-              value={status?.modules_enabled ?? '—'}
-              icon={Boxes}
-            />
-            <StatCard
-              label="Categorias"
-              value={status?.categories_registered ?? '—'}
-              icon={LayoutGrid}
-              description="Registradas no core"
-            />
-            {serviceCounts && (
-              <StatCard
-                label="Serviços Ativos"
-                value={serviceCounts.active}
-                icon={Plug}
-                description={serviceCounts.unavailable > 0
-                  ? `${serviceCounts.unavailable} indisponível(is)` : undefined}
-              />
-            )}
-          </div>
+          {/* Cards personalizáveis — arrastar pra reordenar, engrenagem pra mostrar/ocultar */}
+          {visibleOrder.length === 0 ? (
+            <p className="text-xs text-[hsl(var(--text-subtle))] text-center py-8">
+              Nenhum card visível — use a engrenagem acima pra mostrar algum.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+              {visibleOrder.map((id) => (
+                <DraggableCard key={id} id={id}>
+                  {cardRenderers[id]}
+                </DraggableCard>
+              ))}
+            </div>
+          )}
         </>
       )}
 
