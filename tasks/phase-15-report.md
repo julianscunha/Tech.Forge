@@ -131,6 +131,4 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: backend `pytest tests -q` → 703 passed, 3 skipped (era 701 — 2 novos); cli `pytest tests -q` → 110 passed (era 106 — 4 novos); `ruff check` limpo.
 
-**Commit**: (a seguir)
-
-**Commit**: (a seguir)
+**Commit**: `5d8e9cc`
