@@ -31,12 +31,31 @@ descoberta → validação → registro → instalação → execução → docu
 
 ### Por que não uma app monolítica? Por que módulos?
 
+> Pensa na sua rotina hoje: uma aba pro monitoramento, outra pro cofre de
+> senhas, outra pro acesso remoto aos servidores, mais uma pro dashboard de
+> backup, outra pro chamado aberto — cada sistema com login próprio, visual
+> próprio, e zero contexto entre eles. Trocar de ferramenta é trocar de aba,
+> de senha, de mental model.
+>
+> No TechForge isso tudo é **módulo** dentro da mesma plataforma: mesma
+> navegação, mesmo login, mesma tela. Monitoramento, cofre de senhas e
+> acesso remoto convivendo lado a lado, sem abrir dez sistemas pra fazer
+> uma tarefa. Você instala só o que precisa, organiza do seu jeito — e
+> quando aparece uma ferramenta nova, interna ou de terceiros, ela entra
+> como mais um módulo, não mais um sistema pra gerenciar.
+
 | Monólito tradicional | TechForge |
 |---|---|
 | Cada ferramenta é um projeto separado | Todas as ferramentas em **uma única plataforma** |
 | UI, auth, config e logs duplicados a cada app | Infraestrutura compartilhada: shell, navegação, package manager, docs |
 | Deploy e atualização manuais por ferramenta | `.mod` empacotado, instalado e atualizado com rollback |
 | Conhecimento espalhado | **Documentation Engine** indexa tudo, com busca e contexto p/ IA |
+| Cada equipe reinventa login, tema e navegação | Personalize do seu jeito — módulos que você instala, na ordem que faz sentido pra você |
+
+Pensa nisso como o **VS Code das ferramentas internas da sua empresa**: um
+core enxuto que não faz nada de negócio sozinho, e uma extensão pra cada
+coisa que você precisa — sem esperar um roadmap de terceiro pra ter a
+ferramenta que falta, você mesmo cria o módulo.
 
 ### Este repositório é só a plataforma — os módulos ficam à parte
 
