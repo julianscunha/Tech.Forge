@@ -130,7 +130,7 @@ TechForge/
 │   ├── installed/             # Módulos instalados (hello_world de exemplo)
 │   └── cache/                 # Cache de downloads
 ├── launcher/                  # Splash · single-instance · health-readiness · shutdown ordenado
-├── cli/techforge_cli/         # create/validate/package-module · platform start/stop/status
+├── cli/techforge_cli/         # create/validate/package-module · start/stop/status
 ├── sdk/python/                # SDK para desenvolvedores de módulos
 ├── docs/                      # INDEX.md · phases/ · developer-center/ · architecture.md
 ├── config/                    # .env
@@ -150,9 +150,9 @@ TechForge/
 
 ```bash
 pip install -e cli
-techforge platform start     # sobe backend + frontend + abre o browser
-techforge platform status    # verifica saúde
-techforge platform stop      # shutdown ordenado
+techforge start     # sobe backend + frontend + abre o browser
+techforge status    # verifica saúde
+techforge stop      # shutdown ordenado
 ```
 
 > O launcher garante instância única (pidfile), espera o backend ficar pronto por

@@ -23,7 +23,7 @@ npm run lint        # eslint, --max-warnings 0 (qualquer warning falha)
 
 # CLI
 pip install -e cli && techforge --help
-techforge platform start|status|stop   # sobe/verifica/derruba backend+frontend via launcher
+techforge start|status|stop   # sobe/verifica/derruba backend+frontend via launcher
 ```
 
 ## Arquitetura

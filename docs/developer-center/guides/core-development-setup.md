@@ -38,7 +38,7 @@ cd core/frontend
 npm run dev                              # http://localhost:5173
 
 # Ou tudo via launcher/CLI:
-pip install -e cli && techforge platform start
+pip install -e cli && techforge start
 ```
 
 ## Testes
