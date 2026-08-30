@@ -47,4 +47,18 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `ba68efd`
 
+### Slice 4 — Contract tests de serviço
+
+**Arquivos**: `core/backend/app/doc_engine/contract_examples.py` (novo), `core/backend/tests/test_phase15_contract_examples_parser.py` (novo, unit), `core/backend/tests/test_phase15_contract_tests.py` (novo, contract).
+
+**O quê**: `extract_example_calls(export)` extrai, via `ast.parse`/`ast.literal_eval`, os exemplos de `api.yaml` que são chamadas Python executáveis com keyword args literais (ex.: `calculate_storage(users=500, ...)`) — ignora exemplos em estilo HTTP (`GET /api/v1/modules/x/ping`) e exemplos com argumentos posicionais ou não-literais. O teste `contract` varre **todos** os módulos instalados com `docs/contracts/api.yaml`, extrai os exemplos executáveis e invoca de verdade via `app.service_registry.invoker.invoke` (o mesmo caminho usado em produção), confirmando que o exemplo documentado corresponde ao comportamento real (spec §7, última linha).
+
+**Decisão-chave**: **genérico**, não hardcoded por módulo — `test_phase8_service_registry.py::TestInvoke` já tinha um teste hand-written pra `veeam_m365.calculate_storage`; este é reutilizável automaticamente para qualquer módulo futuro com `api.yaml`, sem escrever um teste novo por módulo (é a peça que a Fase 15 pede para os Slices 9/10 — Release Readiness e Module Quality — poderem rodar contract validation genericamente).
+
+**Aceite**: 2 exemplos executáveis encontrados nos módulos de referência (`veeam_m365.calculate_storage` tem 2; `hello_world.ping`/`veeam_m365.ping` são HTTP-style, corretamente ignorados); resultado do extrator bate com o valor já validado manualmente no teste da Fase 8.
+
+**Teste**: `pytest tests -q` → 685 passed, 3 skipped (era 678 — 7 testes novos).
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)
