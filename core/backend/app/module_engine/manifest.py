@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 import yaml
+from packaging.version import Version
+
+from app.services.versioning import is_valid_semver
 
 # ── Exceptions ────────────────────────────────────────────────────────────────
 
@@ -64,6 +67,9 @@ class ParsedManifest:
     platform_min_version: str = "0.0.0"
     platform_max_version: str = "999.999.999"
 
+    # ── Pre-release channel (Fase 15 §35) ─────────────────────────────────────
+    channel: str = "stable"
+
     # ── Optional presentation field (§7.1) ────────────────────────────────────
     color: Optional[str] = None   # accent color hint — "blue", "green", "red", etc.
 
@@ -95,10 +101,10 @@ class ParsedManifest:
 
 # ── Validation helpers ────────────────────────────────────────────────────────
 
-_SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
-
 # Lucide icon names are kebab-case letters/digits/hyphens, 2–64 chars
 _ICON_RE = re.compile(r"^[a-z][a-z0-9-]{1,63}$")
+
+_VALID_CHANNELS = {"stable", "beta", "development"}
 
 # Valid color accent names accepted by the design system
 VALID_COLORS = {
@@ -108,7 +114,10 @@ VALID_COLORS = {
 
 
 def _assert_semver(value: str, field_name: str) -> None:
-    if not _SEMVER_RE.match(value):
+    # packaging.version aceita pre-release (X.Y.Z-rc.N) — necessário pros
+    # canais de pre-release (Fase 15 §35); mesma validação de Slices 5/7,
+    # consolidando numa única noção de "semver válido" no projeto.
+    if not is_valid_semver(value):
         raise ManifestError(
             f"Field '{field_name}' must follow semver format (X.Y.Z), got: {value!r}"
         )
@@ -134,8 +143,8 @@ def _parse_documentation_versioning(raw: dict) -> dict:
     }
 
 
-def _version_tuple(v: str) -> tuple[int, ...]:
-    return tuple(int(p) for p in v.split("."))
+def _version_tuple(v: str) -> Version:
+    return Version(v)
 
 
 _VALID_CONFIG_TYPES = {"string", "integer", "float", "boolean"}
@@ -282,6 +291,13 @@ class ManifestParser:
                 f"Field 'order' must be ≥ 0, got: {order_value}"
             )
 
+        # ── 7.1 channel validation (optional, Fase 15 §35) ────────────────────
+        channel_value = str(raw.get("channel", "stable")).strip().lower()
+        if channel_value not in _VALID_CHANNELS:
+            raise ManifestError(
+                f"Field 'channel' must be one of {sorted(_VALID_CHANNELS)}, got: {channel_value!r}"
+            )
+
         # ── 8. color validation (optional) ────────────────────────────────────
         color_value: Optional[str] = None
         if raw.get("color"):
@@ -308,6 +324,7 @@ class ManifestParser:
             color=color_value,
             platform_min_version=platform_min,
             platform_max_version=platform_max,
+            channel=channel_value,
             homepage=raw.get("homepage") or None,
             documentation=raw.get("documentation") or None,
             **_parse_documentation_versioning(raw),

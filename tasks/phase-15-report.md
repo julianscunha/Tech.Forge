@@ -162,3 +162,23 @@ Plano: `tasks/phase15-plan.md`.
 **Teste**: `pytest tests -q` → 712 passed, 3 skipped (era 710 — 2 novos); `npm run build` confirmado gerando o artefato.
 
 **Commit**: `b110879`
+
+### Slice 12 — Pre-release channels & rollback readiness
+
+**Arquivos**: `core/backend/app/module_engine/manifest.py` (modificado), `core/backend/tests/test_phase15_prerelease_channels.py` (novo).
+
+**O quê**: manifest ganha campo opcional `channel: stable|beta|development` (default `stable`), validado no parse e propagado via `manifest_raw` (nenhuma mudança em `ModuleEntry`/registry — já é o mecanismo existente de repasse, mesmo padrão usado por `module_type`/`platform_min_version` em slices anteriores). **Mecanismo apenas, sem UI de catálogo dedicada** — decisão do plano original (sem usuários externos ainda pra segmentar canal visualmente).
+
+**Achado real corrigido**: `_assert_semver()` em `manifest.py` usava uma regex estrita (`^\d+\.\d+\.\d+$`) que **rejeitava qualquer versão pre-release** — um módulo declarando `version: 1.5.0-rc.1` (exatamente o formato que um canal `beta`/`development` precisaria) nunca teria carregado. Corrigido pra reusar `is_valid_semver()` (Slice 7, via `packaging.version`) — consolida numa única noção de "semver válido" no projeto (Slices 5/7/12 agora usam a mesma base). `_version_tuple()` (compara `platform_min_version`/`platform_max_version`) também trocado de tupla de int ingênua pra `packaging.version.Version` pela mesma razão.
+
+**Itens do spec já cobertos por slices anteriores, não duplicados aqui**:
+- **Known Issues (§38)**: a seção `Known Issues` do Changelog (Slice 8) já cobre isso — não é uma tabela separada.
+- **Rollback de módulo (§39)**: `PackageManager.update()` já reverte arquivos **e** config em caso de falha desde a Fase 4/12 (rollback-por-exceção) — nada novo a construir.
+- **Migration release validation (§40)**: já coberto pelo check `migrations` do Release Readiness Report (Slice 9) + pelos testes reais de Alembic contra o dev DB (Fase 12).
+- **Rollback de Desktop**: o próprio spec permite "implementação simples" — decisão: documentar o procedimento manual (backup do `techforge.db`) no Developer Center (Slice 14) em vez de construir um mecanismo automatizado sem necessidade real comprovada.
+
+**Aceite**: canal default/beta/development parseiam corretamente; canal desconhecido rejeitado; versão com sufixo pre-release parseia com sucesso.
+
+**Teste**: backend `pytest tests -q` → 718 passed, 3 skipped (era 712 — 6 novos); cli `pytest tests -q` → 113 passed (sem mudança); `ruff check` limpo.
+
+**Commit**: (a seguir)
