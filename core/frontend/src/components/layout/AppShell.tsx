@@ -3,8 +3,9 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Minimize2 } from 'lucide-react'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
-import { Breadcrumb } from './Breadcrumb'
-import { HelpDrawer } from '@/components/help/ContextualHelp'
+import { ModuleTabStrip } from '@/components/modules/ModuleTabStrip'
+import { ModuleWorkspace } from '@/components/modules/ModuleWorkspace'
+import { isModuleRoute } from '@/lib/moduleRoute'
 import { useFocusModeStore } from '@/store/focusMode'
 import { cn } from '@/lib/utils'
 
@@ -55,18 +56,16 @@ export function AppShell() {
           </button>
         ) : (
           <>
-            <Header />
-            <div className={cn('flex items-center justify-between pr-3')}>
-              <Breadcrumb />
-              {contextId && <HelpDrawer contextId={contextId} />}
-            </div>
+            <Header contextId={contextId} />
+            <ModuleTabStrip />
           </>
         )}
 
         {/*
           MODULE RENDER AREA — 95% of usable space
-          In Phase 2, the Plugin Loader will render module frontends
-          inside this <main> using dynamic imports.
+          Rotas normais renderizam via <Outlet/>. Módulos são diferentes:
+          ModuleWorkspace mantém cada aba aberta montada permanentemente
+          (nunca desmonta por navegação) — só uma delas fica visível por vez.
         */}
         <main
           className={cn(
@@ -74,9 +73,13 @@ export function AppShell() {
             'bg-[hsl(var(--bg))]'
           )}
         >
-          <div className="h-full animate-fade-in">
+          <div
+            className="h-full animate-fade-in"
+            style={{ display: isModuleRoute(location.pathname) ? 'none' : 'block' }}
+          >
             <Outlet />
           </div>
+          <ModuleWorkspace />
         </main>
       </div>
     </div>

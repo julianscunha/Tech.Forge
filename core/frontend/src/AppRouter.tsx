@@ -5,14 +5,15 @@ import { ModulesPage }         from '@/pages/ModulesPage'
 import { MarketplacePage }     from '@/pages/MarketplacePage'
 import { SettingsPage }        from '@/pages/SettingsPage'
 import { DeveloperCenterPage } from '@/pages/DeveloperCenterPage'
-import { ModuleHost }         from '@/pages/ModuleHost'
+import { ModuleRouteSync }    from '@/components/modules/ModuleRouteSync'
 
 /**
  * Application Router — Phase 5
  *
  * PLUGIN LOADER HOOK (Phase 2+):
- * When a module is enabled the Plugin Loader injects:
- *   <Route path="/modules/:moduleId/*" element={<ModuleHost />} />
+ * `/modules/:moduleId/*` só sincroniza a URL com a aba ativa
+ * (ModuleRouteSync) — o host de verdade (ModuleHost) é renderizado por
+ * ModuleWorkspace, uma instância por aba aberta, persistente entre rotas.
  */
 export function AppRouter() {
   return (
@@ -24,8 +25,10 @@ export function AppRouter() {
           <Route path="marketplace"      element={<MarketplacePage />} />
           <Route path="developer-center" element={<DeveloperCenterPage />} />
           <Route path="settings"         element={<SettingsPage />} />
-          {/* Phase 2+ — Plugin Loader: host de páginas de módulos */}
-          <Route path="modules/:moduleId/*" element={<ModuleHost />} />
+          {/* Phase 2+ — Plugin Loader: sincroniza URL <-> aba de módulo.
+              O conteúdo em si vem de ModuleWorkspace (montado em AppShell,
+              persistente entre trocas de rota — ver store/moduleTabs). */}
+          <Route path="modules/:moduleId/*" element={<ModuleRouteSync />} />
           <Route path="*"                element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

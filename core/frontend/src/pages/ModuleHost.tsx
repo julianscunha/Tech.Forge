@@ -71,8 +71,16 @@ function ModuleMount({ api }: { api: { render: (c: HTMLElement) => void } }) {
   return <div ref={ref} />
 }
 
-export function ModuleHost() {
-  const { moduleId } = useParams<{ moduleId: string }>()
+interface ModuleHostProps {
+  /** Quando fornecido (uso via ModuleWorkspace), tem prioridade sobre o
+   * :moduleId da URL — cada instância fica presa a um módulo pela vida
+   * inteira do componente, nunca reseta ao trocar de aba ativa. */
+  moduleId?: string
+}
+
+export function ModuleHost({ moduleId: moduleIdProp }: ModuleHostProps = {}) {
+  const { moduleId: moduleIdParam } = useParams<{ moduleId: string }>()
+  const moduleId = moduleIdProp ?? moduleIdParam
   const [entry, setEntry] = useState<ModuleEntry | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
