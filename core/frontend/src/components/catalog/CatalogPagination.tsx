@@ -60,7 +60,7 @@ export function CatalogPagination({
     <div className="px-6 py-4 border-t border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg-subtle))]">
       <div className="flex items-center justify-between flex-wrap gap-4">
         {/* Info */}
-        <div className="text-sm text-[hsl(var(--text-muted))]">
+        <div className="text-xs text-[hsl(var(--text-muted))]">
           Mostrando <span className="font-medium text-[hsl(var(--text))]">{startItem}</span>–<span className="font-medium text-[hsl(var(--text))]">{endItem}</span> de <span className="font-medium text-[hsl(var(--text))]">{total}</span>
         </div>
 

@@ -238,6 +238,13 @@ class PackageManager:
             # Fase 12 §20/§21 — paths oficiais de runtime (data/cache/exports/temp).
             from app.module_runtime.paths import ModulePaths
             ModulePaths.for_module(target_dir).ensure_exist()
+
+            # Restaura data/ preservada de uma remoção anterior com keep_data=True
+            # (ver remove()) — permite reinstalar sem perder o que o usuário guardou.
+            data_backup = self._cache / f"{module_id}.data-backup"
+            if data_backup.is_dir():
+                shutil.copytree(str(data_backup), str(target_dir / "data"), dirs_exist_ok=True)
+                shutil.rmtree(data_backup)
         except Exception as exc:
             if extract_tmp.exists():
                 shutil.rmtree(extract_tmp, ignore_errors=True)
@@ -254,7 +261,7 @@ class PackageManager:
 
     # ── Remove ────────────────────────────────────────────────────────────────
 
-    async def remove(self, module_id: str) -> RemoveResult:
+    async def remove(self, module_id: str, keep_data: bool = False) -> RemoveResult:
         """
         Remove an installed module.
 
@@ -263,6 +270,11 @@ class PackageManager:
           2. Deregister from in-memory registry
           3. Delete the installed directory
           4. Hot-reload registry
+
+        keep_data: se True, o conteúdo de data/ é copiado pro cache antes do
+        rmtree e restaurado automaticamente numa reinstalação futura (ver
+        install()). O diretório do módulo ainda é apagado por completo —
+        senão uma reinstalação seria rejeitada como "já instalado".
         """
         target_dir = self._installed / module_id
         entry = registry.get(module_id)
@@ -305,6 +317,14 @@ class PackageManager:
         # can be mounted again (idempotency guard would otherwise skip it).
         from app.module_engine.plugin_loader import _mounted_module_ids
         _mounted_module_ids.discard(module_id)
+
+        if keep_data:
+            data_dir = target_dir / "data"
+            if data_dir.is_dir():
+                data_backup = self._cache / f"{module_id}.data-backup"
+                if data_backup.exists():
+                    shutil.rmtree(data_backup)
+                shutil.copytree(str(data_dir), str(data_backup))
 
         try:
             shutil.rmtree(target_dir)

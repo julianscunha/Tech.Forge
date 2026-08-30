@@ -233,6 +233,40 @@ class TestRemove:
         )
         assert log_entry is not None
 
+    def test_remove_without_keep_data_deletes_everything(self, tmp_path):
+        pm = make_package_manager(tmp_path)
+        self._install(pm, tmp_path)
+        data_dir = tmp_path / "installed" / "test_pkg" / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / "state.json").write_text('{"foo": "bar"}')
+
+        asyncio.run(pm.remove("test_pkg", keep_data=False))
+
+        assert not (tmp_path / "installed" / "test_pkg").exists()
+        # reinstall must NOT bring the old data back — nothing was preserved
+        mod2 = make_mod_file(tmp_path / "reinstall", MANIFEST_BASE.copy())
+        asyncio.run(pm.install(mod2))
+        assert not (tmp_path / "installed" / "test_pkg" / "data" / "state.json").exists()
+
+    def test_remove_with_keep_data_preserves_data_across_reinstall(self, tmp_path):
+        pm = make_package_manager(tmp_path)
+        self._install(pm, tmp_path)
+        data_dir = tmp_path / "installed" / "test_pkg" / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / "state.json").write_text('{"foo": "bar"}')
+
+        result = asyncio.run(pm.remove("test_pkg", keep_data=True))
+        assert result.success
+        # module dir is fully gone so a fresh install isn't blocked as duplicate
+        assert not (tmp_path / "installed" / "test_pkg").exists()
+
+        mod2 = make_mod_file(tmp_path / "reinstall", MANIFEST_BASE.copy())
+        result2 = asyncio.run(pm.install(mod2))
+        assert result2.success, result2.message
+        restored = tmp_path / "installed" / "test_pkg" / "data" / "state.json"
+        assert restored.exists()
+        assert restored.read_text() == '{"foo": "bar"}'
+
 
 # ── Update tests ──────────────────────────────────────────────────────────────
 

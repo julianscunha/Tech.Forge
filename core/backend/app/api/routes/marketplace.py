@@ -158,9 +158,12 @@ async def install_module(module_id: str):
 # ── Remove ────────────────────────────────────────────────────────────────────
 
 @router.delete("/remove/{module_id}", response_model=OperationResponse)
-async def remove_module(module_id: str):
-    """Remove an installed module and hot-reload the registry."""
-    result = await package_manager.remove(module_id)
+async def remove_module(module_id: str, keep_data: bool = False):
+    """Remove an installed module and hot-reload the registry.
+
+    keep_data: preserva data/ pra ser restaurado numa reinstalação futura.
+    """
+    result = await package_manager.remove(module_id, keep_data=keep_data)
     if result.status == RemoveStatus.NOT_FOUND:
         raise HTTPException(status_code=404, detail=result.message)
     if result.status == RemoveStatus.BLOCKED:

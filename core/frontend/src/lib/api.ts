@@ -77,8 +77,8 @@ export const marketplaceApi = {
   install: (moduleId: string) =>
     request<OperationResponse>(`/marketplace/install/${moduleId}`, { method: 'POST' }),
 
-  remove: (moduleId: string) =>
-    request<OperationResponse>(`/marketplace/remove/${moduleId}`, { method: 'DELETE' }),
+  remove: (moduleId: string, keepData = false) =>
+    request<OperationResponse>(`/marketplace/remove/${moduleId}?keep_data=${keepData}`, { method: 'DELETE' }),
 
   update: (moduleId: string) =>
     request<OperationResponse>(`/marketplace/update/${moduleId}`, { method: 'POST' }),

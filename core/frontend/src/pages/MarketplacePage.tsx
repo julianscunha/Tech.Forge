@@ -13,6 +13,7 @@ import { CatalogCard } from '@/components/catalog/CatalogCard'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
 import { InstallJobDialog } from '@/components/catalog/InstallJobDialog'
 import { CatalogSourcesPanel } from '@/components/catalog/CatalogSourcesPanel'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { PackageInfo, OperationResponse, CatalogModule } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -48,6 +49,7 @@ export function MarketplacePage() {
   const [catalogConflicts,  setCatalogConflicts]  = useState<Record<string, string[]>>({})
   const [showSourcesPanel,  setShowSourcesPanel]  = useState(false)
   const [catalogLoadingPkg, setCatalogLoadingPkg] = useState<string | null>(null)
+  const [pendingRemoval,    setPendingRemoval]    = useState<PackageInfo | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoadState('loading')
@@ -89,6 +91,11 @@ export function MarketplacePage() {
     }
   }, [catalogFilters, selectedCategory, catalogPage, catalogPageSize])
 
+  const handleCatalogFilterChange = useCallback((filters: Partial<CatalogListParams>) => {
+    setCatalogFilters(prev => ({ ...prev, ...filters }))
+    setCatalogPage(1)
+  }, [])
+
   useEffect(() => { fetchAll() }, [fetchAll])
 
   useEffect(() => {
@@ -103,6 +110,13 @@ export function MarketplacePage() {
     const t = setTimeout(() => setFeedback(null), 4000)
     return () => clearTimeout(t)
   }, [feedback])
+
+  const handleRemoveConfirm = async (alsoRemoveData: boolean) => {
+    if (!pendingRemoval) return
+    const moduleId = pendingRemoval.module_id
+    setPendingRemoval(null)
+    await handleOperation(moduleId, () => marketplaceApi.remove(moduleId, !alsoRemoveData))
+  }
 
   const handleOperation = async (
     moduleId: string,
@@ -283,14 +297,7 @@ export function MarketplacePage() {
                   loading={loadingPkg === pkg.module_id}
                   onClick={setSelected}
                   onInstall={p => handleOperation(p.module_id, () => marketplaceApi.install(p.module_id))}
-                  onRemove={p  => {
-                    if (window.confirm(
-                      `Remover PERMANENTEMENTE o módulo "${p.name}"?\n` +
-                      'Os arquivos do módulo serão apagados. Esta ação não pode ser desfeita.'
-                    )) {
-                      handleOperation(p.module_id, () => marketplaceApi.remove(p.module_id));
-                    }
-                  }}
+                  onRemove={p => setPendingRemoval(p)}
                   onUpdate={p  => handleOperation(p.module_id, () => marketplaceApi.update(p.module_id))}
                   onActivate={p   => handleOperation(p.module_id, () => marketplaceApi.activate(p.module_id))}
                   onDeactivate={p => handleOperation(p.module_id, () => marketplaceApi.deactivate(p.module_id))}
@@ -306,12 +313,7 @@ export function MarketplacePage() {
         <>
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Filter bar */}
-            <CatalogFilterBar
-              onChange={filters => {
-                setCatalogFilters(filters)
-                setCatalogPage(1)
-              }}
-            />
+            <CatalogFilterBar onChange={handleCatalogFilterChange} />
 
             {/* Main content area */}
             <div className="flex-1 overflow-hidden flex">
@@ -340,7 +342,7 @@ export function MarketplacePage() {
                 {/* Grid */}
                 <div className="flex-1 overflow-y-auto px-6 py-5">
                   {catalogLoadState === 'loading' && catalogModules.length === 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                       {[1,2,3,4,5,6].map(i => (
                         <div key={i} className="h-40 rounded-lg bg-[hsl(var(--bg-elevated))] animate-pulse border border-[hsl(var(--border-subtle))]" />
                       ))}
@@ -354,7 +356,7 @@ export function MarketplacePage() {
                       <p className="text-xs text-[hsl(var(--text-muted))] max-w-xs">Tente ajustar os filtros ou adicionar novas fontes</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                       {catalogModules.map(mod => (
                         <CatalogCard
                           key={mod.module_id}
@@ -441,6 +443,22 @@ export function MarketplacePage() {
         <CatalogSourcesPanel
           onClose={() => setShowSourcesPanel(false)}
           onRefresh={() => fetchCatalog()}
+        />
+      )}
+
+      {/* ── Remove confirmation ───────────────────────────────────────── */}
+      {pendingRemoval && (
+        <ConfirmDialog
+          title="Remover módulo"
+          message={
+            `Remover PERMANENTEMENTE o módulo "${pendingRemoval.name}"?\n` +
+            'Os arquivos do módulo serão apagados. Esta ação não pode ser desfeita.'
+          }
+          confirmLabel="Remover"
+          danger
+          checkboxLabel="Também remover os dados salvos deste módulo (data)"
+          onConfirm={handleRemoveConfirm}
+          onCancel={() => setPendingRemoval(null)}
         />
       )}
 
