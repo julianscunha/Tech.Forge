@@ -85,7 +85,7 @@ export function DashboardPage() {
   const visibleOrder = getEffectiveOrder(order).filter((id) => !hidden.includes(id))
 
   return (
-    <div className="px-6 pt-4 pb-6 space-y-6 max-w-7xl">
+    <div className="px-6 pt-4 pb-6 space-y-6">
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
@@ -177,7 +177,7 @@ export function DashboardPage() {
               Nenhum card visível — use a engrenagem acima pra mostrar algum.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 items-start">
               {visibleOrder.map((id) => (
                 <DraggableCard key={id} id={id}>
                   {cardRenderers[id]}
@@ -190,7 +190,7 @@ export function DashboardPage() {
 
       {/* Skeleton on first load */}
       {loadState === 'idle' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-[104px] rounded-lg" />
           ))}
