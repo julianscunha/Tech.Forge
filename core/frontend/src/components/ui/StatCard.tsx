@@ -13,7 +13,7 @@ export function StatCard({ label, value, icon: Icon, description, className }: S
   return (
     <div
       className={cn(
-        'rounded-lg p-4',
+        'rounded-lg p-4 h-[104px]',
         'bg-[hsl(var(--bg-elevated))]',
         'border border-[hsl(var(--border-subtle))]',
         className

@@ -11,7 +11,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/tests-721%20passing-brightgreen)](#-testes)
+[![Tests](https://img.shields.io/badge/tests-850%20passing-brightgreen)](#-testes)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
@@ -153,7 +153,7 @@ TechForge/
 ├── sdk/python/                # SDK para desenvolvedores de módulos
 ├── docs/                      # INDEX.md · phases/ · developer-center/ · architecture.md
 ├── config/                    # .env
-└── tests/ → core/backend/tests/  # 721 testes pytest (unit/integration/contract/e2e/smoke)
+└── tests/ → core/backend/tests/  # 850 testes pytest (unit/integration/contract/e2e/smoke)
 ```
 
 ---
@@ -229,7 +229,7 @@ específicas de SQLite ficam isoladas na camada de dados.
 
 ## 🧪 Testes
 
-721 testes no backend (`core/backend/tests/`), organizados por nível via
+850 testes no backend (`core/backend/tests/`), organizados por nível via
 `pytest` markers (`unit`/`integration`/`contract`/`e2e`/`smoke`/`regression`,
 `--strict-markers`); 113 no CLI (`cli/tests/`). CI roda tudo automaticamente
 em cada push/PR ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
@@ -387,6 +387,24 @@ CLI: `techforge version` · `techforge release-check [--skip-tests] [--skip-buil
 </details>
 
 <details>
+<summary><b>Observability & Diagnostics</b></summary>
+
+| Method | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/v1/diagnostics` | Snapshot completo (platform/storage/runtime/módulos) |
+| GET | `/api/v1/diagnostics/errors?limit=` | Erros recentes (Error Registry, com código de diagnóstico) |
+| GET | `/api/v1/diagnostics/executions?limit=` | Execuções recentes (module_id, status, duração) |
+| GET | `/api/v1/diagnostics/resources` | Uso de recursos (CPU/memória/disco) |
+| GET | `/api/v1/diagnostics/heaviest-modules?limit=` | Módulos por espaço em disco + duração + taxa de falha |
+| GET | `/api/v1/diagnostics/export?format=json\|txt` | Export de relatório de diagnóstico |
+| GET | `/api/v1/diagnostics/support-bundle` | Support Bundle sanitizado (ZIP) |
+| GET | `/api/v1/modules/:id/diagnostics` · `/executions` | Diagnóstico e histórico de execução por módulo |
+
+CLI: `techforge diagnostics` · `techforge modules diagnostics <id>` · `techforge logs --follow`.
+
+</details>
+
+<details>
 <summary><b>Notifications</b></summary>
 
 | Method | Path | Descrição |
@@ -426,10 +444,13 @@ Runtime (modo Desktop) · Documentation Compliance Checker · Service Registry
 Module Trust · Marketplace Distribution (catálogo multi-fonte) ·
 Configuration & Persistence (migrations, config de módulo, Secret Store) ·
 Platform Quality & Release Engineering (CI, testes por nível, Release
-Readiness Report).
+Readiness Report) · Observability, Telemetry & Diagnostics (logs
+estruturados, métricas, Error Registry, correlação de falhas, Dashboard
+incrementado, página `/diagnostics`).
 
-**🔜 Próximo**: Observability, Telemetry & Diagnostics (logs estruturados,
-métricas, diagnóstico do sistema).
+**🔜 Próximo**: ver [`tasks/phase-audit.md`](tasks/phase-audit.md) para a
+ordem recomendada das fases restantes (Desktop dist / Security hardening /
+Finalization).
 
 **⏸️ Adiado** (decisão de foco em single-user/Desktop, retomado só com
 necessidade real de negócio): Central Server & Multi-User Readiness,

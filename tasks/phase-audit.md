@@ -55,6 +55,9 @@ pra avaliar viabilidade de resolver, sem reabrir 15 arquivos toda vez.
 | Fase 12 | Frontend nunca verificado visualmente em navegador real — sem ferramenta de browser automation disponível nas sessões até agora | 🟡 | Continua verdade; `npm run build` cobre compilação, não comportamento visual |
 | Fase 15 | Marker de teste `regression` registrado mas nunca usado | ⚪ | Nenhum bug foi corrigido nas fases desde então que justificasse um |
 | Fase 15 | `techforge validate-module` quebra no console PowerShell/Windows por encoding cp1252 (glifos do `rich`) | 🟡 | Não reproduzido em CI (Ubuntu/UTF-8); só afeta a experiência local do dev no Windows |
+| Fase 14 | Diagnóstico por módulo (`get_diagnostics()` opcional, contrato pro módulo implementar) existe só no backend — sem seção dedicada na página do próprio módulo | ⚪ | Fora de escopo da Fase 14 por decisão registrada no plano; revisitar quando um módulo real precisar |
+| Fase 14 | `techforge logs --follow` é polling simples (0.5s), não inotify/similar | ⚪ | Suficiente pro volume de log de um Desktop, não pretende ser um `tail -f` de alta frequência |
+| Fase 14 | `runtime_id` (Fase 9) e `execution_id` (Fase 14) coexistem como conceitos parecidos mas distintos | ⚪ | Nomenclatura herdada pra não quebrar callers/testes existentes; documentada, não unificada |
 
 **Decisões conscientes de escopo, já adiadas por decisão explícita do usuário (não listar de novo — ver a tabela de fases acima)**: config de módulo sem tipo lista/array (Fase 12), Module Storage API só key-value sem provisionamento de schema relacional (Fase 12), Runtime/Execution Configuration como camadas distintas (Fase 12) — todas revisitar só quando um módulo real precisar, não especular agora.
 

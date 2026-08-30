@@ -9,13 +9,13 @@ export function RecentCriticalEventsCard() {
   const [errors, setErrors] = useState<DiagnosticError[] | null>(null)
 
   useEffect(() => {
-    diagnosticsApi.errors(5).then(setErrors).catch(() => setErrors([]))
+    diagnosticsApi.errors(3).then(setErrors).catch(() => setErrors([]))
   }, [])
 
   return (
     <button
       onClick={() => navigate('/diagnostics')}
-      className="text-left w-full h-full rounded-lg p-4 bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border-subtle))]"
+      className="text-left w-full h-[104px] rounded-lg p-4 bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border-subtle))] overflow-hidden"
     >
       <div className="flex items-center gap-1.5 mb-2">
         <Siren size={12} className="text-[hsl(var(--text-muted))]" />

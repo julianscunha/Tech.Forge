@@ -26,7 +26,7 @@ export function ResourceUsageCard() {
       <button
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="w-full text-left p-4"
+        className="w-full text-left p-4 h-[104px]"
       >
         <div className="flex items-start justify-between">
           <div className="space-y-1">
