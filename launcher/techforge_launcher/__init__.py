@@ -240,9 +240,16 @@ def _clear_state() -> None:
 
 
 def already_running() -> bool:
-    """True when a live launcher instance recorded in state.json exists."""
+    """True when the platform is genuinely running.
+
+    Checks the backend process — the actual persistent process — not
+    `launcher_pid`: the CLI invocation that runs `start()` exits normally
+    once startup completes (control returns to the shell), by design.
+    Using `launcher_pid` here always reported "not running" right after
+    a successful start, even with a perfectly healthy backend.
+    """
     state = _read_state()
-    pid = state.get("launcher_pid")
+    pid = state.get("backend_pid")
     return bool(pid and _pid_alive(int(pid)))
 
 
@@ -423,7 +430,7 @@ def status() -> PlatformState:
     running = already_running()
     ps.launcher = ComponentStatus(
         "Launcher", "READY" if running else "STOPPED",
-        detail=f"pid={_read_state().get('launcher_pid')}" if running else "",
+        detail=f"backend_pid={_read_state().get('backend_pid')}" if running else "",
     )
 
     state = _read_state()
@@ -440,11 +447,17 @@ def status() -> PlatformState:
         ps.database = ComponentStatus("Database", "STOPPED")
         ps.runtime = ComponentStatus("Runtime", "STOPPED")
 
-    frontend_pid = state.get("frontend_pid")
-    if frontend_pid and _pid_alive(int(frontend_pid)):
-        fe_ok = _http_ok(FRONTEND_URL)
-        ps.frontend = ComponentStatus("Frontend", "READY" if fe_ok else "FAILING")
+    if state.get("frontend_mode") == "static":
+        # Desktop: sem processo Node separado — a UI é servida pelo
+        # próprio backend (dist/ estático), então o status do frontend
+        # é o mesmo do backend, não "STOPPED" por falta de PID próprio.
+        ps.frontend = ComponentStatus("Frontend", ps.backend.state, detail="estático via backend")
     else:
-        ps.frontend = ComponentStatus("Frontend", "STOPPED")
+        frontend_pid = state.get("frontend_pid")
+        if frontend_pid and _pid_alive(int(frontend_pid)):
+            fe_ok = _http_ok(FRONTEND_URL)
+            ps.frontend = ComponentStatus("Frontend", "READY" if fe_ok else "FAILING")
+        else:
+            ps.frontend = ComponentStatus("Frontend", "STOPPED")
 
     return ps

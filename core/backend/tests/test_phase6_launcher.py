@@ -45,12 +45,14 @@ class TestSingleInstance:
         assert L.already_running() is False
 
     def test_running_with_live_pid(self, clean_state):
-        L._write_state({"launcher_pid": os.getpid()})
+        # already_running() reflete o backend (processo persistente), não
+        # launcher_pid (a CLI de `start` sai assim que termina, por design).
+        L._write_state({"backend_pid": os.getpid()})
         assert L.already_running() is True
 
     def test_stale_pid_reported_dead(self, clean_state):
         # PID 4 billion cannot exist on Windows or POSIX
-        L._write_state({"launcher_pid": 4_000_000_000})
+        L._write_state({"backend_pid": 4_000_000_000})
         assert L.already_running() is False
 
     def test_corrupt_state_is_not_running(self, clean_state):
@@ -116,6 +118,45 @@ class TestStatus:
     def test_summary_shape_matches_spec(self, clean_state):
         keys = set(L.status().summary().keys())
         assert {"launcher", "backend", "frontend", "database", "runtime"} == keys
+
+    def test_launcher_reported_ready_after_start_cli_process_exits(self, clean_state, monkeypatch):
+        """Regressão: `techforge start` roda em foreground, sobe o backend,
+        e SAI (devolve o prompt) assim que a plataforma fica pronta — por
+        design, não é um daemon. `launcher_pid` gravado no state.json é o
+        PID desse processo já morto; usar ele pra decidir "está rodando?"
+        sempre reportava STOPPED mesmo com o backend saudável."""
+        import subprocess
+        proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        try:
+            L._write_state({
+                "launcher_pid": 4_000_000_000,  # processo do `start` já saiu
+                "backend_pid": proc.pid,        # backend continua vivo
+            })
+            monkeypatch.setattr(L, "_http_ok", lambda url, timeout=2.0: True)
+            assert L.already_running() is True
+            assert L.status().launcher.state == "READY"
+        finally:
+            proc.kill()
+            proc.wait()
+
+    def test_frontend_reported_ready_in_desktop_static_mode(self, clean_state, monkeypatch):
+        """Regressão: no modo Desktop não existe processo de frontend
+        separado (o próprio backend serve dist/, frontend_pid=None) — mas
+        `status()` reportava Frontend como STOPPED mesmo com o painel web
+        acessível de verdade via backend."""
+        import subprocess
+        proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        try:
+            L._write_state({
+                "backend_pid": proc.pid,
+                "frontend_pid": None,
+                "frontend_mode": "static",
+            })
+            monkeypatch.setattr(L, "_http_ok", lambda url, timeout=2.0: True)
+            assert L.status().frontend.state == "READY"
+        finally:
+            proc.kill()
+            proc.wait()
 
 
 # ── Runtime foundation (§17) ───────────────────────────────────────────────────
