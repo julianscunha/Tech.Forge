@@ -5,6 +5,7 @@ import { ModulesPage }         from '@/pages/ModulesPage'
 import { MarketplacePage }     from '@/pages/MarketplacePage'
 import { SettingsPage }        from '@/pages/SettingsPage'
 import { DeveloperCenterPage } from '@/pages/DeveloperCenterPage'
+import { DiagnosticsPage }     from '@/pages/DiagnosticsPage'
 import { ModuleRouteSync }    from '@/components/modules/ModuleRouteSync'
 
 /**
@@ -24,6 +25,7 @@ export function AppRouter() {
           <Route path="modules"          element={<ModulesPage />} />
           <Route path="marketplace"      element={<MarketplacePage />} />
           <Route path="developer-center" element={<DeveloperCenterPage />} />
+          <Route path="diagnostics"      element={<DiagnosticsPage />} />
           <Route path="settings"         element={<SettingsPage />} />
           {/* Phase 2+ — Plugin Loader: sincroniza URL <-> aba de módulo.
               O conteúdo em si vem de ModuleWorkspace (montado em AppShell,

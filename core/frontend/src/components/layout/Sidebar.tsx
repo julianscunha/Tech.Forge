@@ -269,8 +269,9 @@ export function Sidebar() {
   ]
 
   const PLATFORM_ITEMS: StaticItem[] = [
-    { id: 'marketplace', label: 'Marketplace',   icon: Store,    path: '/marketplace' },
-    { id: 'settings',    label: 'Configurações', icon: Settings, path: '/settings'   },
+    { id: 'marketplace',  label: 'Marketplace',   icon: Store,    path: '/marketplace' },
+    { id: 'diagnostics',  label: 'Diagnostics',   icon: Activity, path: '/diagnostics' },
+    { id: 'settings',     label: 'Configurações', icon: Settings, path: '/settings'   },
   ]
 
   return (

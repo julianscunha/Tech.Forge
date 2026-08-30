@@ -16,6 +16,7 @@ const CONTEXT_BY_PATH: [RegExp, string][] = [
   [/^\/modules\/?$/, 'modules'],
   [/^\/marketplace/, 'marketplace'],
   [/^\/developer-center/, 'developer-center'],
+  [/^\/diagnostics/, 'diagnostics'],
   [/^\/settings/, 'settings'],
 ]
 

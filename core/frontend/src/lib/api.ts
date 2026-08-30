@@ -276,9 +276,10 @@ export const platformConfigApi = {
 
 // ── Fase 14 — Observability / Diagnostics ────────────────────────────────────
 
-import type { DiagnosticError, ExecutionEntry, ResourceUsage, HeaviestModule } from '@/types'
+import type { DiagnosticError, ExecutionEntry, ResourceUsage, HeaviestModule, DiagnosticsHealth } from '@/types'
 
 export const diagnosticsApi = {
+  health:          ()            => request<DiagnosticsHealth>('/diagnostics/health'),
   errors:          (limit = 50)  => request<DiagnosticError[]>(`/diagnostics/errors?limit=${limit}`),
   executions:      (limit = 50)  => request<ExecutionEntry[]>(`/diagnostics/executions?limit=${limit}`),
   resources:       ()            => request<ResourceUsage>('/diagnostics/resources'),
@@ -289,4 +290,10 @@ export const diagnosticsApi = {
     recent_errors: Pick<DiagnosticError, 'id' | 'code' | 'message' | 'created_at'>[]
     recent_executions: Pick<ExecutionEntry, 'execution_id' | 'status' | 'duration_seconds' | 'created_at'>[]
   }>(`/modules/${moduleId}/diagnostics`),
+
+  exportReport: async (format: 'json' | 'txt' | 'zip'): Promise<Blob> => {
+    const res = await fetch(`${BASE_URL}/diagnostics/export?format=${format}`, { method: 'POST' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.blob()
+  },
 }

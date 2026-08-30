@@ -474,3 +474,23 @@ export interface DependencyCheck {
   required: boolean
   detail: string
 }
+
+export interface DiagnosticsHealth {
+  platform: {
+    name: string
+    version: string
+    database_status: string
+    modules_installed: number
+    modules_enabled: number
+    categories_registered: number
+  }
+  storage: { database: boolean; writable: boolean }
+  runtime: {
+    state: string
+    started_at: string | null
+    uptime_seconds: number | null
+    frontend_mode: string
+    components: Record<string, boolean>
+    events: { timestamp: string; name: string; detail: string }[]
+  }
+}
