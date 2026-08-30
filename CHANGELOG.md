@@ -6,6 +6,9 @@ Este changelog cobre o **Core** apenas. Cada módulo mantém seu próprio `CHANG
 
 ## [Unreleased]
 
+### Added
+- **Observability, Telemetry & Diagnostics** — logs estruturados (JSON-lines) com rotação/retenção configurável; redação automática de dados sensíveis por padrão de chave; métricas operacionais (execuções, falhas, dependências); Error Registry e Execution History persistidos com códigos de diagnóstico estáveis; correlação de falha entre erro, módulo, execução e dependências; página `/diagnostics` e Dashboard incrementado (uso de recursos, módulo mais pesado, eventos críticos recentes, cards reorganizáveis); export de relatório de diagnóstico e Support Bundle sanitizado (JSON/TXT/ZIP); `techforge diagnostics`/`techforge modules diagnostics`/`techforge logs --follow`.
+
 ## [1.0.0] - 2026-08-30
 
 Primeira release estável do Core. Plataforma modular local-first completa: instalar, executar, configurar e documentar módulos plugáveis numa única aplicação Desktop leve.
