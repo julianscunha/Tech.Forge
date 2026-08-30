@@ -129,6 +129,41 @@ visualmente).
 (`app/services/changelog.py::validate_changelog()`). Módulos mantêm
 `CHANGELOG.md` próprio na pasta do módulo — nunca misturar releases.
 
+### Processo padrão de release (GitHub Releases)
+
+Passo a passo pra cortar uma release nova do Core:
+
+1. Mover o conteúdo acumulado em `## [Unreleased]` do `CHANGELOG.md` para
+   uma seção nova `## [X.Y.Z] - YYYY-MM-DD`, categorizado em
+   `Added`/`Changed`/`Fixed`/`Deprecated`/`Removed` (só o que houver —
+   não força seção vazia) + `Known Issues` com as limitações que
+   realmente importam pra quem vai usar a release (não é o lugar pra
+   despejar todo débito técnico interno — isso fica em
+   `tasks/phase-audit.md`).
+2. Atualizar `PLATFORM_VERSION` em `app/core/settings.py` e `"version"`
+   em `core/frontend/package.json` pro mesmo valor (§24 — fonte única;
+   há um teste de guarda que trava se divergirem).
+3. `techforge release-check` — precisa reportar `Release: READY` antes
+   de seguir.
+4. Validar o changelog: `validate_changelog()` deve retornar sem erros
+   (seção, data e versão bem formadas) — já roda como teste automatizado.
+5. Commit da atualização de versão/changelog, depois:
+   ```bash
+   git tag -a vX.Y.Z -m "vX.Y.Z"
+   git push origin vX.Y.Z
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <(sed -n '/## \[X.Y.Z\]/,/## \[/p' CHANGELOG.md | sed '$d')
+   ```
+   Ou, mais simples: copiar manualmente o bloco da versão nova do
+   `CHANGELOG.md` (sem o cabeçalho `## [X.Y.Z] - data`) como corpo do
+   `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file -`.
+6. Versionamento segue [SemVer](https://semver.org/): `MAJOR` = breaking
+   change, `MINOR` = funcionalidade nova compatível, `PATCH` = correção
+   compatível — mesma regra do `is_valid_semver()`.
+
+Módulo segue o mesmo princípio (`CHANGELOG.md` próprio + tag no repositório
+onde o módulo vive), mas não usa GitHub Releases do Core — cada catálogo de
+módulos define seu próprio processo de publicação.
+
 ---
 
 ## Release Readiness Report
