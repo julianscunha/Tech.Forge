@@ -11,13 +11,11 @@ from app.doc_engine import doc_indexer
 from app.module_engine import journal as loader_journal
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
+from app.observability.logging_setup import configure_logging
 from app.runtime import runtime
 from app.security.redaction import SecretRedactionFilter
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+configure_logging(level=settings.LOG_LEVEL, logs_path=settings.LOGS_PATH)
 
 
 def _install_secret_redaction_filter(logger: logging.Logger | None = None) -> None:

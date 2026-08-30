@@ -26,6 +26,7 @@ graphify-out/
 # Logs
 logs/*.log
 logs/*.txt
+logs/*.jsonl
 logs/pids/
 
 # Runtime state (gerado, não versionar)

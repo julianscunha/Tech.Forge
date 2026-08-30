@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     PORT: int = 8000
     RELOAD: bool = True
 
+    # Observability (Fase 14)
+    LOG_LEVEL: str = "INFO"
+
     # Launcher (Phase 6)
     FRONTEND_PORT: int = 5173
     HEALTH_CHECK_TIMEOUT: int = 60      # seconds waiting for backend READY
