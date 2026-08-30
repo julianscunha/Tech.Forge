@@ -16,10 +16,10 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from app.doc_engine.completeness import CompletenessReport, DocCompletenessChecker, DoDCheck
+from app.doc_engine.indexer import DocIndexer
 from app.doc_engine.models import DocCategory, DocEntry, ServiceContract
 from app.doc_engine.search import DocIndex, DocSearchEngine
-from app.doc_engine.indexer import DocIndexer
-from app.doc_engine.completeness import DocCompletenessChecker, CompletenessReport, DoDCheck
 
 logger = logging.getLogger("techforge.doc_engine")
 
@@ -116,7 +116,7 @@ class AIContextExporter:
             if not entries:
                 continue
 
-            lines.append(f"---")
+            lines.append("---")
             lines.append(f"## {cls.SECTION_TITLES[category]}")
             lines.append("")
 
@@ -170,9 +170,9 @@ class AIContextExporter:
                     lines.append("")
 
         # ── Dependency Governance (Fase 8.1) ───────────────────────────────────
+        from app.dependency_engine.graph import DependencyGraph
         from app.module_engine.registry import registry as module_registry
         from app.service_registry.registry import service_registry
-        from app.dependency_engine.graph import DependencyGraph
 
         graph = DependencyGraph.build(module_registry, service_registry)
         if graph.edges:
@@ -237,9 +237,9 @@ class AIContextExporter:
         # ── Module Catalog (Fase 11 §25) ─────────────────────────────────────────
         # Provide context about available catalog sources and remote installation
         try:
+            from app.db.database import AsyncSessionLocal
             from app.package_manager.catalog_aggregator import CatalogAggregator
             from app.services.catalog_source import CatalogSourceService
-            from app.db.database import AsyncSessionLocal
 
             # Note: This section builds without actual DB query
             # (AI context is generated server-side on demand, not in background)

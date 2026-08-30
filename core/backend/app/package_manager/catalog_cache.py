@@ -9,8 +9,8 @@ esta classe fica só como alias de compatibilidade com a API já usada por
 `CatalogAggregator` e pelos testes da Fase 11 (mesmo construtor, mesmos
 métodos get/set/invalidate).
 """
-from app.storage.cache import TTLCache
 from app.package_manager.models import PackageInfo
+from app.storage.cache import TTLCache
 
 
 class CatalogCache(TTLCache[list[PackageInfo]]):

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -21,12 +20,11 @@ ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "sdk" / "python"))
 sys.path.insert(0, str(ROOT / "cli"))
 
-from techforge_cli.validators.module_validator import ModuleCLIValidator
-from techforge_cli.templates.generator import ModuleSpec, TemplateGenerator
 from techforge_cli.packager.builder import PackageBuilder
-
-from techforge_sdk.contracts import ModuleContract, ModuleMetadata, HealthResult
-from techforge_sdk import create_sdk, TechForgeSDK
+from techforge_cli.templates.generator import ModuleSpec, TemplateGenerator
+from techforge_cli.validators.module_validator import ModuleCLIValidator
+from techforge_sdk import TechForgeSDK, create_sdk
+from techforge_sdk.contracts import HealthResult, ModuleContract, ModuleMetadata
 
 pytestmark = pytest.mark.integration
 
@@ -420,6 +418,7 @@ class TestSDKServices:
 
     def test_database_mock_insert_fetch(self):
         import asyncio
+
         from techforge_sdk.database import DatabaseSDK
         db = DatabaseSDK("test")
         asyncio.run(db.execute("INSERT INTO jobs (name) VALUES (?)", ["nightly"]))

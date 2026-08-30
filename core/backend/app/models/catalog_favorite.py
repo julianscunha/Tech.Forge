@@ -7,7 +7,7 @@ sem números agregados — é uma marca desta instalação apenas.
 
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, func
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base

@@ -259,8 +259,8 @@ export function Sidebar() {
   const collapsed = useAppStore(s => s.sidebarCollapsed)
   const { tree, refresh } = useNavStore()
 
-  // Fetch navigation tree on mount and whenever location changes after hot-reload
-  useEffect(() => { refresh() }, [])
+  // Fetch navigation tree on mount — `refresh` (zustand action) é estável entre renders
+  useEffect(() => { refresh() }, [refresh])
 
   const CORE_ITEMS: StaticItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },

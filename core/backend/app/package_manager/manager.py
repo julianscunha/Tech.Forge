@@ -21,27 +21,27 @@ Hot reload strategy (Phase 4):
 """
 from __future__ import annotations
 
-import hashlib
 import asyncio
-import json
 import logging
 import shutil
 import zipfile
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 import yaml
 
 from app.core.settings import settings
-from app.module_engine.loader import ModuleLoader
-from app.module_engine.registry import registry
 from app.module_engine import journal as loader_journal
 from app.module_engine.enums import ModuleStatus
-from app.package_manager.enums import (
-    InstallStatus, RemoveStatus, UpdateStatus, CompatibilityLevel,
-)
+from app.module_engine.loader import ModuleLoader
+from app.module_engine.registry import registry
 from app.package_manager.compatibility import check_compatibility
+from app.package_manager.enums import (
+    CompatibilityLevel,
+    InstallStatus,
+    RemoveStatus,
+    UpdateStatus,
+)
 from app.package_manager.models import PackageInfo
 from app.package_manager.operation_log import operation_log
 from app.package_manager.repository import LocalRepositoryProvider, RepositoryProvider
@@ -112,8 +112,8 @@ class PackageManager:
             from app.module_engine.registry import registry
             return registry
         if not hasattr(self, "_isolated_registry"):
-            from app.module_engine.registry import ModuleRegistry
             from app.module_engine.loader import ModuleLoader
+            from app.module_engine.registry import ModuleRegistry
             self._isolated_registry = ModuleRegistry()
             loader = ModuleLoader(installed_path=self._installed,
                                   target_registry=self._isolated_registry)

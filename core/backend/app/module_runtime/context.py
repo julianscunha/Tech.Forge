@@ -48,9 +48,9 @@ class ModuleExecutionContext:
         if entry is None:
             return None
 
-        from app.service_registry.registry import service_registry
         from app.db.database import AsyncSessionLocal
         from app.module_engine.manifest import parse_configuration_fields
+        from app.service_registry.registry import service_registry
         from app.services.module_configuration import get_config
 
         fields = parse_configuration_fields(entry.manifest_raw)

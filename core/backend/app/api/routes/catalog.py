@@ -20,10 +20,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings import settings
 from app.db.database import get_db
 from app.package_manager.catalog_aggregator import CatalogAggregator
-from app.package_manager.models import PackageInfo
-from app.services.catalog_source import CatalogSourceService
-from app.services.catalog_favorite import CatalogFavoriteService
 from app.package_manager.catalog_source import CatalogSource
+from app.package_manager.models import PackageInfo
+from app.services.catalog_favorite import CatalogFavoriteService
+from app.services.catalog_source import CatalogSourceService
 
 logger = logging.getLogger("techforge.catalog.api")
 router = APIRouter(prefix="/catalog", tags=["catalog"])

@@ -64,7 +64,6 @@ def test_services_list_offline_fails_cleanly(runner, monkeypatch):
 def test_services_list_prints_service_ids(runner, monkeypatch):
     payload = [{"service_id": "hello_world", "module_id": "hello_world",
                 "status": "ACTIVE", "capabilities": ["hello_world.ping"]}]
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp(payload))
     result = runner.invoke(services_cmd, ["list"])
     assert result.exit_code == 0, result.output
@@ -76,7 +75,6 @@ def test_services_show_prints_descriptor(runner, monkeypatch):
     payload = {"service_id": "hello_world", "module_id": "hello_world",
                "status": "ACTIVE", "capabilities": ["hello_world.ping"],
                "module_version": "1.0.0", "service_version": "1.0.0", "contract": None}
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp(payload))
     result = runner.invoke(services_cmd, ["show", "hello_world"])
     assert result.exit_code == 0, result.output
@@ -85,7 +83,6 @@ def test_services_show_prints_descriptor(runner, monkeypatch):
 
 def test_services_capabilities_prints_map(runner, monkeypatch):
     payload = {"hello_world.ping": ["hello_world"]}
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp(payload))
     result = runner.invoke(services_cmd, ["capabilities"])
     assert result.exit_code == 0, result.output
@@ -97,7 +94,6 @@ def test_services_contract_prints_exports(runner, monkeypatch):
                "description": "d", "version": "1.0.0", "dependencies": [],
                "capabilities": [], "exports": [{"name": "ping", "description": "d",
                "parameters": [], "returns": None, "examples": []}]}
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp(payload))
     result = runner.invoke(services_cmd, ["contract", "hello_world"])
     assert result.exit_code == 0, result.output
@@ -113,7 +109,6 @@ def test_services_search_prints_matches(runner, monkeypatch):
         captured["url"] = url if isinstance(url, str) else url.full_url
         return FakeResp(payload)
 
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
     result = runner.invoke(services_cmd, ["search", "cost"])
     assert result.exit_code == 0, result.output
@@ -122,7 +117,6 @@ def test_services_search_prints_matches(runner, monkeypatch):
 
 
 def test_services_search_no_match_prints_message(runner, monkeypatch):
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp([]))
     result = runner.invoke(services_cmd, ["search", "nonexistent"])
     assert result.exit_code == 0, result.output
@@ -134,7 +128,6 @@ def test_services_status_prints_summary(runner, monkeypatch):
         {"service_id": "a", "module_id": "a", "status": "ACTIVE", "capabilities": []},
         {"service_id": "b", "module_id": "b", "status": "FAILED", "capabilities": []},
     ]
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp(payload))
     result = runner.invoke(services_cmd, ["status"])
     assert result.exit_code == 0, result.output

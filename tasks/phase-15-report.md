@@ -75,4 +75,18 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `d29fa4a`
 
+### Slice 6 — Static quality
+
+**Arquivos**: `pyproject.toml` (novo, raiz — config `ruff` cobrindo `app`, `cli`, `sdk`), `core/backend/requirements-dev.txt` (novo), `core/frontend/eslint.config.js` (novo), `core/frontend/package.json` (devDependencies + script `lint`), 6 arquivos de produção corrigidos (backend: `docs.py`, `registry.py`, `repository.py`; frontend: `DeveloperCenterPage.tsx`, `Sidebar.tsx`, `ContextualHelp.tsx`), `cli/techforge_cli/commands/{modules,platform}.py`.
+
+**O quê — backend**: `ruff` (lint + import order + format, uma ferramenta só — evita empilhar black+flake8+isort) com `select = ["E","F","I"]`; `UP` (pyupgrade/modernização de sintaxe) deliberadamente fora do escopo — gera ~600 mudanças cosméticas sem relação com "quality gate". Achados reais corrigidos: **`logging` usado sem import em `docs.py`** (NameError latente se o `except` daquele bloco fosse atingido); **`httpx.AsyncClient` referenciado só como string de type hint sem `httpx` importado** em `repository.py` (F821); 2 variáveis mortas (`resp`, `logs`) em comandos CLI; 2 imports organizacionais movidos ao topo (E402 genuíno, sem risco de import circular verificado). `E402` liberado só para `tests/*.py` (padrão `sys.path.insert()` antes do import local é necessário, generalizado em ~50 arquivos) e `F401` liberado só para `__init__.py` (re-exports intencionais).
+
+**O quê — frontend**: `eslint` não era sequer instalado (gap pré-existente da Fase 12) — instalado do zero com `typescript-eslint` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh` (flat config, `eslint.config.js`). **Decisão deliberada**: usadas só as regras clássicas de corretude do `react-hooks` (`rules-of-hooks`, `exhaustive-deps`) — o preset `recommended` da v7 do plugin é voltado ao React Compiler e reprovaria o padrão comum de fetch-on-mount usado em todo o codebase (não é bug real, é opinião de estilo incompatível com este projeto). Achado real corrigido: `catch { }` vazio em `DeveloperCenterPage.tsx` engolia erro de reindex sem feedback ao usuário (inconsistente com o `handleExport` vizinho, que já tratava erro) — corrigido pra mostrar mensagem, igual ao padrão irmão. `Sidebar.tsx`: `refresh` (ação zustand, estável entre renders) adicionado ao array de deps do `useEffect` — satisfaz a regra sem mudar comportamento.
+
+**Aceite**: `ruff check` limpo em `app`/`cli`/`sdk`; `npm run lint` limpo (era: não rodava, comando inexistente); `npm run build` continua passando.
+
+**Teste**: `pytest tests -q` (backend) → 690 passed, 3 skipped, sem alteração de contagem (slice de tooling, não adicionou teste novo); `cli && pytest tests -q` → 105 passed; `npm run lint` e `npm run build` → limpos.
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)

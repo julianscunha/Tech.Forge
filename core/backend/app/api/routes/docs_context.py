@@ -5,10 +5,9 @@ Mapping declarativo em docs/context-map.yaml.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
 import yaml
+from fastapi import APIRouter, HTTPException
 
 from app.core.settings import settings
 

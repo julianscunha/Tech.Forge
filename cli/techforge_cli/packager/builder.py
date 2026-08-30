@@ -23,6 +23,6 @@ _CORE_BACKEND = Path(__file__).resolve().parents[3] / "core" / "backend"
 if str(_CORE_BACKEND) not in sys.path:
     sys.path.insert(0, str(_CORE_BACKEND))
 
-from app.package_manager.builder import BuildResult, PackageBuilder
+from app.package_manager.builder import BuildResult, PackageBuilder  # noqa: E402 — precisa do sys.path.insert acima
 
 __all__ = ["BuildResult", "PackageBuilder"]

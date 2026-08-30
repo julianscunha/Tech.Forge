@@ -1,24 +1,25 @@
 from fastapi import APIRouter
-from app.api.routes.platform    import router as platform_router
-from app.api.routes.categories  import router as categories_router
-from app.api.routes.modules     import router as modules_router
-from app.api.routes.registry    import router as registry_router
-from app.api.routes.health      import router as health_router
-from app.api.routes.marketplace import router as marketplace_router
-from app.api.routes.docs        import router as docs_router
-from app.runtime.routes         import router as runtime_router
-from app.api.routes.notifications import router as notifications_router
-from app.api.routes.module_assets import router as module_assets_router
-from app.api.routes.docs_context import router as docs_context_router
-from app.api.routes.services import router as services_router
-from app.api.routes.dependencies import modules_router as dependencies_modules_router
-from app.api.routes.dependencies import dependencies_router
-from app.api.routes.publishers import router as publishers_router
-from app.api.routes.module_verification import router as module_verification_router
+
 from app.api.routes.catalog import router as catalog_router
-from app.api.routes.system import router as system_router
+from app.api.routes.categories import router as categories_router
+from app.api.routes.dependencies import dependencies_router
+from app.api.routes.dependencies import modules_router as dependencies_modules_router
+from app.api.routes.docs import router as docs_router
+from app.api.routes.docs_context import router as docs_context_router
+from app.api.routes.health import router as health_router
+from app.api.routes.marketplace import router as marketplace_router
+from app.api.routes.module_assets import router as module_assets_router
 from app.api.routes.module_config import router as module_config_router
+from app.api.routes.module_verification import router as module_verification_router
+from app.api.routes.modules import router as modules_router
+from app.api.routes.notifications import router as notifications_router
+from app.api.routes.platform import router as platform_router
 from app.api.routes.platform_config import router as platform_config_router
+from app.api.routes.publishers import router as publishers_router
+from app.api.routes.registry import router as registry_router
+from app.api.routes.services import router as services_router
+from app.api.routes.system import router as system_router
+from app.runtime.routes import router as runtime_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(platform_router)

@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import click
-from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
 
 from techforge_cli.console import (
-    console, print_header, print_success, print_error,
-    print_info, print_muted, print_section,
+    console,
+    print_error,
+    print_header,
+    print_info,
+    print_muted,
+    print_section,
+    print_success,
 )
 from techforge_cli.templates.generator import ModuleSpec, TemplateGenerator
 
@@ -117,7 +123,7 @@ def create_module_cmd(
     console.print()
     print_info("Next steps:")
     print_muted(f"  1. cd {module_dir}")
-    print_muted(f"  2. techforge validate-module .")
+    print_muted("  2. techforge validate-module .")
     print_muted(f"  3. cp -r {module_dir} <techforge_root>/modules/installed/")
-    print_muted(f"  4. Restart the TechForge backend")
+    print_muted("  4. Restart the TechForge backend")
     console.print()

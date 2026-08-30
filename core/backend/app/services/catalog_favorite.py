@@ -9,7 +9,6 @@ from typing import Set
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 
 from app.models.catalog_favorite import CatalogFavorite
 

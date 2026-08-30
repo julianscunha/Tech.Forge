@@ -1,16 +1,19 @@
+from app.module_trust.trust import TrustLevel
+from app.package_manager.compatibility import check_compatibility
+from app.package_manager.enums import (
+    CompatibilityLevel,
+    InstallStatus,
+    RemoveStatus,
+    UpdateStatus,
+)
 from app.package_manager.manager import PackageManager, package_manager
 from app.package_manager.models import PackageInfo
-from app.package_manager.enums import (
-    InstallStatus, RemoveStatus, UpdateStatus, CompatibilityLevel,
-)
-from app.module_trust.trust import TrustLevel
+from app.package_manager.operation_log import OperationLogEntry, operation_log
 from app.package_manager.repository import (
-    RepositoryProvider,
     LocalRepositoryProvider,
     RemoteRepositoryProvider,
+    RepositoryProvider,
 )
-from app.package_manager.operation_log import operation_log, OperationLogEntry
-from app.package_manager.compatibility import check_compatibility
 
 __all__ = [
     "PackageManager", "package_manager",

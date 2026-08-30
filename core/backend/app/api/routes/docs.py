@@ -5,12 +5,15 @@ Exposes the full Documentation Engine to the Developer Center frontend.
 """
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from typing import Optional
 
-from app.doc_engine import doc_index, doc_search, doc_indexer
+from app.core.settings import settings as _settings
+from app.doc_engine import DocCompletenessChecker, doc_index, doc_indexer, doc_search
 from app.doc_engine.models import DocCategory
 from app.models.notifications import Notification
 
@@ -206,10 +209,6 @@ def _contract_to_read(c) -> ServiceContractRead:
 
 # ── §16 — Documentation First Principle: Completeness ────────────────────────
 
-from app.doc_engine import DocCompletenessChecker
-from app.core.settings import settings as _settings
-
-
 class DoDCheckRead(BaseModel):
     name:     str
     passed:   bool
@@ -290,9 +289,10 @@ async def run_compliance_check(module_id: str) -> dict:
 
     notified = False
     if not report.is_complete:
+        from sqlalchemy import func, select
+
         from app.db.database import AsyncSessionLocal
         from app.services.notifications import NotificationService
-        from sqlalchemy import select, func
 
         title = "Documentation compliance"
         async with AsyncSessionLocal() as db:

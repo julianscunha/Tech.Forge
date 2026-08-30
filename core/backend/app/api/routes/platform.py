@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-
 import logging
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
 from app.db.database import get_db
-from app.schemas.registry import PlatformStatus, PlatformHealthCheck
+from app.schemas.registry import PlatformHealthCheck, PlatformStatus
 from app.services.registry import CategoryService, ModuleService
 
 logger = logging.getLogger("techforge.platform.api")

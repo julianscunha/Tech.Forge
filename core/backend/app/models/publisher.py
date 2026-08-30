@@ -8,7 +8,7 @@ Decisão do usuário: tabela, não arquivo (consistente com o padrão
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, DateTime, JSON, func
+from sqlalchemy import JSON, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base

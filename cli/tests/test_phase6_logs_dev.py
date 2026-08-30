@@ -13,7 +13,7 @@ from click.testing import CliRunner
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "cli"))
 
-from techforge_cli.commands.platform import logs_cmd, dev_cmd
+from techforge_cli.commands.platform import dev_cmd, logs_cmd
 
 pytestmark = pytest.mark.integration
 

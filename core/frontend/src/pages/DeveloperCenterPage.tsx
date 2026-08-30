@@ -124,7 +124,7 @@ export function DeveloperCenterPage() {
       await loadSection(activeSection)
       setExportMsg(`${r.indexed} documentos reindexados.`)
       setTimeout(() => setExportMsg(null), 3000)
-    } catch { } finally { setReindexing(false) }
+    } catch { setExportMsg('Erro ao reindexar.') } finally { setReindexing(false) }
   }
 
   const activeConfig = SIDEBAR_SECTIONS.find(s => s.id === activeSection)

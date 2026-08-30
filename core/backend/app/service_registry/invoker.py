@@ -16,8 +16,12 @@ from app.core.settings import settings
 from app.module_runtime.loader import ModuleLoadError, load_module_file
 from app.service_registry.descriptor import ServiceStatus
 from app.service_registry.errors import (
-    CapabilityNotFoundError, ContractViolationError, InvalidArgumentsError,
-    ServiceDisabledError, ServiceExecutionFailedError, ServiceNotFoundError,
+    CapabilityNotFoundError,
+    ContractViolationError,
+    InvalidArgumentsError,
+    ServiceDisabledError,
+    ServiceExecutionFailedError,
+    ServiceNotFoundError,
     ServiceUnavailableError,
 )
 from app.service_registry.registry import service_registry

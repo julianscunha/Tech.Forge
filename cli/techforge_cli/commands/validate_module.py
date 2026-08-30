@@ -2,12 +2,18 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import click
 from rich.table import Table
 
 from techforge_cli.console import (
-    console, print_header, print_success, print_error,
-    print_warning, print_info, print_section, print_muted,
+    console,
+    print_error,
+    print_header,
+    print_info,
+    print_section,
+    print_success,
+    print_warning,
 )
 from techforge_cli.validators.module_validator import ModuleCLIValidator
 

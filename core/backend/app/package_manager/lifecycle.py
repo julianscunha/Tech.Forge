@@ -14,13 +14,13 @@ import json
 import logging
 from pathlib import Path
 
-from sqlalchemy import select, update as sa_update
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
+from app.models.registry import Module
 from app.module_engine.enums import ModuleStatus
 from app.module_engine.registry import registry
-from app.models.registry import Module
 from app.package_manager import operation_log
 from app.services.notifications import NotificationService
 
@@ -144,8 +144,8 @@ async def activate_module(db: AsyncSession, module_id: str) -> dict:
 
     # Hot activation — mounting routers on demand is safe and cheap
     try:
-        from app.module_engine.plugin_loader import mount_module_routers
         from app.main import app
+        from app.module_engine.plugin_loader import mount_module_routers
         mount_module_routers(app)
     except Exception as exc:
         logger.warning("Hot mount after activation failed for %s: %s", module_id, exc)

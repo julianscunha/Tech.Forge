@@ -57,7 +57,6 @@ def test_docs_list_prints_titles(runner, monkeypatch):
         def __enter__(self): return self
         def __exit__(self, *a): pass
 
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp())
     result = runner.invoke(docs_cmd, ["list"])
     assert result.exit_code == 0, result.output
@@ -78,7 +77,6 @@ def test_docs_search_passes_query(runner, monkeypatch):
         captured["url"] = url if isinstance(url, str) else url.full_url
         return FakeResp()
 
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
     result = runner.invoke(docs_cmd, ["search", "lifecycle"])
     assert result.exit_code == 0, result.output
@@ -94,7 +92,6 @@ def test_docs_get_prints_article(runner, monkeypatch):
         def __enter__(self): return self
         def __exit__(self, *a): pass
 
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp())
     result = runner.invoke(docs_cmd, ["get", "core/overview"])
     assert result.exit_code == 0, result.output
@@ -109,7 +106,6 @@ def test_docs_export_context_outputs_text(runner, monkeypatch):
         def __enter__(self): return self
         def __exit__(self, *a): pass
 
-    import urllib.request
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResp())
     result = runner.invoke(docs_cmd, ["export-context"])
     assert result.exit_code == 0, result.output

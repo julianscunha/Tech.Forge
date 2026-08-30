@@ -4,10 +4,10 @@
 #   from app.module_engine import ModuleLoader, ModuleRegistry, ModuleStatus
 
 from app.module_engine.enums import ModuleStatus
-from app.module_engine.manifest import ManifestParser, ParsedManifest, ManifestError
-from app.module_engine.validator import ModuleValidator, ValidationResult
-from app.module_engine.registry import ModuleRegistry
 from app.module_engine.loader import ModuleLoader
+from app.module_engine.manifest import ManifestError, ManifestParser, ParsedManifest
+from app.module_engine.registry import ModuleRegistry
+from app.module_engine.validator import ModuleValidator, ValidationResult
 
 __all__ = [
     "ModuleStatus",

@@ -48,7 +48,6 @@ def status_cmd() -> None:
 
 def _log_path(source: str) -> Path:
     """Caminho do arquivo de log do launcher (fonte única de paths)."""
-    logs = _LAUNCHER_DIR / "techforge_launcher"
     # derive repo root: launcher/../logs
     repo_root = _LAUNCHER_DIR.parent
     return repo_root / "logs" / f"{source}.log"

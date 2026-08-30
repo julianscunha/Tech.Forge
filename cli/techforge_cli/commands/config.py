@@ -14,8 +14,8 @@ _CORE = "http://127.0.0.1:8000/api/v1"
 
 
 def _get(path: str):
-    import urllib.request
     import urllib.error
+    import urllib.request
     try:
         with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
             return json.loads(resp.read())

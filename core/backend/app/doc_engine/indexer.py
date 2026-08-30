@@ -18,9 +18,9 @@ from pathlib import Path
 from typing import Optional
 
 from app.core.settings import settings
-from app.doc_engine.models import DocCategory, DocEntry, ServiceContract
-from app.doc_engine.markdown_parser import MarkdownParser
 from app.doc_engine.api_yaml_parser import APIYamlParser
+from app.doc_engine.markdown_parser import MarkdownParser
+from app.doc_engine.models import DocCategory, ServiceContract
 from app.doc_engine.search import DocIndex
 
 logger = logging.getLogger("techforge.doc_engine")

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.dependency_engine.parser import DependencyParser, DependencyParseError
 from app.dependency_engine.models import TargetType
+from app.dependency_engine.parser import DependencyParseError, DependencyParser
 
 
 @dataclass

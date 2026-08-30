@@ -1,16 +1,17 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import api_router
 from app.core.settings import settings
 from app.db.database import init_db
-from app.api import api_router
-from app.module_engine.loader import ModuleLoader
+from app.doc_engine import doc_indexer
 from app.module_engine import journal as loader_journal
+from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
 from app.runtime import runtime
-from app.doc_engine import doc_indexer
 from app.security.redaction import SecretRedactionFilter
 
 logging.basicConfig(
@@ -66,16 +67,16 @@ async def lifespan(app: FastAPI):
     logger.info("Documentation Engine: %d documents indexed.", count)
 
     # Fase 4 §21 — sync registry in-memory → DB (dashboard counters)
-    from app.services.registry_sync import sync_registry_to_db
     from app.db.database import AsyncSessionLocal
+    from app.services.registry_sync import sync_registry_to_db
     async with AsyncSessionLocal() as db:
         await sync_registry_to_db(db)
 
         # Fase 10 §15/§28 — verificação de integridade no startup
         # (event-driven, não é polling — roda uma vez, no boot)
         from app.module_engine.enums import ModuleStatus
-        from app.module_trust.verification import verify_module_integrity
         from app.module_engine.registry import registry as startup_module_registry
+        from app.module_trust.verification import verify_module_integrity
         for entry in startup_module_registry.all():
             if entry.status == ModuleStatus.INSTALLED:
                 try:

@@ -7,7 +7,7 @@ um módulo pode estar ativo enquanto um serviço específico está indisponível
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Optional
 

@@ -14,8 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from app.module_engine.enums import ModuleStatus
-from app.module_engine.manifest import ParsedManifest, ManifestError, ManifestParser
-
+from app.module_engine.manifest import ManifestError, ManifestParser, ParsedManifest
 
 # ── Required directory structure per spec §6 ─────────────────────────────────
 

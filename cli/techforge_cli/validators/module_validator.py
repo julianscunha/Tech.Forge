@@ -15,12 +15,9 @@ Checks:
 """
 from __future__ import annotations
 
-import ast
 import re
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-
 
 # ── Result ────────────────────────────────────────────────────────────────────
 
@@ -322,7 +319,7 @@ class ModuleCLIValidator:
         é o estado esperado antes da instalação. Retorna o
         IntegrityStatus resolvido, ou None se não havia o que checar.
         """
-        from app.module_trust.integrity import verify_integrity, IntegrityStatus, INTEGRITY_FILENAME
+        from app.module_trust.integrity import INTEGRITY_FILENAME, IntegrityStatus, verify_integrity
 
         integrity_file = module_path / INTEGRITY_FILENAME
         if not integrity_file.is_file():
@@ -347,7 +344,7 @@ class ModuleCLIValidator:
         (Fase 10 é abstração-only, sem Ed25519 real); só uma assinatura
         presente E explicitamente inválida seria bloqueante, e isso não
         pode acontecer ainda com NoOpSignatureProvider."""
-        from app.module_trust.signature import default_signature_provider, SignatureStatus
+        from app.module_trust.signature import SignatureStatus, default_signature_provider
 
         signature = raw.get("signature")
         status = default_signature_provider.verify(

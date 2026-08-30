@@ -43,7 +43,6 @@ from typing import Optional
 
 import yaml
 
-
 # ── Excluded patterns ─────────────────────────────────────────────────────────
 
 EXCLUDE_PATTERNS = {

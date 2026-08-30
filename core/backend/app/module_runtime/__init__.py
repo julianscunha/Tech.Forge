@@ -5,15 +5,21 @@ Consolida o ciclo de execução de módulos ativos: loader único de arquivos
 de backend, Runtime State (separado do Administrative State do
 ModuleRegistry), ExecutionContext oficial e envelope de resultado.
 """
-from app.module_runtime.loader import ModuleLoadError, load_module_file
-from app.module_runtime.state import (
-    ModuleRuntimeEntry, ModuleRuntimeRegistry, RuntimeState, module_runtime_registry,
-)
-from app.module_runtime.lifecycle import on_activate, on_deactivate, health_check, discard_instance
 from app.module_runtime.context import ModuleExecutionContext
 from app.module_runtime.execution import (
-    ModuleExecutionResult, CancellationToken, ExecutionCancelledError,
-    ProgressPhase, ProgressReport,
+    CancellationToken,
+    ExecutionCancelledError,
+    ModuleExecutionResult,
+    ProgressPhase,
+    ProgressReport,
+)
+from app.module_runtime.lifecycle import discard_instance, health_check, on_activate, on_deactivate
+from app.module_runtime.loader import ModuleLoadError, load_module_file
+from app.module_runtime.state import (
+    ModuleRuntimeEntry,
+    ModuleRuntimeRegistry,
+    RuntimeState,
+    module_runtime_registry,
 )
 
 __all__ = [

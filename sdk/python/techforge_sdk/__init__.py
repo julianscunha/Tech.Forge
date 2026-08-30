@@ -32,8 +32,8 @@ Services available via sdk.*:
     sdk.services      — discover Service Registry capabilities (read-only)
     sdk.runtime       — read this module's own Runtime State (read-only)
 """
+from techforge_sdk.contracts import HealthResult, ModuleContract, ModuleMetadata
 from techforge_sdk.core import TechForgeSDK, create_sdk
-from techforge_sdk.contracts import ModuleContract, ModuleMetadata, HealthResult
 
 # Default singleton — module_id will be "unknown" until replaced by
 # create_sdk(module_id) inside the module's backend/main.py

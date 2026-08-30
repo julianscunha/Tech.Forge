@@ -19,10 +19,8 @@ Auto-documentation extension point:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
 
 from app.doc_engine.models import DocCategory, DocEntry, SearchResult
-
 
 # ── Simple tokeniser ──────────────────────────────────────────────────────────
 

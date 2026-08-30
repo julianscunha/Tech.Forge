@@ -7,7 +7,6 @@ e detecção de conflitos. Uma fonte indisponível não impede as outras.
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +17,9 @@ from app.package_manager.catalog_source import CatalogSource
 from app.package_manager.conflicts import detect_conflicts
 from app.package_manager.models import PackageInfo
 from app.package_manager.repository import (
+    CustomCatalogProvider,
     LocalRepositoryProvider,
     OfficialCatalogProvider,
-    CustomCatalogProvider,
 )
 from app.services.catalog_source import CatalogSourceService
 
@@ -179,6 +178,7 @@ class CatalogAggregator:
         (same title + message). Prevents duplicate notifications on repeated failures.
         """
         from sqlalchemy import func, select
+
         from app.models.notifications import Notification
         from app.services.notifications import NotificationService
 

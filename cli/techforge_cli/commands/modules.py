@@ -5,16 +5,19 @@ No validation logic is duplicated here, per spec §19.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
-
-import json
 
 import click
 from rich.table import Table
 
 from techforge_cli.console import (
-    console, print_header, print_error, print_success, print_info,
+    console,
+    print_error,
+    print_header,
+    print_info,
+    print_success,
 )
 
 # Core engine — added to path so the CLI can run from any checkout
@@ -22,7 +25,7 @@ _CORE = Path(__file__).resolve().parent.parent.parent.parent / "core" / "backend
 if str(_CORE) not in sys.path:
     sys.path.insert(0, str(_CORE))
 
-from app.module_engine.manifest import ManifestParser, ManifestError  # noqa: E402
+from app.module_engine.manifest import ManifestError, ManifestParser  # noqa: E402
 from app.module_engine.validator import ModuleValidator  # noqa: E402
 
 
@@ -185,7 +188,7 @@ def remove_cmd(module_id, yes):
         method="DELETE",
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30):
             print_success(f"Módulo '{module_id}' removido.")
     except urllib.error.HTTPError as exc:
         print_error(exc.read().decode("utf-8", errors="replace"))
@@ -198,8 +201,8 @@ def remove_cmd(module_id, yes):
 # ── Dependency Governance (Fase 8.1 §24) — delegates to Core API ────────────
 
 def _core_get(path: str):
-    import urllib.request
     import urllib.error
+    import urllib.request
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:8000/api/v1{path}", timeout=15) as resp:
             return json.loads(resp.read())
@@ -282,8 +285,8 @@ def _parse_set_values(pairs: tuple[str, ...]) -> dict:
 
 
 def _core_put_json(path: str, payload: dict) -> dict:
-    import urllib.request
     import urllib.error
+    import urllib.request
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         f"http://127.0.0.1:8000/api/v1{path}", data=body, method="PUT",
@@ -301,8 +304,8 @@ def _core_put_json(path: str, payload: dict) -> dict:
 
 
 def _core_post_json(path: str, payload: dict) -> dict:
-    import urllib.request
     import urllib.error
+    import urllib.request
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         f"http://127.0.0.1:8000/api/v1{path}", data=body, method="POST",

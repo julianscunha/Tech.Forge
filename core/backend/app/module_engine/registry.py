@@ -23,7 +23,6 @@ from typing import Optional
 from app.module_engine.enums import ModuleStatus
 from app.module_engine.manifest import ParsedManifest
 
-
 # ── Runtime entry ─────────────────────────────────────────────────────────────
 
 @dataclass

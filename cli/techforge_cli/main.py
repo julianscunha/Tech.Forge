@@ -13,22 +13,25 @@ Usage:
     techforge create-module --help
 """
 import click
-from techforge_cli.console import print_banner
-from techforge_cli.commands.create_module  import create_module_cmd
-from techforge_cli.commands.validate_module import validate_module_cmd
-from techforge_cli.commands.package_module  import package_module_cmd
-from techforge_cli.commands.modules        import modules_cmd
-from techforge_cli.commands.docs           import docs_cmd
-from techforge_cli.commands.services       import services_cmd
-from techforge_cli.commands.runtime        import runtime_cmd
-from techforge_cli.commands.module_trust   import (
-    verify_module_cmd, integrity_cmd, publishers_cmd,
+
+from techforge_cli.commands.catalog import catalog_cmd
+from techforge_cli.commands.config import config_cmd
+from techforge_cli.commands.create_module import create_module_cmd
+from techforge_cli.commands.docs import docs_cmd
+from techforge_cli.commands.migrations import migrations_cmd
+from techforge_cli.commands.module_trust import (
+    integrity_cmd,
+    publishers_cmd,
+    verify_module_cmd,
 )
-from techforge_cli.commands.platform        import start_cmd, stop_cmd, status_cmd, logs_cmd, dev_cmd
-from techforge_cli.commands.catalog         import catalog_cmd
-from techforge_cli.commands.storage         import storage_cmd
-from techforge_cli.commands.migrations      import migrations_cmd
-from techforge_cli.commands.config          import config_cmd
+from techforge_cli.commands.modules import modules_cmd
+from techforge_cli.commands.package_module import package_module_cmd
+from techforge_cli.commands.platform import dev_cmd, logs_cmd, start_cmd, status_cmd, stop_cmd
+from techforge_cli.commands.runtime import runtime_cmd
+from techforge_cli.commands.services import services_cmd
+from techforge_cli.commands.storage import storage_cmd
+from techforge_cli.commands.validate_module import validate_module_cmd
+from techforge_cli.console import print_banner
 
 
 @click.group()

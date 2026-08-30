@@ -23,8 +23,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from app.module_engine.enums import ModuleStatus
-from app.module_engine.registry import ModuleRegistry, registry as _global_registry
-
+from app.module_engine.registry import ModuleRegistry
+from app.module_engine.registry import registry as _global_registry
 
 # ── Data model ────────────────────────────────────────────────────────────────
 

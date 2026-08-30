@@ -12,8 +12,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from jinja2 import Environment, BaseLoader
-
+from jinja2 import BaseLoader, Environment
 
 # ── Module spec ───────────────────────────────────────────────────────────────
 

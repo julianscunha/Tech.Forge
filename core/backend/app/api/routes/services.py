@@ -7,6 +7,7 @@ permitir execução arbitrária de serviços por API genérica).
 from __future__ import annotations
 
 from dataclasses import asdict
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 

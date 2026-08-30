@@ -130,7 +130,8 @@ async def _notify_conflicts(db) -> None:
     if not conflicts:
         return
 
-    from sqlalchemy import select, func
+    from sqlalchemy import func, select
+
     from app.models.notifications import Notification
     from app.services.notifications import NotificationService
 
@@ -152,9 +153,9 @@ async def sync_with_notifications(module_entries, doc_indexer, db) -> None:
 
 async def sync() -> None:
     """Rebuild the Service Registry from the current ModuleRegistry state, notifying conflicts."""
-    from app.module_engine.registry import registry as module_registry
-    from app.doc_engine import doc_indexer
     from app.db.database import AsyncSessionLocal
+    from app.doc_engine import doc_indexer
+    from app.module_engine.registry import registry as module_registry
 
     async with AsyncSessionLocal() as db:
         await sync_with_notifications(module_registry.all(), doc_indexer, db)

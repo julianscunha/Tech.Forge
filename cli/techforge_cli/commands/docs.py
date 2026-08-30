@@ -11,7 +11,9 @@ import click
 from rich.table import Table
 
 from techforge_cli.console import (
-    console, print_header, print_error, print_info,
+    console,
+    print_error,
+    print_info,
 )
 
 _CORE = "http://127.0.0.1:8000/api/v1"
@@ -19,8 +21,8 @@ _CORE = "http://127.0.0.1:8000/api/v1"
 
 def _get(path: str, raw: bool = False):
     """GET na API do Core. Levanta SystemExit com mensagem amigável em erro."""
-    import urllib.request
     import urllib.error
+    import urllib.request
     try:
         with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
             data = resp.read()

@@ -1,7 +1,6 @@
-from datetime import datetime
 from typing import Optional, Sequence
 
-from sqlalchemy import select, func, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notifications import Notification

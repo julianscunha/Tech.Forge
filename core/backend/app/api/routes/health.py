@@ -7,8 +7,9 @@ for now, health is derived from the registry status.
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.module_engine.registry import registry
+
 from app.module_engine.enums import ModuleStatus
+from app.module_engine.registry import registry
 
 router = APIRouter(prefix="/health", tags=["health"])
 

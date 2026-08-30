@@ -14,6 +14,7 @@ interface ContextDoc {
   title: string
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocado com o componente que o usa, abaixo
 export function useContextHelp(contextId: string | undefined) {
   const [doc, setDoc] = useState<ContextDoc | null>(null)
   const [open, setOpen] = useState(false)

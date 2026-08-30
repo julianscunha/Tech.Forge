@@ -12,9 +12,8 @@ Modules import from the top-level package:
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Optional
-
 
 # ── Base interface ─────────────────────────────────────────────────────────────
 

@@ -18,7 +18,6 @@ from typing import Any, Optional
 
 import yaml
 
-
 # ── Exceptions ────────────────────────────────────────────────────────────────
 
 class ManifestError(Exception):

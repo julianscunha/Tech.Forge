@@ -6,13 +6,11 @@ Mesmo padrão de app/models/publisher.py (Fase 10).
 """
 
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import String, DateTime, Boolean, func
+from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
-from app.package_manager.catalog_source import CatalogSource
 
 
 class CatalogSourceConfig(Base):

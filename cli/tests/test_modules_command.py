@@ -110,6 +110,7 @@ def test_modules_validate_invalid_module_exits_nonzero(runner, installed_dir):
 def test_cli_does_not_duplicate_manifest_parsing():
     """Spec §19: validation logic must come from the Core, not a CLI copy."""
     import inspect
+
     from techforge_cli.commands import modules as modules_src
 
     src = inspect.getsource(modules_src)

@@ -1,9 +1,7 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings import settings
 from app.db.database import get_db
 from app.schemas.notifications import (
     MarkedResponse,
@@ -60,6 +58,7 @@ async def mark_read(
         raise HTTPException(status_code=404, detail="Notification not found")
     # re-fetch to return the updated entity
     from sqlalchemy import select
+
     from app.models.notifications import Notification
 
     result = await db.execute(

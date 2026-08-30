@@ -28,9 +28,10 @@ def migrations_cmd():
 @migrations_cmd.command("status")
 def status_cmd():
     """Show current vs head revision."""
+    import sqlite3
+
     from app.db import migrations as db_migrations
     from app.db.database import settings
-    import sqlite3
 
     head = db_migrations.head_revision()
     current = None

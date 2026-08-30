@@ -6,14 +6,14 @@ This is the data model the Marketplace UI and Package Manager work with.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from app.module_trust.trust import TrustLevel
 from app.package_manager.catalog_source import CatalogSource
 from app.package_manager.enums import CompatibilityLevel
-from app.module_trust.trust import TrustLevel
 
 
 @dataclass

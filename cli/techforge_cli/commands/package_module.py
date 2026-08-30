@@ -2,14 +2,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import click
 
 from techforge_cli.console import (
-    console, print_header, print_success, print_error,
-    print_info, print_section, print_muted,
+    console,
+    print_error,
+    print_header,
+    print_info,
+    print_muted,
+    print_section,
+    print_success,
 )
-from techforge_cli.validators.module_validator import ModuleCLIValidator
 from techforge_cli.packager.builder import PackageBuilder
+from techforge_cli.validators.module_validator import ModuleCLIValidator
 
 
 @click.command("package-module")

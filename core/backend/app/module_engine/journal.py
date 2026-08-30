@@ -10,6 +10,7 @@ when the Marketplace requires install/upgrade history.
 from __future__ import annotations
 
 from typing import Optional
+
 from app.module_engine.loader import LoaderResult
 
 _last_result: Optional[LoaderResult] = None

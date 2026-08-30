@@ -16,13 +16,13 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import json
 import logging
 import zipfile
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+import httpx
 import yaml
 
 from app.core.settings import settings
@@ -318,8 +318,9 @@ class CustomCatalogProvider(RepositoryProvider):
 
     async def list_available(self, platform_version: str) -> list[PackageInfo]:
         """Fetch module metadata from modules/ directory via GitHub Contents API."""
-        import httpx
         import base64
+
+        import httpx
 
         # GitHub API endpoint for modules/ directory
         api_url = (
@@ -418,9 +419,10 @@ class CustomCatalogProvider(RepositoryProvider):
 
     async def fetch_mod_path(self, module_id: str) -> Optional[Path]:
         """Download module files and build a .mod package."""
-        import httpx
         import shutil
         import tempfile
+
+        import httpx
 
         from app.package_manager.builder import PackageBuilder
 

@@ -5,14 +5,16 @@ Governa relações declaradas entre módulos: resolução, validação de
 compatibilidade, detecção de conflitos e ciclos, respeitando a regra
 arquitetural Service Module ✗→ Application Module.
 """
-from app.dependency_engine.models import Dependency, DependencyStatus, TargetType
-from app.dependency_engine.parser import DependencyParser, DependencyParseError
-from app.dependency_engine.validator import DependencyCheck, DependencyValidator
 from app.dependency_engine.graph import DependencyGraph, Edge
-from app.dependency_engine.resolver import DependencyResolver
 from app.dependency_engine.lifecycle import (
-    check_can_activate, check_can_deactivate, check_can_remove,
+    check_can_activate,
+    check_can_deactivate,
+    check_can_remove,
 )
+from app.dependency_engine.models import Dependency, DependencyStatus, TargetType
+from app.dependency_engine.parser import DependencyParseError, DependencyParser
+from app.dependency_engine.resolver import DependencyResolver
+from app.dependency_engine.validator import DependencyCheck, DependencyValidator
 
 __all__ = [
     "Dependency", "DependencyStatus", "TargetType",

@@ -6,12 +6,14 @@ They are distinct from /api/v1/modules (which queries SQLite) because
 the runtime registry contains live status data that may differ from the DB.
 """
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel as _BaseModel
 
-from app.module_engine.registry import registry
 from app.module_engine import journal as loader_journal
+from app.module_engine.navigation import NavigationBuilder
+from app.module_engine.registry import registry
 from app.schemas.module_engine import (
-    ModuleEntryRead,
     LoaderResultRead,
+    ModuleEntryRead,
     RegistrySummary,
 )
 
@@ -126,10 +128,6 @@ async def get_loader_journal() -> LoaderResultRead:
 
 
 # ── Navigation tree (§7.1) ────────────────────────────────────────────────────
-
-from pydantic import BaseModel as _BaseModel
-from app.module_engine.navigation import NavigationBuilder
-
 
 class NavModuleRead(_BaseModel):
     module_id: str

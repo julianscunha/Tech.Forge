@@ -11,18 +11,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
-
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
-from pydantic import BaseModel
 from typing import Optional
 
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from pydantic import BaseModel
+
+from app.core.settings import settings
 from app.package_manager import (
-    package_manager, operation_log,
-    InstallStatus, RemoveStatus, UpdateStatus, CompatibilityLevel,
+    RemoveStatus,
+    operation_log,
+    package_manager,
 )
 from app.package_manager.models import PackageInfo
-from app.core.settings import settings
 
 logger = logging.getLogger("techforge.marketplace.api")
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
@@ -264,7 +264,6 @@ async def install_remote_module(module_id: str, request: RemoteInstallRequest):
     Phases: ACQUIRING → VALIDATING → INSTALLING → DONE|FAILED
     """
     from app.package_manager.install_job import install_job_registry
-    import asyncio
 
     job = install_job_registry.create(module_id)
 
@@ -316,6 +315,7 @@ async def _notify_installation(
 ) -> None:
     """Helper: create installation notification with dedupe (same title + message = skip)."""
     from sqlalchemy import func, select
+
     from app.models.notifications import Notification
     from app.services.notifications import NotificationService
 
@@ -343,8 +343,8 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
     (Slices 2/3) — never raises. Any other exception is still caught here
     so the job always reaches a terminal state (never stuck on a poll).
     """
-    from app.package_manager.install_job import install_job_registry, InstallJobPhase
     from app.db.database import AsyncSessionLocal
+    from app.package_manager.install_job import InstallJobPhase, install_job_registry
 
     try:
         install_job_registry.set_phase(job_id, InstallJobPhase.ACQUIRING)
@@ -494,8 +494,8 @@ class LifecycleResponse(BaseModel):
 @router.post("/activate/{module_id}", response_model=LifecycleResponse)
 async def activate_module_route(module_id: str):
     """DISABLED → INSTALLED. Hot-mounts the module's backend router."""
-    from app.package_manager.lifecycle import activate_module
     from app.db.database import AsyncSessionLocal
+    from app.package_manager.lifecycle import activate_module
 
     async with AsyncSessionLocal() as db:
         result = await activate_module(db, module_id)
@@ -509,9 +509,8 @@ async def activate_module_route(module_id: str):
 @router.post("/deactivate/{module_id}", response_model=LifecycleResponse)
 async def deactivate_module_route(module_id: str):
     """INSTALLED → DISABLED. Files preserved; skipped at next boot."""
-    from app.package_manager.lifecycle import deactivate_module
     from app.db.database import AsyncSessionLocal
-    import asyncio
+    from app.package_manager.lifecycle import deactivate_module
 
     async with AsyncSessionLocal() as db:
         result = await deactivate_module(db, module_id)
