@@ -6,7 +6,7 @@ tags: [governance, documentation, definition-of-done, contracts, examples, dod]
 order: 1
 ---
 
-# §16 — Documentation First Principle
+# Documentation First Principle
 
 > Nenhuma funcionalidade é considerada concluída sem documentação publicada.
 
@@ -115,7 +115,7 @@ Essas diretrizes garantem que tanto desenvolvedores humanos quanto modelos de IA
 techforge validate-module modules/installed/my_module
 ```
 
-Os checks prefixados com `§16` no relatório correspondem a este princípio.
+Os checks de nome `Documentation: *`, `Example: *` e `Contract: *` no relatório correspondem a este princípio.
 
 ### Via API
 
@@ -135,7 +135,7 @@ Resposta:
   "missing": [],
   "checks": [
     {"name": "Implementation: backend", "passed": true, "required": true, "detail": "..."},
-    {"name": "§16 Example: basic.md",   "passed": true, "required": true, "detail": "..."}
+    {"name": "Example: basic.md",       "passed": true, "required": true, "detail": "..."}
   ]
 }
 ```

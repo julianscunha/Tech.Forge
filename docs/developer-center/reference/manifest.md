@@ -25,7 +25,7 @@ vendor: Acme Corp
 author: Dev Team
 description: Descrição clara do que o módulo faz.
 
-# Navegação e apresentação (obrigatórios — §7.1)
+# Navegação e apresentação (obrigatórios)
 icon: shield-check
 order: 10
 color: blue
@@ -64,7 +64,7 @@ checksum:
 | `color` | string | Cor de destaque. Valores: `blue`, `green`, `red`, `yellow`, `orange`, `purple`, `pink`, `cyan`, `teal`, `indigo`, `gray`. |
 | `platform_min_version` | string | Versão mínima da plataforma. Default: `0.0.0`. |
 | `platform_max_version` | string | Versão máxima da plataforma. Default: `999.999.999`. |
-| `module_type` | string | `application` (padrão) ou `service`. Módulos `service` exigem contrato completo e os 3 tiers de exemplo — ver [§16 Documentation First Principle](/developer-center/governance/documentation-first-principle). |
+| `module_type` | string | `application` (padrão) ou `service`. Módulos `service` exigem contrato completo e os 3 tiers de exemplo — ver [Documentation First Principle](/developer-center/governance/documentation-first-principle). |
 | `homepage` | URL | Site do módulo. |
 | `documentation` | URL | Documentação externa. |
 | `signature` | string | Assinatura digital (ainda não implementada). |

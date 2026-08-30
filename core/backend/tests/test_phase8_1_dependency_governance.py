@@ -295,7 +295,7 @@ class TestCLIDependencyGovernance:
             {"target": {"type": "capability", "id": "aws.cost.read"}, "required": False},
         ])
         report = ModuleCLIValidator.validate(mod)
-        dep_checks = [c for c in report.checks if c.name.startswith("§8.1")]
+        dep_checks = [c for c in report.checks if c.name.startswith("Dependencies")]
         assert dep_checks
         assert all(c.passed for c in dep_checks)
 
@@ -311,7 +311,7 @@ class TestCLIDependencyGovernance:
         from techforge_cli.validators.module_validator import ModuleCLIValidator
         mod = _make_full_module(tmp_path, "app_mod")
         report = ModuleCLIValidator.validate(mod)
-        dep_checks = [c for c in report.checks if c.name.startswith("§8.1")]
+        dep_checks = [c for c in report.checks if c.name.startswith("Dependencies")]
         assert dep_checks == []
 
 

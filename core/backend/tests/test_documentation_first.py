@@ -525,9 +525,10 @@ class TestCLIValidatorDocumentationFirst:
             with_advanced_example=True, with_integration_example=True,
         )
         report = ModuleCLIValidator.validate(mod)
-        section16_checks = [c for c in report.checks if c.name.startswith("§16")]
-        assert len(section16_checks) > 0
-        failures = [c for c in section16_checks if not c.passed and c.level == "error"]
+        doc_first_prefixes = ("Documentation:", "Example:", "Contract")
+        doc_first_checks = [c for c in report.checks if c.name.startswith(doc_first_prefixes)]
+        assert len(doc_first_checks) > 0
+        failures = [c for c in doc_first_checks if not c.passed and c.level == "error"]
         assert not failures, [c.message for c in failures]
 
     def test_application_module_not_required_to_have_contract(self, tmp_path):

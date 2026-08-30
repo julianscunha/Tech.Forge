@@ -6,7 +6,7 @@ domain: [governanca-setup]
 
 # TechForge — Development Guide
 
-> Documento exigido por requisito de setup (docs/phases/01 §16). Guia completo do Developer
+> Setup rápido de desenvolvimento do Core. Guia completo do Developer
 > Center em `docs/developer-center/guides/development-guide.md`.
 
 ## Requisitos

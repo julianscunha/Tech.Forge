@@ -19,7 +19,7 @@ export function CompletenessBadge({ score, isComplete, className }: Props) {
       {isComplete
         ? <CheckCircle2 size={10} />
         : <AlertTriangle size={10} />}
-      §16 {score.toFixed(0)}%
+      Docs {score.toFixed(0)}%
     </span>
   )
 }

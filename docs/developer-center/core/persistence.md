@@ -15,7 +15,7 @@ Este documento formaliza como o TechForge e seus módulos guardam dados e config
 mantendo a instalação Desktop leve (SQLite, arquivo único) sem impedir uma
 migração futura para um Server multiusuário (PostgreSQL, configuração central).
 
-**Fora de escopo desta fase** (spec §34, documentado — não implementado):
+**Fora de escopo, documentado — não implementado**:
 PostgreSQL obrigatório, multiusuário completo, autenticação, RBAC, replicação,
 cluster, backup corporativo, data warehouse.
 
@@ -249,7 +249,7 @@ cache.invalidate("key")   # remove imediatamente, ignora TTL
 
 `GET /api/v1/config` — configuração de plataforma efetiva
 (`settings.model_dump(mode="json")`). Como `settings.py` nunca guarda segredo
-(§9 exige isso), ler e exportar são a mesma operação, sem endpoint `/export`
+, ler e exportar são a mesma operação, sem endpoint `/export`
 separado. `techforge config export` no CLI.
 
 Export de configuração de módulo já é o próprio `GET /modules/{id}/config`
@@ -261,7 +261,7 @@ Export de configuração de módulo já é o próprio `GET /modules/{id}/config`
 
 1. **Configuração de módulo não suporta tipo lista/array.**
    `_VALID_CONFIG_TYPES` cobre só `string/integer/float/boolean`. O próprio
-   exemplo do spec §13 (`region` string → `regions` lista) não é representável
+   exemplo típico (`region` string → `regions` lista) não é representável
    hoje. Decisão explícita do usuário: deixar para quando um módulo real
    precisar, em vez de desenhar uma API especulativa agora.
 2. **Module Storage API cobre só key-value.** Um módulo com necessidade de

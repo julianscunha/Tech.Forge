@@ -55,7 +55,7 @@ export function ModuleCard({ module, developerMode, completeness, trust, onClick
         </div>
       </div>
 
-      {/* §16 Documentation completeness */}
+      {/* Documentation completeness */}
       {completeness && (
         <div className="mb-2">
           <CompletenessBadge score={completeness.score} isComplete={completeness.is_complete} />

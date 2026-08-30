@@ -12,7 +12,7 @@ domain: [core]
 ## Definition of Done
 
 Nenhuma funcionalidade é considerada pronta só porque "funciona na minha
-máquina" (spec §2). Antes de considerar um slice/feature fechado:
+máquina". Antes de considerar um slice/feature fechado:
 
 - [ ] **Implementation** — código completo, sem TODO pendente no caminho crítico.
 - [ ] **Tests** — cada comportamento novo tem teste correspondente, marcado
@@ -25,13 +25,13 @@ máquina" (spec §2). Antes de considerar um slice/feature fechado:
       `techforge release-check` (para o Core) não bloqueia.
 
 Reusa o **Documentation Compliance Checker** e os validadores já existentes
-— não há critérios de qualidade paralelos (spec §2).
+— não há critérios de qualidade paralelos.
 
 ---
 
 ## Estratégia de testes
 
-### Níveis (spec §4)
+### Níveis
 
 Registrados como `pytest` markers (`core/backend/pytest.ini`, `cli/pytest.ini`,
 `--strict-markers`) — um marker desconhecido falha a coleta, não passa
@@ -62,8 +62,8 @@ pytest tests -m integration -q
 `core/backend/tests/conftest.py` — `module_dir_factory`, `valid_manifest`,
 `invalid_manifest` — servem testes **novos**; os 13 arquivos que já
 construíam seu próprio fixture de módulo não foram retrofitados (duplicação
-interna sem valor de correção real, spec §13 cumprido sem reescrever
-histórico estável).
+interna sem valor de correção real, requisito de fixtures cumprido sem
+reescrever histórico estável).
 
 ### Architecture tests
 
@@ -112,7 +112,7 @@ reprovaria o padrão de fetch-on-mount usado em todo o codebase.
 tinha `"version"` independente. Ambos agora derivam de/são travados contra
 `PLATFORM_VERSION`.
 
-### Canais de pre-release (§35)
+### Canais de pre-release
 
 Manifest aceita `channel: stable|beta|development` (default `stable`),
 validado no parse, propagado via `manifest_raw`. **Mecanismo apenas** — sem
@@ -147,8 +147,8 @@ Passo a passo pra cortar uma release nova do Core:
    modo, quebra de linha é só espaço). Wrap manual no `CHANGELOG.md` faz
    o texto do release aparecer com linhas curtas paradas no meio da tela.
 2. Atualizar `PLATFORM_VERSION` em `app/core/settings.py` e `"version"`
-   em `core/frontend/package.json` pro mesmo valor (§24 — fonte única;
-   há um teste de guarda que trava se divergirem).
+   em `core/frontend/package.json` pro mesmo valor — fonte única;
+   há um teste de guarda que trava se divergirem.
 3. `techforge release-check` — precisa reportar `Release: READY` antes
    de seguir.
 4. Validar o changelog: `validate_changelog()` deve retornar sem erros
@@ -224,7 +224,7 @@ Antes de publicar uma nova versão de módulo:
 - **frontend**: `eslint`, `npm run build`, upload do artefato `dist/`.
 
 Sem CI comercial obrigatório, sem deploy automático, sem GitOps — só o que
-já roda localmente, automatizado (spec §48).
+já roda localmente, automatizado.
 
 ---
 

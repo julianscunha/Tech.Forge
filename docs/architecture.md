@@ -124,7 +124,7 @@ Extensões servidas: whitelist (.js/.css/.svg/.png/...); path traversal bloquead
 
 ## Notification Foundation
 
-Notificações são **dado legítimo do Core** (data ownership §13) — nunca dados
+Notificações são **dado legítimo do Core** (data ownership) — nunca dados
 de negócio de módulos. APIs:
 
 ```text

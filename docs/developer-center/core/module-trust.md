@@ -41,7 +41,7 @@ o próprio `integrity.json`.
 | `INVALID_MANIFEST` | `integrity.json` ausente ou corrompido. |
 
 Reverificação é **sob demanda** (startup, update, `POST .../verify`) —
-nunca polling contínuo (§28).
+nunca polling contínuo.
 
 ## Publisher Identity
 
@@ -107,7 +107,7 @@ GET  /api/v1/publishers/{id}
 ## CLI
 
 ```bash
-techforge validate-module <path>       # inclui Integrity/Signature/Trust (§19)
+techforge validate-module <path>       # inclui Integrity/Signature/Trust
 techforge verify-module <id>
 techforge integrity check <id>
 techforge publishers list

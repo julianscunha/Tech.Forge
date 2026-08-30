@@ -43,7 +43,7 @@ exports:
     ...
 ```
 
-## Estados (§8)
+## Estados
 
 Module state (`INSTALLED`/`DISABLED`, ver [Module Registry](module-registry.md))
 é separado de service availability:
@@ -88,7 +88,7 @@ capacidade já existe?" (a capacidade pode estar categorizada em qualquer
 lugar). Exposto via `GET /api/v1/services?q=<termo>` e
 `techforge services search <termo>`.
 
-## Invocação (§12/§13/§14)
+## Invocação
 
 Chamada direta de função Python — sem round-trip HTTP interno, sem processo
 extra:
@@ -106,7 +106,7 @@ tipos básicos, sem argumento desconhecido) e importa dinamicamente
 (`hello_world.ping`) quanto método da instância `ModuleContract` exportada
 como `module` (`veeam_m365.calculate_storage`).
 
-## Erros (§15)
+## Erros
 
 ```text
 SERVICE_NOT_FOUND · CAPABILITY_NOT_FOUND · SERVICE_DISABLED ·
@@ -117,7 +117,7 @@ SERVICE_EXECUTION_FAILED
 Uma falha da função invocada nunca vaza stack trace interno ao chamador —
 vira `ServiceExecutionFailedError`; o detalhe fica só no log do Core.
 
-## Conflitos (§17)
+## Conflitos
 
 Duas capabilities iguais entre serviços `ACTIVE` são **reportadas, nunca
 resolvidas silenciosamente**: `list_conflicts()` retorna
@@ -135,7 +135,7 @@ GET /api/v1/services/capabilities                  → mapa capability → [serv
 GET /api/v1/services/capabilities/{capability}      → provedores de uma capability
 ```
 
-Somente consulta — nenhuma rota genérica de invocação pública (spec §23).
+Somente consulta — nenhuma rota genérica de invocação pública.
 
 ## CLI
 

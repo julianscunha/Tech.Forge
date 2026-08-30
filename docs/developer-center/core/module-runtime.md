@@ -126,7 +126,7 @@ techforge runtime initialize <id>
 
 ## O que foi deliberadamente deixado fora desta fase
 
-- `POST /runtime/modules/{id}/execute` e `/cancel` (spec §26): sem uma
+- `POST /runtime/modules/{id}/execute` e `/cancel`: sem uma
   ação de execução de negócio real declarada por nenhum módulo hoje, um
   endpoint genérico seria vazio (não prova nada) ou arbitrário (a própria
   spec pede pra evitar "endpoint genérico inseguro capaz de executar
@@ -136,4 +136,4 @@ techforge runtime initialize <id>
   desligada — só é reavaliado numa tentativa explícita de `activate` ou
   `initialize`.
 - Containers, sandbox de segurança completo, execução distribuída, fila
-  corporativa, multiusuário, autenticação, Marketplace remoto (spec §32).
+  corporativa, multiusuário, autenticação, Marketplace remoto.

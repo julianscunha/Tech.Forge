@@ -255,14 +255,14 @@ class ModuleCLIValidator:
         # ── Documentation: overview.md ────────────────────────────────────────
         overview = docs_dir / "overview.md"
         overview_ok = overview.exists() and len(overview.read_text(encoding="utf-8").strip()) > 40
-        report.add("§16 Documentation: overview.md", overview_ok,
+        report.add("Documentation: overview.md", overview_ok,
                    "docs/overview.md present and non-trivial" if overview_ok
-                   else "docs/overview.md missing or too short — required by §16 Documentation First Principle")
+                   else "docs/overview.md missing or too short — required by the Documentation First Principle")
 
         # ── Example: at least basic.md is mandatory for every module ──────────
         examples_dir = docs_dir / "examples"
         basic_exists = (examples_dir / "basic.md").exists()
-        report.add("§16 Example: basic.md", basic_exists,
+        report.add("Example: basic.md", basic_exists,
                    "docs/examples/basic.md present" if basic_exists
                    else "docs/examples/basic.md missing — every module must provide at least one functional example")
 
@@ -272,15 +272,15 @@ class ModuleCLIValidator:
 
         contract_path = docs_dir / "contracts" / "api.yaml"
         if not contract_path.exists():
-            report.add("§16 Contract: api.yaml present", False,
+            report.add("Contract: api.yaml present", False,
                        "module_type is 'service' but docs/contracts/api.yaml is missing")
         else:
-            report.add("§16 Contract: api.yaml present", True, str(contract_path))
+            report.add("Contract: api.yaml present", True, str(contract_path))
             ModuleCLIValidator._check_contract_completeness(report, contract_path)
 
         for tier in ("advanced.md", "integration.md"):
             exists = (examples_dir / tier).exists()
-            report.add(f"§16 Example: {tier}", exists,
+            report.add(f"Example: {tier}", exists,
                        f"docs/examples/{tier} present" if exists
                        else f"docs/examples/{tier} missing — required for service modules (module_type: service)")
 
@@ -306,7 +306,7 @@ class ModuleCLIValidator:
         from app.dependency_engine.validator import DependencyValidator
         checks = DependencyValidator.validate(module_type, dependencies, module_registry=module_registry)
         for c in checks:
-            report.add(f"§8.1 {c.name}", c.passed, c.detail,
+            report.add(f"Dependencies: {c.name}", c.passed, c.detail,
                        level="error" if c.required else "warning")
 
     @staticmethod
@@ -323,7 +323,7 @@ class ModuleCLIValidator:
 
         integrity_file = module_path / INTEGRITY_FILENAME
         if not integrity_file.is_file():
-            report.add("§10 Integrity: manifest present", True,
+            report.add("Integrity: manifest present", True,
                        "integrity.json not yet generated — expected before installation",
                        level="warning")
             return None
@@ -334,7 +334,7 @@ class ModuleCLIValidator:
             f"modified={result.modified_files}, missing={result.missing_files}, "
             f"unexpected={result.unexpected_files}"
         )
-        report.add(f"§10 Integrity: {result.status.value}", passed,
+        report.add(f"Integrity: {result.status.value}", passed,
                    "all files match integrity.json" if passed else detail)
         return result.status
 
@@ -349,7 +349,7 @@ class ModuleCLIValidator:
         signature = raw.get("signature")
         status = default_signature_provider.verify(
             data=b"", signature=signature.encode() if signature else None, public_key=None)
-        report.add(f"§10 Signature: {status.value}", status != SignatureStatus.INVALID,
+        report.add(f"Signature: {status.value}", status != SignatureStatus.INVALID,
                    f"signature status: {status.value}", level="warning")
 
     @staticmethod
@@ -371,7 +371,7 @@ class ModuleCLIValidator:
         from app.module_trust.trust import TrustResolver
 
         level = TrustResolver.resolve(integrity_status, publisher=None)
-        report.add(f"§10 Trust Level: {level.value}", True,
+        report.add(f"Trust Level: {level.value}", True,
                    f"{level.value} (publisher not checked — synchronous validator, "
                    f"see GET /modules/{{id}}/trust for full resolution)",
                    level="warning")
@@ -386,21 +386,21 @@ class ModuleCLIValidator:
             import yaml
             raw_contract = yaml.safe_load(contract_path.read_text(encoding="utf-8")) or {}
         except Exception as exc:
-            report.add("§16 Contract: parseable", False, f"api.yaml invalid: {exc}")
+            report.add("Contract: parseable", False, f"api.yaml invalid: {exc}")
             return
 
         exports = raw_contract.get("exports", [])
         if not exports:
-            report.add("§16 Contract: has exports", False,
+            report.add("Contract: has exports", False,
                        "api.yaml has no entries under 'exports'")
             return
-        report.add("§16 Contract: has exports", True, f"{len(exports)} export(s) declared")
+        report.add("Contract: has exports", True, f"{len(exports)} export(s) declared")
 
         for exp in exports:
             if not isinstance(exp, dict):
                 continue
             name = str(exp.get("name", "?"))
-            prefix = f"§16 Contract '{name}'"
+            prefix = f"Contract '{name}'"
 
             report.add(f"{prefix}: name", bool(exp.get("name")),
                        "has name" if exp.get("name") else "missing name")

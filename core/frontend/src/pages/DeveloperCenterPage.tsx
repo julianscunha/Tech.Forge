@@ -31,7 +31,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
   { id: 'examples',       label: 'Exemplos',                icon: FileText,  category: 'examples'       },
   { id: 'manifest-reference', label: 'Referência do Manifesto', icon: Package, category: 'manifest-reference' },
   { id: 'marketplace',    label: 'Marketplace para Devs',   icon: Store,     category: 'marketplace'    },
-  { id: 'governance',     label: 'Documentation First (§16)', icon: ShieldCheck, category: 'governance'  },
+  { id: 'governance',     label: 'Documentation First',      icon: ShieldCheck, category: 'governance'  },
   { id: 'dependency-graph', label: 'Dependency Graph',       icon: GitBranch, category: 'dependency-graph' },
   { id: 'faq',            label: 'FAQ',                     icon: HelpCircle, category: 'faq'           },
 ]
@@ -289,7 +289,7 @@ export function DeveloperCenterPage() {
             <div className="max-w-4xl mx-auto px-8 py-8">
               <h1 className="text-xl font-semibold text-[hsl(var(--text))] mb-1">Dependency Graph</h1>
               <p className="text-xs text-[hsl(var(--text-muted))] mb-6">
-                Topologia real de dependências entre módulos instalados (§6/§22).
+                Topologia real de dependências entre módulos instalados.
               </p>
               {loading ? (
                 <p className="text-xs text-[hsl(var(--text-subtle))]">Carregando…</p>

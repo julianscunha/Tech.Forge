@@ -616,7 +616,7 @@ class TestValidatorIntegritySignatureTrust:
         (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
 
         report = ModuleCLIValidator.validate(mod)
-        integrity_checks = [c for c in report.checks if c.name.startswith("§10 Integrity")]
+        integrity_checks = [c for c in report.checks if c.name.startswith("Integrity")]
         assert integrity_checks and integrity_checks[0].passed
         assert integrity_checks[0].level == "warning"
 
@@ -643,10 +643,10 @@ class TestValidatorIntegritySignatureTrust:
 
         report = ModuleCLIValidator.validate(mod)
         integrity_checks = [c for c in report.checks
-                            if c.name.startswith("§10 Integrity") and "VALID" in c.name]
+                            if c.name.startswith("Integrity") and "VALID" in c.name]
         assert integrity_checks and integrity_checks[0].passed
 
-        trust_checks = [c for c in report.checks if c.name.startswith("§10 Trust Level")]
+        trust_checks = [c for c in report.checks if c.name.startswith("Trust Level")]
         assert trust_checks and "UNVERIFIED" in trust_checks[0].name
 
     def test_installed_dir_with_modified_file_fails_integrity(self, tmp_path):
@@ -672,7 +672,7 @@ class TestValidatorIntegritySignatureTrust:
         (mod / "backend" / "main.py").write_text("router = None\nmodule = None\nEVIL=1\n")
 
         report = ModuleCLIValidator.validate(mod)
-        integrity_checks = [c for c in report.checks if c.name.startswith("§10 Integrity")]
+        integrity_checks = [c for c in report.checks if c.name.startswith("Integrity")]
         assert integrity_checks and not integrity_checks[0].passed
         assert not report.passed
 
@@ -696,7 +696,7 @@ class TestValidatorIntegritySignatureTrust:
         (mod / "manifest.yaml").write_text(yaml.dump(manifest), encoding="utf-8")
 
         report = ModuleCLIValidator.validate(mod)
-        sig_checks = [c for c in report.checks if c.name.startswith("§10 Signature")]
+        sig_checks = [c for c in report.checks if c.name.startswith("Signature")]
         assert sig_checks and sig_checks[0].passed
         assert sig_checks[0].level == "warning"
 
