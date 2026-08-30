@@ -23,6 +23,7 @@ import click
 from techforge_cli.commands.catalog import catalog_cmd
 from techforge_cli.commands.config import config_cmd
 from techforge_cli.commands.create_module import create_module_cmd
+from techforge_cli.commands.diagnostics import diagnostics_cmd
 from techforge_cli.commands.docs import docs_cmd
 from techforge_cli.commands.migrations import migrations_cmd
 from techforge_cli.commands.module_trust import (
@@ -95,6 +96,7 @@ cli.add_command(migrations_cmd)  # Fase 12 Slice 2 — migrations status/run
 cli.add_command(config_cmd)      # Fase 12 Slice 10 — config export
 cli.add_command(version_cmd)     # Fase 15 Slice 7 — version
 cli.add_command(release_check_cmd)  # Fase 15 Slice 9 — release-check
+cli.add_command(diagnostics_cmd)    # Fase 14 — diagnostics health/errors/export
 
 
 def main():

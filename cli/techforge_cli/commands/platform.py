@@ -58,7 +58,8 @@ def _log_path(source: str) -> Path:
 @click.option("--frontend", "source", flag_value="frontend", help="Log do frontend.")
 @click.option("--launcher", "source", flag_value="launcher", help="Log do launcher.")
 @click.option("-n", "--lines", default=50, show_default=True, help="Últimas N linhas.")
-def logs_cmd(source: str | None, lines: int) -> None:
+@click.option("-f", "--follow", is_flag=True, help="Acompanhar o log ao vivo (Fase 14 §35, techforge logs tail).")
+def logs_cmd(source: str | None, lines: int, follow: bool) -> None:
     """Mostrar as últimas linhas dos logs da plataforma (§16)."""
     if not source:
         raise click.UsageError("Escolha uma origem: --backend, --frontend ou --launcher.")
@@ -69,6 +70,27 @@ def logs_cmd(source: str | None, lines: int) -> None:
     content = path.read_text(encoding="utf-8", errors="replace").splitlines()
     for line in content[-lines:]:
         click.echo(line)
+
+    if follow:
+        _follow_file(path)
+
+
+def _follow_file(path: Path) -> None:
+    """Poll simples (sem dependência nova) — imprime linhas novas conforme
+    são gravadas, até Ctrl+C."""
+    import time
+
+    with path.open("r", encoding="utf-8", errors="replace") as f:
+        f.seek(0, 2)  # fim do arquivo — só o que vier depois
+        try:
+            while True:
+                line = f.readline()
+                if line:
+                    click.echo(line.rstrip("\n"))
+                else:
+                    time.sleep(0.5)
+        except KeyboardInterrupt:
+            pass
 
 
 @click.command(name="dev")

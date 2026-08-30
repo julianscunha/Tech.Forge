@@ -354,6 +354,31 @@ def quality_cmd(module_id):
     _print_quality_report(_core_get(f"/modules/{module_id}/quality"))
 
 
+@modules_cmd.command("diagnostics")
+@click.argument("module_id")
+def module_diagnostics_cmd(module_id):
+    """Show diagnostics for a single module (Fase 14 §35)."""
+    data = _core_get(f"/modules/{module_id}/diagnostics")
+    print_header(f"Diagnostics — {module_id}")
+    runtime = data.get("runtime")
+    if runtime:
+        console.print(f"Runtime state: {runtime['state']} (desde {runtime['since']})")
+        if runtime.get("last_error"):
+            print_error(f"Último erro: {runtime['last_error']}")
+    else:
+        print_info("Módulo sem estado de runtime (não está INSTALLED/ativo).")
+
+    errors = data.get("recent_errors") or []
+    console.print(f"\nErros recentes ({len(errors)}):")
+    for e in errors:
+        console.print(f"  [{e.get('code') or '?'}] {e['message']} ({e.get('created_at')})")
+
+    executions = data.get("recent_executions") or []
+    console.print(f"\nExecuções recentes ({len(executions)}):")
+    for ex in executions:
+        console.print(f"  {ex['status']} — {ex['duration_seconds']}s ({ex.get('created_at')})")
+
+
 @modules_cmd.command("release-check")
 @click.argument("module_id")
 def module_release_check_cmd(module_id):

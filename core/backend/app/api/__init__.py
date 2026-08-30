@@ -4,6 +4,8 @@ from app.api.routes.catalog import router as catalog_router
 from app.api.routes.categories import router as categories_router
 from app.api.routes.dependencies import dependencies_router
 from app.api.routes.dependencies import modules_router as dependencies_modules_router
+from app.api.routes.diagnostics import diagnostics_router
+from app.api.routes.diagnostics import modules_diagnostics_router
 from app.api.routes.docs import router as docs_router
 from app.api.routes.docs_context import router as docs_context_router
 from app.api.routes.health import router as health_router
@@ -49,3 +51,5 @@ api_router.include_router(module_config_router)         # Fase 12 — Module Con
 api_router.include_router(platform_config_router)       # Fase 12 — Platform Configuration (GET /config)
 api_router.include_router(release_router)               # Fase 15 — Release Readiness Report
 api_router.include_router(module_quality_router)        # Fase 15 — Module Quality / Release Readiness
+api_router.include_router(diagnostics_router)           # Fase 14 — Observability / Diagnostics
+api_router.include_router(modules_diagnostics_router)   # Fase 14 — Observability / Diagnostics (per-module)

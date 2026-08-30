@@ -12,6 +12,7 @@ from app.module_engine import journal as loader_journal
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
 from app.observability.logging_setup import configure_logging
+from app.observability.notifications_bridge import wire_notifications
 from app.observability.retention import cleanup_old_logs
 from app.observability.startup_diagnostics import time_step
 from app.runtime import runtime
@@ -33,6 +34,7 @@ def _install_secret_redaction_filter(logger: logging.Logger | None = None) -> No
 
 
 _install_secret_redaction_filter()
+wire_notifications()
 
 logger = logging.getLogger("techforge.core")
 
