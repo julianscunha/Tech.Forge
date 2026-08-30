@@ -89,4 +89,18 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `4124796`
 
+### Slice 7 — Release versioning
+
+**Arquivos**: `core/backend/app/services/versioning.py` (novo), `core/backend/app/api/routes/system.py` (modificado — `GET /system/version`), `cli/techforge_cli/commands/version.py` (novo), `cli/techforge_cli/main.py` (registro do comando), `core/backend/tests/test_phase15_release_versioning.py`, `cli/tests/test_phase15_version_command.py` (novos).
+
+**O quê**: `is_valid_semver()` valida `PLATFORM_VERSION` (fonte única desde a Fase 1, `app/core/settings.py`) via `packaging.version` — sem parser SemVer próprio. `GET /api/v1/system/version` segue o padrão já estabelecido em `system.py` (Fase 12: storage/migrations status). `techforge version` usa **acesso direto** a `app.core.settings` (não HTTP) — mesmo racional do `techforge migrations status`: precisa funcionar com a plataforma parada; o frontend usa a API.
+
+**Decisão-chave**: nenhuma lib nova — `packaging` já era dependência (Fase 12).
+
+**Aceite**: versão atual (`1.0.0`) valida como SemVer; endpoint e CLI retornam o mesmo valor de `settings.PLATFORM_VERSION`.
+
+**Teste**: backend `pytest tests -q` → 695 passed, 3 skipped (era 690 — 5 novos); `cli pytest tests -q` → 106 passed (era 105 — 1 novo).
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)

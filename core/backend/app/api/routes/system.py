@@ -7,10 +7,20 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.settings import settings
 from app.db.database import get_db
 from app.db.storage import storage_provider
 
 router = APIRouter(prefix="/system", tags=["system"])
+
+
+class VersionInfo(BaseModel):
+    platform_version: str
+
+
+@router.get("/version", response_model=VersionInfo, summary="Platform version (Fase 15 §24)")
+async def get_version() -> VersionInfo:
+    return VersionInfo(platform_version=settings.PLATFORM_VERSION)
 
 
 class StorageStatus(BaseModel):

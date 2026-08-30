@@ -19,6 +19,7 @@ from techforge_cli.commands.config import config_cmd
 from techforge_cli.commands.create_module import create_module_cmd
 from techforge_cli.commands.docs import docs_cmd
 from techforge_cli.commands.migrations import migrations_cmd
+from techforge_cli.commands.version import version_cmd
 from techforge_cli.commands.module_trust import (
     integrity_cmd,
     publishers_cmd,
@@ -79,6 +80,7 @@ cli.add_command(catalog_cmd)   # Fase 11 Slice 6 — catalog (list/search/show/s
 cli.add_command(storage_cmd)   # Fase 12 Slice 1 — storage status
 cli.add_command(migrations_cmd)  # Fase 12 Slice 2 — migrations status/run
 cli.add_command(config_cmd)      # Fase 12 Slice 10 — config export
+cli.add_command(version_cmd)     # Fase 15 Slice 7 — version
 
 
 def main():
