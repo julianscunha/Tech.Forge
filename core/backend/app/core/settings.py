@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # Observability (Fase 14)
     LOG_LEVEL: str = "INFO"
     LOG_FILE_LEVEL: str | None = None   # None = mesmo nível de LOG_LEVEL
+    LOG_MAX_BYTES: int = 10_000_000     # 10MB — limite de tamanho do backend.jsonl antes de rotacionar
+    LOG_BACKUP_COUNT: int = 5
+    LOG_RETENTION_DAYS: dict[str, int] = {
+        "DEBUG": 7, "INFO": 30, "WARNING": 30, "ERROR": 90, "CRITICAL": 90,
+    }
 
     # Launcher (Phase 6)
     FRONTEND_PORT: int = 5173

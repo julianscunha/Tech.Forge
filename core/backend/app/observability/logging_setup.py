@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from app.observability.context import get_log_context
@@ -42,8 +43,14 @@ class JsonLogFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False)
 
 
+_DEFAULT_MAX_BYTES = 10_000_000  # 10MB
+_DEFAULT_BACKUP_COUNT = 5
+
+
 def configure_logging(level: str = "INFO", logs_path: Path | None = None,
-                       file_level: str | None = None) -> None:
+                       file_level: str | None = None,
+                       max_bytes: int = _DEFAULT_MAX_BYTES,
+                       backup_count: int = _DEFAULT_BACKUP_COUNT) -> None:
     """Configura o root logger: console humano + arquivo JSON-lines.
 
     `level` e `file_level` podem divergir (ex: console em WARNING pra não
@@ -66,7 +73,8 @@ def configure_logging(level: str = "INFO", logs_path: Path | None = None,
 
     if logs_path is not None:
         logs_path.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(logs_path / "backend.jsonl", encoding="utf-8")
+        file_handler = RotatingFileHandler(logs_path / "backend.jsonl", encoding="utf-8",
+                                            maxBytes=max_bytes, backupCount=backup_count)
         file_handler.setLevel(file_level)
         file_handler.setFormatter(JsonLogFormatter())
         file_handler.addFilter(LogContextFilter())

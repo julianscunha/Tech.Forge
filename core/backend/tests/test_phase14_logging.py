@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,7 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from app.observability.context import bind_log_context, get_log_context
 from app.observability.logging_setup import JsonLogFormatter, LogContextFilter, configure_logging
+from app.observability.retention import cleanup_old_logs
 
 pytestmark = pytest.mark.unit
 
@@ -134,3 +136,54 @@ class TestConfigureLogging:
         file_handler = next(h for h in root.handlers if isinstance(h, logging.FileHandler))
         assert file_handler.level == logging.ERROR
         root.handlers.clear()
+
+    def test_file_handler_rotates_by_size(self, tmp_path):
+        from logging.handlers import RotatingFileHandler
+        configure_logging(level="INFO", logs_path=tmp_path / "logs",
+                          max_bytes=1000, backup_count=3)
+        root = logging.getLogger()
+        file_handler = next(h for h in root.handlers if isinstance(h, logging.FileHandler))
+        assert isinstance(file_handler, RotatingFileHandler)
+        assert file_handler.maxBytes == 1000
+        assert file_handler.backupCount == 3
+        root.handlers.clear()
+
+
+class TestLogRetention:
+
+    def _write_line(self, path: Path, level: str, days_ago: int) -> None:
+        ts = (datetime.now(timezone.utc) - timedelta(days=days_ago)).isoformat()
+        line = json.dumps({"timestamp": ts, "level": level, "component": "x", "message": "m"})
+        with path.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
+
+    def test_removes_lines_older_than_retention_for_their_level(self, tmp_path):
+        jsonl = tmp_path / "backend.jsonl"
+        self._write_line(jsonl, "DEBUG", days_ago=10)   # DEBUG retention 7d -> removida
+        self._write_line(jsonl, "DEBUG", days_ago=1)     # dentro da retenção -> mantida
+        self._write_line(jsonl, "ERROR", days_ago=10)    # ERROR retention 90d -> mantida
+
+        removed = cleanup_old_logs(jsonl, retention_days={"DEBUG": 7, "ERROR": 90})
+
+        assert removed == 1
+        remaining = [json.loads(l) for l in jsonl.read_text(encoding="utf-8").strip().splitlines()]
+        assert len(remaining) == 2
+        assert sum(1 for r in remaining if r["level"] == "DEBUG") == 1
+        assert sum(1 for r in remaining if r["level"] == "ERROR") == 1
+
+    def test_noop_when_file_does_not_exist(self, tmp_path):
+        removed = cleanup_old_logs(tmp_path / "nope.jsonl", retention_days={"DEBUG": 7})
+        assert removed == 0
+
+    def test_keeps_lines_without_matching_retention_rule(self, tmp_path):
+        jsonl = tmp_path / "backend.jsonl"
+        self._write_line(jsonl, "CRITICAL", days_ago=365)
+        removed = cleanup_old_logs(jsonl, retention_days={"DEBUG": 7})
+        assert removed == 0
+
+    def test_keeps_malformed_lines(self, tmp_path):
+        jsonl = tmp_path / "backend.jsonl"
+        jsonl.write_text("not json at all\n", encoding="utf-8")
+        removed = cleanup_old_logs(jsonl, retention_days={"DEBUG": 7})
+        assert removed == 0
+        assert jsonl.read_text(encoding="utf-8") == "not json at all\n"

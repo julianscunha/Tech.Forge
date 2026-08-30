@@ -12,11 +12,14 @@ from app.module_engine import journal as loader_journal
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
 from app.observability.logging_setup import configure_logging
+from app.observability.retention import cleanup_old_logs
 from app.runtime import runtime
 from app.security.redaction import SecretRedactionFilter
 
+cleanup_old_logs(settings.LOGS_PATH / "backend.jsonl", settings.LOG_RETENTION_DAYS)
 configure_logging(level=settings.LOG_LEVEL, logs_path=settings.LOGS_PATH,
-                   file_level=settings.LOG_FILE_LEVEL)
+                   file_level=settings.LOG_FILE_LEVEL,
+                   max_bytes=settings.LOG_MAX_BYTES, backup_count=settings.LOG_BACKUP_COUNT)
 
 
 def _install_secret_redaction_filter(logger: logging.Logger | None = None) -> None:
