@@ -12,6 +12,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
+from app.module_engine.enums import ModuleStatus
 from app.package_manager.catalog_cache import CatalogCache, catalog_cache
 from app.package_manager.catalog_source import CatalogSource
 from app.package_manager.conflicts import detect_conflicts
@@ -112,9 +113,27 @@ class CatalogAggregator:
         for result in results:
             packages.extend(result)
 
+        self._annotate_installed_state(packages)
+
         conflicts = detect_conflicts(packages)
 
         return packages, conflicts
+
+    @staticmethod
+    def _annotate_installed_state(packages: list[PackageInfo]) -> None:
+        """Marca is_installed/installed_version a partir do registry global —
+        mesma fonte única usada por PackageManager.list_available(), senão
+        módulos instalados via fonte oficial/custom nunca aparecem como
+        instalados no catálogo (só entradas da fonte local eram anotadas)."""
+        from app.module_engine.registry import registry
+
+        for pkg in packages:
+            entry = registry.get(pkg.module_id)
+            if entry:
+                pkg.is_installed      = True
+                pkg.installed_version = entry.version
+                pkg.install_date      = entry.install_date
+                pkg.is_enabled        = (entry.status != ModuleStatus.DISABLED)
 
     async def _fetch_source(
         self,

@@ -354,6 +354,68 @@ class TestCatalogAggregator:
         assert len(conflicts) == 0
 
     @pytest.mark.asyncio
+    async def test_aggregator_marks_installed_from_official_source(self, test_db, fresh_cache):
+        """Módulo instalado que veio da fonte oficial/custom (não local) deve
+        aparecer como is_installed=True — bug real: só a fonte local era
+        anotada a partir do registry, oficial/custom sempre ficava False."""
+        from datetime import datetime as dt
+        from app.module_engine.enums import ModuleStatus
+        from app.module_engine.registry import ModuleEntry
+
+        pkg_official = PackageInfo(
+            module_id="system_information_service",
+            name="System Information Service",
+            version="1.0.0",
+            category="System",
+            vendor="TechForge",
+            author="TechForge Team",
+            description="Test",
+            source=CatalogSource.OFFICIAL_CATALOG,
+        )
+        pkg_not_installed = PackageInfo(
+            module_id="never_installed",
+            name="Never Installed",
+            version="1.0.0",
+            category="Test",
+            vendor="V",
+            author="A",
+            description="Test",
+            source=CatalogSource.OFFICIAL_CATALOG,
+        )
+
+        fake_entry = ModuleEntry(
+            module_id="system_information_service",
+            name="System Information Service",
+            version="1.0.0",
+            category="System",
+            vendor="TechForge",
+            author="TechForge Team",
+            description="Test",
+            status=ModuleStatus.INSTALLED,
+            install_date=dt(2026, 1, 1),
+        )
+
+        aggregator = CatalogAggregator(cache=fresh_cache)
+        local_provider = AsyncMock()
+        local_provider.list_available.return_value = []
+        official_provider = AsyncMock()
+        official_provider.list_available.return_value = [pkg_official, pkg_not_installed]
+
+        with patch.object(aggregator, 'local_provider', local_provider):
+            with patch.object(aggregator, 'official_provider', official_provider):
+                with patch.object(aggregator, '_get_custom_providers', return_value=[]):
+                    with patch("app.module_engine.registry.registry") as mock_registry:
+                        mock_registry.get.side_effect = (
+                            lambda mid: fake_entry if mid == "system_information_service" else None
+                        )
+                        packages, _ = await aggregator.list_all_available(test_db, "1.0.0")
+
+        by_id = {p.module_id: p for p in packages}
+        assert by_id["system_information_service"].is_installed is True
+        assert by_id["system_information_service"].installed_version == "1.0.0"
+        assert by_id["never_installed"].is_installed is False
+
+    @pytest.mark.asyncio
     async def test_aggregator_respects_cache_ttl(self, test_db, fresh_cache):
         """Two calls within TTL use cache; call count reflects this."""
         pkg = PackageInfo(

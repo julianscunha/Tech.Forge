@@ -42,9 +42,18 @@ def _iter_installed_contracts():
             yield contract
 
 
+_REFERENCE_MODULE_IDS = {"hello_world", "veeam_m365"}
+
+
 def test_every_documented_example_executes_without_raising(client):
+    """Escopo restrito aos módulos de referência (hello_world/veeam_m365) —
+    a suíte roda contra o `modules/installed/` real do ambiente de dev, que
+    pode ter outros módulos instalados (uso legítimo da plataforma); o teste
+    não deve quebrar por causa deles."""
     checked = 0
     for contract in _iter_installed_contracts():
+        if contract.service_id not in _REFERENCE_MODULE_IDS:
+            continue
         for export in contract.exports:
             for kwargs in extract_example_calls(export):
                 checked += 1
