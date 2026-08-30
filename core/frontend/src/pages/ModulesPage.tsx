@@ -86,10 +86,11 @@ export function ModulesPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Page header ────────────────────────────────────────────────── */}
-      <div className="px-6 pt-6 pb-4 flex-shrink-0">
+      <div className="px-6 pt-4 pb-4 flex-shrink-0">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-lg font-semibold text-[hsl(var(--text))] tracking-tight">
+            <h1 className="text-lg font-semibold text-[hsl(var(--text))] tracking-tight flex items-center gap-2">
+              <Boxes size={17} className="text-[hsl(var(--accent))]" />
               Módulos
             </h1>
             <p className="text-sm text-[hsl(var(--text-muted))] mt-0.5">

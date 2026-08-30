@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, Settings2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CatalogSourceType, TrustLevel } from '@/types'
 import type { CatalogListParams } from '@/lib/api'
 
 interface Props {
   onChange: (params: Partial<CatalogListParams>) => void
+  onManageSources?: () => void
 }
 
 const SOURCES: { value: CatalogSourceType; label: string }[] = [
@@ -27,7 +28,7 @@ const SORT_OPTIONS: { value: 'name' | 'recent'; label: string }[] = [
   { value: 'recent', label: 'Recente' },
 ]
 
-export function CatalogFilterBar({ onChange }: Props) {
+export function CatalogFilterBar({ onChange, onManageSources }: Props) {
   const [search, setSearch] = useState('')
   const [selectedSources, setSelectedSources] = useState<CatalogSourceType[]>([])
   const [selectedTrustLevels, setSelectedTrustLevels] = useState<TrustLevel[]>([])
@@ -86,33 +87,51 @@ export function CatalogFilterBar({ onChange }: Props) {
 
   return (
     <div className="space-y-3 p-4 border-b border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg-subtle))]">
-      {/* Search */}
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--text-muted))]" />
-        <input
-          type="text"
-          placeholder="Buscar módulos..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className={cn(
-            'w-full pl-9 pr-3 py-2 rounded border border-[hsl(var(--border-subtle))]',
-            'bg-[hsl(var(--bg-elevated))] text-[hsl(var(--text))]',
-            'placeholder:text-[hsl(var(--text-muted))]',
-            'focus:outline-none focus:border-[hsl(var(--accent))]',
+      {/* Search + manage sources */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[hsl(var(--text-muted))]" />
+          <input
+            type="text"
+            placeholder="Buscar módulos..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className={cn(
+              'w-full pl-8 pr-3 py-1.5 rounded text-sm border border-[hsl(var(--border-subtle))]',
+              'bg-[hsl(var(--bg-elevated))] text-[hsl(var(--text))]',
+              'placeholder:text-[hsl(var(--text-muted))]',
+              'focus:outline-none focus:border-[hsl(var(--accent))]',
+            )}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              aria-label="Limpar busca"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]"
+            >
+              <X size={13} />
+            </button>
           )}
-        />
-        {search && (
+        </div>
+
+        {onManageSources && (
           <button
-            onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]"
+            onClick={onManageSources}
+            aria-label="Gerenciar fontes"
+            title="Gerenciar fontes"
+            className={cn(
+              'ml-auto flex items-center justify-center w-7 h-7 rounded flex-shrink-0',
+              'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
+              'hover:bg-[hsl(var(--bg-elevated))] transition-colors',
+            )}
           >
-            <X size={14} />
+            <Settings2 size={15} />
           </button>
         )}
       </div>
 
       {/* Filter chips */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-4">
         {/* Fonte */}
         <div>
           <p className="text-xs font-medium text-[hsl(var(--text-muted))] mb-1.5">Fonte</p>
@@ -154,40 +173,40 @@ export function CatalogFilterBar({ onChange }: Props) {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Toggles */}
-        <div className="flex flex-wrap gap-3">
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="checkbox"
-              checked={compatibleOnly}
-              onChange={e => handleCompatibleToggle(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-[hsl(var(--text-muted))]">Somente compatíveis</span>
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="checkbox"
-              checked={installedOnly}
-              onChange={e => handleInstalledToggle(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-[hsl(var(--text-muted))]">Somente instalados</span>
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="checkbox"
-              checked={favoritesOnly}
-              onChange={e => handleFavoritesToggle(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-[hsl(var(--text-muted))]">Somente favoritos</span>
-          </label>
-        </div>
+      {/* Toggles */}
+      <div className="flex flex-wrap gap-3">
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={compatibleOnly}
+            onChange={e => handleCompatibleToggle(e.target.checked)}
+            className="rounded"
+          />
+          <span className="text-[hsl(var(--text-muted))]">Somente compatíveis</span>
+        </label>
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={installedOnly}
+            onChange={e => handleInstalledToggle(e.target.checked)}
+            className="rounded"
+          />
+          <span className="text-[hsl(var(--text-muted))]">Somente instalados</span>
+        </label>
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favoritesOnly}
+            onChange={e => handleFavoritesToggle(e.target.checked)}
+            className="rounded"
+          />
+          <span className="text-[hsl(var(--text-muted))]">Somente favoritos</span>
+        </label>
 
         {/* Sort */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <p className="text-xs font-medium text-[hsl(var(--text-muted))]">Ordenar por:</p>
           <select
             value={sort}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Boxes, LayoutGrid, Server, Database, RefreshCw, AlertCircle, Plug } from 'lucide-react'
+import { Boxes, LayoutGrid, LayoutDashboard, Server, Database, RefreshCw, AlertCircle, Plug } from 'lucide-react'
 import { platformApi, servicesApi } from '@/lib/api'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -39,11 +39,12 @@ export function DashboardPage() {
   }, [])
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl">
+    <div className="px-6 pt-4 pb-6 space-y-6 max-w-4xl">
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-[hsl(var(--text))] tracking-tight">
+          <h1 className="text-lg font-semibold text-[hsl(var(--text))] tracking-tight flex items-center gap-2">
+            <LayoutDashboard size={17} className="text-[hsl(var(--accent))]" />
             Dashboard
           </h1>
           <p className="text-sm text-[hsl(var(--text-muted))] mt-0.5">

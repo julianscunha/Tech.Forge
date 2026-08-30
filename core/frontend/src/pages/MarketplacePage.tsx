@@ -183,8 +183,8 @@ export function MarketplacePage() {
     <div className="flex flex-col h-full">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-6 pb-0 flex-shrink-0">
-        <div className="flex items-start justify-between gap-4 mb-5">
+      <div className="px-6 pt-4 pb-0 flex-shrink-0">
+        <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h1 className="text-lg font-semibold text-[hsl(var(--text))] tracking-tight flex items-center gap-2">
               <Store size={17} className="text-[hsl(var(--accent))]" />
@@ -310,10 +310,12 @@ export function MarketplacePage() {
 
       {/* ── Catalog tab (3-zone layout) ───────────────────────────────── */}
       {tab === 'catalog' && (
-        <>
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Filter bar */}
-            <CatalogFilterBar onChange={handleCatalogFilterChange} />
+            <CatalogFilterBar
+              onChange={handleCatalogFilterChange}
+              onManageSources={() => setShowSourcesPanel(true)}
+            />
 
             {/* Main content area */}
             <div className="flex-1 overflow-hidden flex">
@@ -387,22 +389,6 @@ export function MarketplacePage() {
               </div>
             </div>
           </div>
-
-          {/* Toolbar button for sources panel */}
-          <div className="px-6 py-4 border-t border-[hsl(var(--border-subtle))] flex gap-2">
-            <button
-              onClick={() => setShowSourcesPanel(true)}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium',
-                'bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border))]',
-                'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--bg-subtle))]',
-                'transition-colors',
-              )}
-            >
-              Gerenciar fontes
-            </button>
-          </div>
-        </>
       )}
 
       {/* ── Detail panel (Marketplace) ────────────────────────────────── */}
