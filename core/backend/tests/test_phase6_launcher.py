@@ -135,7 +135,11 @@ class TestHealthProbes:
 # ── Status (§15) ───────────────────────────────────────────────────────────────
 
 class TestStatus:
-    def test_status_all_stopped_when_no_state(self, clean_state):
+    def test_status_all_stopped_when_no_state(self, clean_state, monkeypatch):
+        # Determinístico independente do que estiver rodando de verdade na
+        # máquina — sem isso, um backend real na porta configurada faz o
+        # teste falhar (ver TestPortGuard, que cobre o caso ocupado).
+        monkeypatch.setattr(L, "_port_in_use", lambda host, port: False)
         ps = L.status()
         summary = ps.summary()
         assert summary["launcher"]["state"] == "STOPPED"

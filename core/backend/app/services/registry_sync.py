@@ -16,11 +16,20 @@ logger = logging.getLogger("techforge.registry_sync")
 
 
 async def sync_registry_to_db(db: AsyncSession) -> None:
-    """Upsert de cada entrada do registry in-memory para a tabela modules."""
+    """Upsert de cada entrada do registry in-memory para a tabela modules,
+    e remove linhas cujo module_id não existe mais no registry — senão a
+    tabela só cresce (módulo removido, ou residuo de teste escrito direto
+    no banco, nunca some do contador do Dashboard)."""
+    from sqlalchemy import delete
+
     from app.models.registry import Module
     from app.services.registry import CategoryService, ModuleService
 
     categories = {c.name: c for c in await CategoryService.get_all(db)}
+    valid_ids = {
+        entry.module_id for entry in registry.all()
+        if entry.status not in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE)
+    }
 
     for entry in registry.all():
         if entry.status in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE):
@@ -50,8 +59,14 @@ async def sync_registry_to_db(db: AsyncSession) -> None:
                 source_type=entry.source_type,
                 source_location=entry.source_location,
             ))
+
+    if valid_ids:
+        await db.execute(delete(Module).where(Module.module_id.not_in(valid_ids)))
+    else:
+        await db.execute(delete(Module))
+
     await db.commit()
-    logger.info("Registry synced to DB (%d modules).", len(registry.all()))
+    logger.info("Registry synced to DB (%d modules).", len(valid_ids))
 
 
 async def sync_from_request(app=None) -> None:
