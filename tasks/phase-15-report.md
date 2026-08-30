@@ -59,6 +59,6 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `pytest tests -q` → 685 passed, 3 skipped (era 678 — 7 testes novos).
 
-**Commit**: (a seguir)
+**Commit**: `65bac37`
 
 **Commit**: (a seguir)
