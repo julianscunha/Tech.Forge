@@ -103,4 +103,18 @@ Plano: `tasks/phase15-plan.md`.
 
 **Commit**: `2da287c`
 
+### Slice 8 — Changelog & Release Notes
+
+**Arquivos**: `core/backend/app/services/changelog.py` (novo), `CHANGELOG.md` (novo, raiz), `core/backend/tests/test_phase15_changelog.py` (novo).
+
+**O quê**: `parse_changelog()`/`validate_changelog()` — formato "Keep a Changelog" (`## [version] - YYYY-MM-DD`, subseções restritas a `Added/Changed/Fixed/Deprecated/Removed/Known Issues`, spec §26 exato). `CHANGELOG.md` na raiz cobre só o **Core**; módulos mantêm `CHANGELOG.md` próprio na pasta do módulo (convenção documentada no cabeçalho do arquivo, spec §27 — "não misturar releases de módulo com releases do Core").
+
+**Decisão-chave**: validador não tenta reconstruir o histórico retroativo de 12 fases — `CHANGELOG.md` começa com uma entrada `1.0.0` resumindo o baseline atual e referencia `tasks/phase-*-report.md` para o histórico detalhado; daqui pra frente, toda release relevante ganha entrada própria.
+
+**Aceite**: `CHANGELOG.md` existe e passa na própria validação; seção desconhecida, versão sem data e versão malformada são rejeitadas com mensagem específica.
+
+**Teste**: `pytest tests -q` → 701 passed, 3 skipped (era 695 — 6 novos).
+
+**Commit**: (a seguir)
+
 **Commit**: (a seguir)
