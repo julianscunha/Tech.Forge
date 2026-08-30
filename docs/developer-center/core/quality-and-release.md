@@ -4,7 +4,7 @@ category: core-architecture
 domain: [core]
 ---
 
-# Platform Quality, Testing & Release Engineering — Fase 15
+# Platform Quality, Testing & Release Engineering
 
 > Quality pipeline, níveis de teste, contract tests, versionamento,
 > changelog, Release Readiness Report, CI e checklist de release de módulo.
@@ -17,7 +17,7 @@ máquina" (spec §2). Antes de considerar um slice/feature fechado:
 - [ ] **Implementation** — código completo, sem TODO pendente no caminho crítico.
 - [ ] **Tests** — cada comportamento novo tem teste correspondente, marcado
       com o nível certo (`unit`/`integration`/`contract`/`e2e`/`smoke`/`regression`).
-- [ ] **Documentation** — `DocCompletenessChecker` (Fase 7) passa para o módulo/feature.
+- [ ] **Documentation** — `DocCompletenessChecker` passa para o módulo/feature.
 - [ ] **Compatibility** — `techforge modules quality <id>` reporta `ready: true`
       (status, documentação, compatibilidade de versão, contrato de serviço).
 - [ ] **Build** — `npm run build` (frontend) e suíte pytest completa (backend) passam.
@@ -46,7 +46,7 @@ silenciosamente:
 | `smoke` | Verificação rápida pós-build | start→health→storage→discover→activate→execute |
 | `regression` | Reproduz um bug corrigido, retido como guarda | — |
 
-Os ~600 testes anteriores à Fase 15 **não foram reorganizados fisicamente**
+Os ~600 testes anteriores a esta categorização **não foram reorganizados fisicamente**
 — cada arquivo ganhou `pytestmark = pytest.mark.X` no topo (module-level),
 categorizado pela presença de `TestClient`/DB (→ `integration`) vs. lógica
 pura (→ `unit`). Testes novos já nascem marcados.
@@ -70,9 +70,9 @@ histórico estável).
 `test_phase15_architecture.py` — via `ast-grep` (ferramenta mandatória do
 projeto, não uma lib nova tipo `import-linter`): módulo instalado nunca
 importa `app.*` (Core interno) nem outro módulo diretamente; `ModuleKVStorage`
-nunca aceita `module_id` como parâmetro de chamada (guarda estrutural da
-Fase 12). Regras de tipo de dependência (Service × Application) já existiam
-na Fase 8.1 — não duplicadas.
+nunca aceita `module_id` como parâmetro de chamada (guarda estrutural).
+Regras de tipo de dependência (Service × Application) já existiam
+antes — não duplicadas.
 
 ### Contract tests genéricos
 
@@ -167,7 +167,7 @@ Antes de publicar uma nova versão de módulo:
 3. `CHANGELOG.md` do módulo atualizado (seção da nova versão).
 4. Se o módulo declarar `configuration.fields` e mudar entre versões:
    implementar `migrate_config(old_version, old_config)` no `entry_backend`
-   (Fase 12) — testado com uma config real da versão anterior.
+   — testado com uma config real da versão anterior.
 5. Se o módulo declarar `docs/contracts/api.yaml`: todo exemplo documentado
    deve executar sem erro (`extract_example_calls` + `invoke`).
 
@@ -197,17 +197,17 @@ copy config\techforge.db config\techforge.db.bak
 Restaurar o `.bak` reverte o estado caso a migration/atualização falhe.
 
 **Módulo**: `PackageManager.update()` já reverte arquivos **e** configuração
-em caso de falha (rollback-por-exceção, Fase 4/12) — nada novo construído
-nesta fase.
+em caso de falha (rollback-por-exceção) — comportamento já existente,
+nada novo construído aqui.
 
 ---
 
-## Limitações conhecidas (Fase 15)
+## Limitações conhecidas
 
 1. Backend Package / Desktop Distribution não existem como artefato
    rastreável (`version+checksum+build metadata`) — o backend roda direto
-   de fonte via `uvicorn`, sem etapa de empacotamento. Pertence à Fase 16
-   (Desktop Distribution), não antecipado aqui.
+   de fonte via `uvicorn`, sem etapa de empacotamento. Pertence à Desktop
+   Distribution, não antecipado aqui.
 2. Rollback de Desktop é manual (cópia de arquivo), não automatizado.
 3. `techforge validate-module` falha no console PowerShell/Windows com
    `UnicodeEncodeError` (cp1252 não renderiza glifos do `rich`) — cosmético

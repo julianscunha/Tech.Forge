@@ -4,14 +4,14 @@ category: core-architecture
 domain: [core]
 ---
 
-# Configuration, Data & Persistence — Fase 12
+# Configuration, Data & Persistence
 
 > Storage abstraction, configuração de módulo tipada, Module Storage API,
 > filesystem paths oficiais, Secret Store e migrations versionadas.
 
 ## Visão Geral
 
-A Fase 12 formaliza como o TechForge e seus módulos guardam dados e configuração,
+Este documento formaliza como o TechForge e seus módulos guardam dados e configuração,
 mantendo a instalação Desktop leve (SQLite, arquivo único) sem impedir uma
 migração futura para um Server multiusuário (PostgreSQL, configuração central).
 
@@ -117,16 +117,16 @@ só renderiza se o manifesto declarar `configuration.fields`.
 retention = context.configuration.get("retention_days", 30)
 ```
 
-`ModuleExecutionContext.build()` (Fase 9) ficou async nesta fase justamente
+`ModuleExecutionContext.build()` ficou async justamente
 para poder buscar essa config persistida antes de montar o contexto — antes
-da Fase 12, `configuration` era sempre `{}` (stub nunca conectado).
+disso, `configuration` era sempre `{}` (stub nunca conectado).
 
 ---
 
 ## Config migration no update de módulo
 
 Um módulo pode declarar um hook opcional no objeto `module` do seu
-`entry_backend` (mesmo padrão de `enable`/`disable`/`health_check`, Fase 9):
+`entry_backend` (mesmo padrão de `enable`/`disable`/`health_check`):
 
 ```python
 class MyModule:
@@ -200,7 +200,7 @@ context.paths.temp      # arquivos de vida curta de uma execução
 
 `PackageManager.install()` cria os quatro diretórios (`ensure_exist()`) logo
 após extrair o módulo. `cache/`, `exports/` e `temp/` entram na lista de
-exclusão do hash de integridade (Fase 10, `app/module_trust/integrity.py`) —
+exclusão do hash de integridade (`app/module_trust/integrity.py`) —
 são dados de runtime, não código do módulo; escrever neles depois da
 instalação não marca o módulo como modificado.
 
@@ -234,7 +234,7 @@ no **Logger** — um `Filter` anexado a um `Logger` só roda quando aquele logge
 ## Cache TTL genérico
 
 `app/storage/cache.py::TTLCache[T]` — extraído do cache por-fonte que o
-Catálogo (Fase 11) já usava. Não é fonte única de verdade — expira e some.
+Catálogo já usava. Não é fonte única de verdade — expira e some.
 
 ```python
 cache: TTLCache[list[Something]] = TTLCache(ttl_seconds=900)
@@ -257,7 +257,7 @@ Export de configuração de módulo já é o próprio `GET /modules/{id}/config`
 
 ---
 
-## Limitações Conhecidas (Fase 12)
+## Limitações Conhecidas
 
 1. **Configuração de módulo não suporta tipo lista/array.**
    `_VALID_CONFIG_TYPES` cobre só `string/integer/float/boolean`. O próprio

@@ -10,14 +10,14 @@ order: 4
 
 Governa relações declaradas entre módulos — resolução, validação de
 compatibilidade, detecção de conflitos e ciclos, e impacto no ciclo de vida
-(activate/deactivate/remove). Complementa o [[Service Registry]] (Fase 8):
+(activate/deactivate/remove). Complementa o [[Service Registry]]:
 o Service Registry resolve *o que existe*; a Dependency Governance resolve
-*o que um módulo precisa e se pode contar com isso* (Fase 8.1).
+*o que um módulo precisa e se pode contar com isso*.
 
 ## Declarando uma dependência
 
 Campo novo `dependencies` no `manifest.yaml` — separado do `dependencies`
-de `docs/contracts/api.yaml` (que é outro conceito, existente desde a Fase 5/7):
+de `docs/contracts/api.yaml` (que é outro conceito, já existente):
 
 ```yaml
 dependencies:
@@ -94,7 +94,7 @@ techforge modules validate-dependencies
 techforge modules graph
 ```
 
-## Fora de escopo (Fase 8.1)
+## Fora de escopo
 
 Download automático de dependências, Marketplace remoto, resolvedor
 distribuído, múltiplas versões simultâneas, execução em containers,

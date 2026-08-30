@@ -10,8 +10,7 @@ order: 6
 
 Base de confiança para módulos do TechForge — integridade por hash,
 identidade de publisher, e preparação para assinatura digital. Sem
-transformar o sistema local numa plataforma pesada de autenticação
-(Fase 10).
+transformar o sistema local numa plataforma pesada de autenticação.
 
 ## Integrity Manifest
 

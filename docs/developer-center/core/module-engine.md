@@ -7,7 +7,7 @@ domain: [arquitetura-core]
 > Nota: este documento foi movido da raiz de docs/ e é complementar à visão
 > canônica no Developer Center. Conteúdo histórico preservado.
 
-# TechForge — Fase 2: Module Engine
+# TechForge — Module Engine
 
 ## Documentação Técnica
 
@@ -15,7 +15,7 @@ domain: [arquitetura-core]
 
 ## 1. Visão Geral
 
-A Fase 2 implementa toda a infraestrutura de plugins sem nenhum módulo funcional de negócio.
+O Module Engine implementa toda a infraestrutura de plugins sem nenhum módulo funcional de negócio.
 O objetivo é que novos módulos possam ser adicionados colocando um diretório em
 `modules/installed/` e reiniciando o backend — sem alterar uma linha do Core.
 
@@ -82,8 +82,8 @@ API disponível em /api/v1/registry/modules
 | `platform_max_version` | `"999.999.999"` |
 | `homepage`             | null            |
 | `documentation`        | null            |
-| `signature`            | null (Fase 5)   |
-| `checksum`             | null (Fase 5)   |
+| `signature`            | null (não implementado)   |
+| `checksum`             | null (não implementado)   |
 
 **Erros emitidos:**
 - `ManifestError: manifest.yaml not found in module directory: <path>`
@@ -134,14 +134,14 @@ registry.count_total
 registry.count_installed
 registry.categories                     # → list[str] ordenada
 
-# Escrita (Phase 2: apenas durante startup)
+# Escrita (apenas durante startup)
 registry.register(entry)
 registry.set_status("hello_world", ModuleStatus.DISABLED)
 registry.deregister("hello_world")
 registry.clear()
 ```
 
-**Extensão Phase 3 (Marketplace):**
+**Extensão via Marketplace:**
 ```python
 # Instalar em runtime sem reiniciar
 await marketplace.install(module_id)
@@ -216,7 +216,7 @@ Cada evento no journal tem:
 
 ---
 
-## 9. API Endpoints — Fase 2
+## 9. API Endpoints
 
 | Method | Path                                    | Descrição                                   |
 |--------|-----------------------------------------|---------------------------------------------|
@@ -234,7 +234,7 @@ Cada evento no journal tem:
 
 **Localização:** `modules/installed/hello_world/`
 
-**Propósito:** validar a arquitetura da Fase 2. Não é um módulo funcional.
+**Propósito:** validar a arquitetura do Module Engine. Não é um módulo funcional.
 
 **O que valida:**
 - Manifest com todos os campos obrigatórios
@@ -247,25 +247,25 @@ Cada evento no journal tem:
 
 ## 11. Pontos de Extensão Preparados
 
-### Phase 3 — Marketplace
+### Marketplace
 
 - `ModuleRegistry.register()` aceita entradas em runtime (não apenas no startup)
 - `ModuleLoader._load_one()` pode ser chamado individualmente para instalar um módulo sem reiniciar
 - Endpoint `POST /api/v1/modules` já aceita `checksum` e `signature`
 - `modules/repository/` está reservado para módulos baixados do Marketplace
 
-### Phase 2+ — Plugin Loader Dinâmico de Rotas
+### Plugin Loader Dinâmico de Rotas
 
 - `hello_world/backend/main.py` exporta um `router` FastAPI pronto para ser montado
 - `AppRouter.tsx` tem comentário `PLUGIN LOADER HOOK` onde vai entrar `<Route path="modules/:moduleId/*">`
 - O `ModuleEntry` contém `entry_backend` e `entry_frontend` para o loader saber o que importar
 
-### Phase 5 — Segurança
+### Segurança
 
 - `ParsedManifest.signature` e `.checksum` já existem no parser
 - `ModuleValidator` tem um passo livre ao final do fluxo onde verificação de assinatura será inserida
 
-### Phase 4 — CLI
+### CLI
 
 - `sdk/python/techforge_sdk/` é importável e funcionará como interface para `techforge install <module>`
 - `ModuleLoader` é reutilizável pela CLI para validar antes de instalar

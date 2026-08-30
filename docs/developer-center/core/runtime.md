@@ -7,7 +7,7 @@ tags: [core, runtime, phase-6, lifecycle]
 
 # Runtime
 
-Fundação mínima do runtime da plataforma (Fase 6). Localização:
+Fundação mínima do runtime da plataforma. Localização:
 `core/backend/app/runtime/`.
 
 ## Responsabilidade atual

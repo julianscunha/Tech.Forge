@@ -12,7 +12,7 @@ Consolida o ciclo de execução de módulos ativos: separa o estado
 **administrativo** (decisão do usuário/operador) do estado **runtime**
 (efêmero, de execução), conecta de verdade os hooks de lifecycle do
 `ModuleContract` (antes declarados no SDK mas nunca chamados) e define a
-forma oficial de um módulo acessar recursos permitidos (Fase 9).
+forma oficial de um módulo acessar recursos permitidos.
 
 ## Administrative State vs. Runtime State
 
@@ -33,13 +33,13 @@ um módulo nunca derruba o Core nem a operação do usuário).
 ## Lifecycle hooks reais
 
 `ModuleContract` (SDK) já declarava `install/enable/disable/upgrade/
-health_check/uninstall` desde a Fase 3 — só `uninstall()` era de fato
-chamado. A Fase 9 conecta os demais:
+health_check/uninstall` desde sempre — só `uninstall()` era de fato
+chamado. O Module Runtime conecta os demais:
 
 | Hook | Quando roda | Efeito no Runtime State |
 |---|---|---|
-| `enable()` | Depois que `activate_module` já validou dependências (Fase 8.1) | sucesso → `READY`; exceção → `FAILED` + `last_error` |
-| `disable()` | Depois que `deactivate_module` já validou dependentes (Fase 8.1) | sempre → `STOPPED` (best-effort, falha não bloqueia) |
+| `enable()` | Depois que `activate_module` já validou dependências | sucesso → `READY`; exceção → `FAILED` + `last_error` |
+| `disable()` | Depois que `deactivate_module` já validou dependentes | sempre → `STOPPED` (best-effort, falha não bloqueia) |
 | `health_check()` | Sob demanda, via `POST /runtime/modules/{id}/initialize` — sem cache | `is_healthy=True` → `READY`; `False` → `DEGRADED`; exceção → `FAILED` |
 
 Todos os três são **best-effort**: uma falha no hook do módulo nunca
@@ -61,7 +61,7 @@ ctx = ModuleExecutionContext.build("hello_world", module_registry)
 ```
 
 Não é injetado como parâmetro nos hooks do `ModuleContract` (assinatura
-fixa desde a Fase 3) — é a estrutura que o Runtime usa internamente.
+fixa desde sempre) — é a estrutura que o Runtime usa internamente.
 
 ## Module SDK — sdk.services / sdk.runtime
 
@@ -72,7 +72,7 @@ Um módulo acessa recursos do Core sempre pelo SDK, nunca importando
 from techforge_sdk import create_sdk
 sdk = create_sdk("my_module")
 
-providers = sdk.services.find_capability("aws.cost.read")  # Service Registry (Fase 8)
+providers = sdk.services.find_capability("aws.cost.read")  # Service Registry
 state = sdk.runtime.state()  # {"state": "READY", "last_error": None, ...}
 ```
 
@@ -118,7 +118,7 @@ POST /api/v1/runtime/modules/{id}/initialize  # reroda health_check() sob demand
 ## CLI
 
 ```bash
-techforge runtime status              # runtime da plataforma (Fase 6)
+techforge runtime status              # runtime da plataforma
 techforge runtime modules             # Runtime State de todo módulo
 techforge runtime module <id>
 techforge runtime initialize <id>

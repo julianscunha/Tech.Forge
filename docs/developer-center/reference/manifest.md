@@ -36,7 +36,7 @@ entry_frontend: frontend/index.tsx
 homepage: https://example.com
 documentation: https://docs.example.com
 
-# Segurança — Fase 5
+# Segurança (ainda não implementada)
 signature:
 checksum:
 ```
@@ -67,8 +67,8 @@ checksum:
 | `module_type` | string | `application` (padrão) ou `service`. Módulos `service` exigem contrato completo e os 3 tiers de exemplo — ver [§16 Documentation First Principle](/developer-center/governance/documentation-first-principle). |
 | `homepage` | URL | Site do módulo. |
 | `documentation` | URL | Documentação externa. |
-| `signature` | string | Assinatura digital (Fase 5). |
-| `checksum` | string | Checksum SHA-256 (Fase 5). |
+| `signature` | string | Assinatura digital (ainda não implementada). |
+| `checksum` | string | Checksum SHA-256 (ainda não implementado). |
 
 ## Ícones disponíveis
 

@@ -7,7 +7,7 @@ domain: [arquitetura-core]
 > Nota: este documento foi movido da raiz de docs/ e é complementar à visão
 > canônica no Developer Center. Conteúdo histórico preservado.
 
-# TechForge — Fase 4: Package Manager & Marketplace
+# TechForge — Package Manager & Marketplace
 
 ## Documentação Técnica
 
@@ -15,7 +15,7 @@ domain: [arquitetura-core]
 
 ## 1. Visão Geral
 
-A Fase 4 implementa a infraestrutura completa de gestão de pacotes da plataforma.
+O Package Manager implementa a infraestrutura completa de gestão de pacotes da plataforma.
 O **Package Manager** é o único componente autorizado a escrever em `modules/installed/`.
 O **Marketplace** é a interface de usuário que delega todas as operações ao Package Manager.
 
@@ -34,7 +34,7 @@ modules/
 
 | Diretório | Quem escreve | Quem lê |
 |-----------|-------------|---------|
-| `repository/` | Usuário (manual) / Marketplace (Fase 5) | LocalRepositoryProvider |
+| `repository/` | Usuário (manual) / Marketplace | LocalRepositoryProvider |
 | `installed/`  | PackageManager (exclusivo) | ModuleLoader |
 | `cache/`      | PackageManager (temporário) | PackageManager |
 
@@ -59,11 +59,11 @@ O `.mod` é um ZIP estruturado com a seguinte árvore interna:
     └── BUILD                  ← metadados de build (module_id, version, built_at)
 ```
 
-**Geração:** `techforge package-module <path>` (CLI Fase 3)
+**Geração:** `techforge package-module <path>` (CLI)
 
 **Sidecar de checksum:** `<filename>.mod.sha256` — SHA-256 do arquivo ZIP completo.
 
-**Fase 5 — assinatura digital:**
+**Assinatura digital (ainda não implementada):**
 `META-INF/SIGNATURE` será adicionado pelo serviço de signing.
 Os campos `signature`, `checksum`, `publisher`, `trust_level` já estão presentes
 em `PackageInfo` e `ModuleEntryRead` aguardando implementação.
@@ -159,8 +159,8 @@ class RepositoryProvider(ABC):
 
 | Implementação | Estado | Descrição |
 |---|---|---|
-| `LocalRepositoryProvider` | ✅ Fase 4 | Lê .mod de `modules/repository/` |
-| `RemoteRepositoryProvider` | 🔲 Fase 5 | Chama API REST do servidor Marketplace |
+| `LocalRepositoryProvider` | ✅ Implementado | Lê .mod de `modules/repository/` |
+| `RemoteRepositoryProvider` | 🔲 Não implementado | Chama API REST do servidor Marketplace |
 
 ---
 
@@ -180,16 +180,16 @@ class RepositoryProvider(ABC):
 
 ---
 
-## 10. Campos de Segurança (Phase 5 preparados)
+## 10. Campos de Segurança
 
 Todo `PackageInfo` e `ModuleEntryRead` já carrega:
 
-| Campo | Tipo | Fase |
+| Campo | Tipo | Descrição |
 |---|---|---|
-| `signature`   | `Optional[str]`  | 5 — assinatura criptográfica do publisher |
-| `checksum`    | `Optional[str]`  | 4 — SHA-256 do .mod, calculado ao ler |
-| `publisher`   | `Optional[str]`  | 5 — identidade do publicador |
-| `trust_level` | `TrustLevel` enum | 5 — `verified/community/unsigned/untrusted` |
+| `signature`   | `Optional[str]`  | assinatura criptográfica do publisher |
+| `checksum`    | `Optional[str]`  | SHA-256 do .mod, calculado ao ler |
+| `publisher`   | `Optional[str]`  | identidade do publicador |
+| `trust_level` | `TrustLevel` enum | `verified/community/unsigned/untrusted` |
 
 ---
 
@@ -205,7 +205,7 @@ Campos por entrada: `timestamp`, `operation`, `module_id`, `version`, `status`, 
 
 Acessível via: `GET /api/v1/marketplace/log`
 
-Fase 5: persiste em tabela SQLite para auditoria e Central de Notificações.
+Ainda não implementado: persistência em tabela SQLite para auditoria e Central de Notificações.
 
 ---
 

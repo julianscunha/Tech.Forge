@@ -6,7 +6,7 @@ domain: [governanca-setup]
 
 # TechForge — Development Guide
 
-> Documento exigido pela Fase 1 (docs/phases/01 §16). Guia completo do Developer
+> Documento exigido por requisito de setup (docs/phases/01 §16). Guia completo do Developer
 > Center em `docs/developer-center/guides/development-guide.md`.
 
 ## Requisitos

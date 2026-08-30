@@ -4,7 +4,7 @@ category: core-architecture
 domain: [core]
 ---
 
-# Catálogo de Módulos — Fase 11
+# Catálogo de Módulos
 
 > Descubra, gerencie e instale módulos de múltiplas fontes com verificação de integridade,
 > detecção de conflitos e acompanhamento de progresso.
@@ -92,7 +92,7 @@ Publicado em `https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/
 ```
 
 Formato real gerado por `techforge catalog build-index` (validado contra um `index.json`
-real servido localmente, Fase 11 fechamento). `mod_url` é relativo ao `base_url` da fonte
+real servido localmente). `mod_url` é relativo ao `base_url` da fonte
 — `OfficialCatalogProvider` resolve `f"{base_url}/{mod_url}"` quando não é uma URL absoluta.
 O caminho é aninhado por módulo (`<id>/<id>-<versão>.mod`, não um arquivo solto) — cada
 versão já publicada de um módulo fica empilhada na mesma pasta, para sempre; `index.json`
@@ -276,16 +276,16 @@ techforge catalog build-index <source_dir> --output <catalog_dir>
 
 ---
 
-## Limitações Conhecidas (Fase 11)
+## Limitações Conhecidas
 
 1. **`CustomCatalogProvider` só suporta GitHub Contents API.**
    - GitHub, GitLab (com API compatível), outros hosts Git com suporte a Contents API.
-   - GitLab self-hosted ou Gitea exigem um adapter (Fase 18.1).
+   - GitLab self-hosted ou Gitea exigem um adapter dedicado (ainda não implementado).
 
 2. **Sem rollback completo em falha de atualização.**
    - Se a instalação falhar parcialmente, os arquivos já instalados permanecem.
    - A versão anterior NÃO é restaurada automaticamente.
-   - Mesmo comportamento da instalação local (decisão da Fase 4, mantida aqui).
+   - Mesmo comportamento da instalação local, mantido aqui por consistência.
 
 3. **Sem polling em segundo plano para atualizações.**
    - Notificações de "novo módulo disponível" e "atualização disponível" só aparecem quando

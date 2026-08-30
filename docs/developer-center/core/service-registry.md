@@ -11,7 +11,7 @@ order: 3
 O Service Registry é o mecanismo central de descoberta e consumo de
 capacidades públicas fornecidas por Service Modules — permite que
 Application Modules localizem e invoquem serviços sem conhecer sua
-implementação interna (Fase 8).
+implementação interna.
 
 ## Modelo
 
@@ -19,7 +19,7 @@ implementação interna (Fase 8).
 Service Module
       │ declara (docs/contracts/api.yaml: capabilities + exports)
       ▼
-Service Contract          (Fase 7 — APIYamlParser, sem duplicação)
+Service Contract          (APIYamlParser, sem duplicação)
       │ registrado
       ▼
 ServiceDescriptor          (service_id, module_id, versões, status, contrato)
@@ -32,7 +32,7 @@ Application Module
 
 Uma capability é um identificador estável e hierárquico do que um serviço
 oferece (ex: `veeam.m365.calculate`, `aws.cost.read`). Declaradas dentro do
-próprio `docs/contracts/api.yaml` já validado pela Fase 7 — nenhum segundo
+próprio `docs/contracts/api.yaml` já validado pelo `APIYamlParser` — nenhum segundo
 lugar de metadados:
 
 ```yaml
@@ -155,9 +155,9 @@ O `ServiceContractPanel` exibe capabilities e status do serviço; o
 IA gerando um Application Module saiba quais serviços pode consumir e em
 que estado estão.
 
-## Pontos de extensão pendentes (Fase 8.1+)
+## Pontos de extensão pendentes
 
 - Resolução de conflito além de "reportar" (política de precedência).
 - `ServiceContract.dependencies` já existe no modelo mas não é validado —
-  Dependency Governance (Fase 8.1).
+  Dependency Governance cobre esse ponto.
 - Múltiplas versões simultâneas de um mesmo serviço.

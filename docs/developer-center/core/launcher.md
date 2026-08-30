@@ -7,7 +7,7 @@ tags: [core, launcher, phase-6, startup]
 
 # Launcher
 
-Infraestrutura de bootstrap da plataforma (Fase 6). O Launcher é a única ação
+Infraestrutura de bootstrap da plataforma. O Launcher é a única ação
 que o usuário final precisa executar para ter o TechForge operacional.
 
 ## Arquitetura

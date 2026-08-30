@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚒️ TechForge
+<img src="docs/assets/banner.svg" alt="TechForge — plataforma corporativa modular" width="100%" />
 
 **A modular platform engine for technical & business tools.**
 
@@ -236,7 +236,7 @@ python -m pytest tests -q
 ```
 
 <details>
-<summary><b>Release Readiness (Fase 15) — gate agregado antes de uma release</b></summary>
+<summary><b>Release Readiness — gate agregado antes de uma release</b></summary>
 
 ```bash
 techforge release-check                             # 5 checks vivos + pytest + npm build
@@ -325,7 +325,7 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
-<summary><b>Catálogo de Módulos (Fase 11 — multi-fonte)</b></summary>
+<summary><b>Catálogo de Módulos (multi-fonte)</b></summary>
 
 | Method | Path | Descrição |
 |--------|------|-----------|
@@ -340,7 +340,7 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
-<summary><b>Configuration & Persistence (Fase 12)</b></summary>
+<summary><b>Configuration & Persistence</b></summary>
 
 | Method | Path | Descrição |
 |--------|------|-----------|
@@ -353,7 +353,7 @@ sob `/api/v1` e sua documentação entra no índice com score de completude.
 </details>
 
 <details>
-<summary><b>Quality & Release Engineering (Fase 15)</b></summary>
+<summary><b>Quality & Release Engineering</b></summary>
 
 | Method | Path | Descrição |
 |--------|------|-----------|
@@ -396,39 +396,26 @@ CLI: `techforge version` · `techforge release-check [--skip-tests] [--skip-buil
 
 ## 🗺️ Roadmap
 
-Fases detalhadas em [`docs/phases/`](docs/phases/) · auditoria real em [`tasks/phase-audit.md`](tasks/phase-audit.md).
+Cronograma detalhado por fase em [`docs/phases/`](docs/phases/) · status real
+de implementação em [`tasks/phase-audit.md`](tasks/phase-audit.md).
 
-```mermaid
-gantt
-    dateFormat X
-    axisFormat %s
-    section Fundação
-    Fase 1 Foundation ✓         :done, 0, 1
-    Fase 2 Core Architecture ✓  :done, 0, 1
-    Fase 3 Module System ✓      :done, 0, 1
-    section Plataforma
-    Fase 4 Marketplace/PkgMgr ✓ :done, 1, 2
-    Fase 5 Developer Center ✓   :done, 1, 2
-    Fase 6 Launcher/Runtime ✓   :done, 1, 2
-    Fase 7 Doc Compliance ✓     :done, 1, 2
-    section Ecossistema
-    Fase 8 Service Registry ✓          :done, 2, 3
-    Fase 8.1 Dependency Governance ✓   :done, 2, 3
-    Fase 9 Module Runtime ✓             :done, 3, 4
-    Fase 10 Security & Trust ✓          :done, 4, 5
-    Fase 11 Marketplace Distribution ✓  :done, 5, 6
-    Fase 12 Configuration & Persistence ✓ :done, 6, 7
-    Fase 15 Quality & Release Engineering ✓ :done, 7, 8
-    section Adiado / condicionado
-    Fase 13 Central Server Multi-User (adiada) :7, 9
-    Fase 14 Observability                 :active, 8, 9
-    Fase 16-20                            :9, 11
-```
+**✅ Entregue**: Core (FastAPI + React/TS + SQLite) · Module System (loader,
+validação, navegação) · Marketplace & Package Manager (install/activate/
+deactivate/remove com rollback) · Developer Center & Doc Engine · Launcher &
+Runtime (modo Desktop) · Documentation Compliance Checker · Service Registry
+& Dependency Governance · Module Runtime & Execution · Security, Integrity &
+Module Trust · Marketplace Distribution (catálogo multi-fonte) ·
+Configuration & Persistence (migrations, config de módulo, Secret Store) ·
+Platform Quality & Release Engineering (CI, testes por nível, Release
+Readiness Report).
 
-**Próximos marcos** (decididos por auditoria contra código real,
-ver [`tasks/phase-audit.md`](tasks/phase-audit.md)):
-- Observability, Telemetry & Diagnostics (Fase 14) — ordem recomendada 15→**14**→16→17→18
-- Fase 13 (Central Server/Multi-User) e 18.1/19/20 (ecossistema externo público) ficam adiadas até decisão explícita de negócio — foco atual é otimizar a experiência single-user/Desktop
+**🔜 Próximo**: Observability, Telemetry & Diagnostics (logs estruturados,
+métricas, diagnóstico do sistema).
+
+**⏸️ Adiado** (decisão de foco em single-user/Desktop, retomado só com
+necessidade real de negócio): Central Server & Multi-User Readiness,
+distribuição de módulos por fontes externas, release público do ecossistema,
+governança de longo prazo.
 
 ---
 

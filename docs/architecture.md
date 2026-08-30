@@ -6,7 +6,7 @@ domain: [governanca-setup]
 
 # TechForge — Architecture
 
-> Documento exigido pela Fase 1 (docs/phases/01 §16). Conteúdo detalhado por domínio
+> Documento de arquitetura viva do Core. Conteúdo detalhado por domínio
 > vive em `docs/INDEX.md`, `docs/developer-center/` e `docs/phases/`.
 
 ## Visão geral
@@ -44,21 +44,21 @@ modules/{repository,installed,cache}/   pacotes .mod e módulos instalados
 launcher/  cli/  sdk/  config/  logs/
 ```
 
-## Princípios (Fase 1 §1)
+## Princípios
 
 - **Core mínimo**: estável, leve, sem domínios de negócio; extensão via hooks marcados ("PLUGIN LOADER HOOK", "Phase N").
 - **Modularidade**: manifest.yaml → validação → registro → navegação por metadados → montagem de routers.
 - **Configuração centralizada**: `app/core/settings.py`; nada de URLs/portas/caminhos hardcoded.
 - **Local First, Server Ready**: single-process hoje; sem decisões que impeçam servidor multiusuário no futuro.
 
-## Modos de Execução (Fase 6, spec §3/§10)
+## Modos de Execução
 
 | Modo | Comando | Backend | Frontend |
 |---|---|---|---|
 | **Desktop** (default c/ build) | `techforge start` | uvicorn sem reload, `SERVE_STATIC_FRONTEND=true` | backend serve `core/frontend/dist` (SPA fallback) — nenhum processo node |
 | **Dev** | `techforge dev` | uvicorn com reload | vite dev server (:5173) |
 
-Decisão §10 documentada: o próprio backend serve os assets estáticos (menor nº
+Decisão documentada: o próprio backend serve os assets estáticos (menor nº
 de processos, menor consumo — diretriz "extremamente leve"). O launcher escolhe
 o modo automaticamente: desktop se `dist/index.html` existir; `--dev` força
 desenvolvimento. CLI: `techforge logs [--backend|--frontend|--launcher]`.
@@ -85,7 +85,7 @@ Regras:
   decide como exibir. Não filtrar na fonte.
 - Após qualquer mutação: `scan_installed()` + `sync_registry_to_db()`.
 
-## Module Lifecycle — Activate / Deactivate (Fase 4 §9/§10)
+## Module Lifecycle — Activate / Deactivate
 
 Semântica (diretriz do produto): **desativar = poupar recursos**.
 
@@ -101,12 +101,12 @@ DISABLED  → REMOVED    (remove — ação explícita)
 - Cada transição registra operation_log + notificação (Notification Foundation).
 - Guard de instalação: ID já registrado como INVALID/INCOMPATIBLE é rejeitado.
 - Limitação conhecida: desativação não descarrega módulo já montado em runtime
-  (requer restart). Hot-unload fica para a Fase 9.
+  (requer restart). Hot-unload ainda não implementado.
 
 APIs: `POST /api/v1/marketplace/activate/{id}` · `/deactivate/{id}`
 CLI: `techforge modules activate|deactivate|remove <id>`
 
-## Module Frontend Contract (Fase 3 §11)
+## Module Frontend Contract
 
 `entry_frontend` aponta para um módulo JS (ESM) **compilado**, servido via
 `GET /api/v1/modules/{id}/assets/{path}`. Contrato micro-frontend:
@@ -119,10 +119,10 @@ export default {
 ```
 
 O host (`ModuleHost.tsx`) importa dinamicamente e chama `render(el)` dentro de
-um ErrorBoundary — falha do módulo nunca derruba o Core (spec Fase 3 §15).
+um ErrorBoundary — falha do módulo nunca derruba o Core.
 Extensões servidas: whitelist (.js/.css/.svg/.png/...); path traversal bloqueado.
 
-## Notification Foundation (Fase 2 §10/§13)
+## Notification Foundation
 
 Notificações são **dado legítimo do Core** (data ownership §13) — nunca dados
 de negócio de módulos. APIs:
@@ -136,11 +136,11 @@ POST /api/v1/notifications/{id}/read · /read-all
 
 Backend: `app/models/notifications.py` + `app/services/notifications.py` +
 `app/api/routes/notifications.py`. Frontend: store zustand com polling leve (30s)
-e `NotificationBell` no Header. Fases futuras devem usar `NotificationService.create()`.
+e `NotificationBell` no Header. Novos módulos/serviços devem usar `NotificationService.create()`.
 O SDK entrega via `NotificationsSDK.push()` com fallback silencioso para fila local.
 
 ## Pontos de extensão pendentes
 
-- activate/deactivate quente em runtime (hot-unload — Fase 9)
-- RemoteRepositoryProvider (NotImplementedError — Fase 11)
+- activate/deactivate quente em runtime (hot-unload)
+- RemoteRepositoryProvider (NotImplementedError)
 - dynamic import de entry_frontend já feito; restam refinamentos de empacotamento
