@@ -17,4 +17,4 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `cd core/backend && .venv/Scripts/python.exe -m pytest tests -q` → 666 passed, 3 skipped. `cd cli && pytest tests -q` (mesmo `.venv`) → 105 passed.
 
-**Commit**: (a seguir)
+**Commit**: `16ed826`
