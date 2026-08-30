@@ -23,6 +23,8 @@ import asyncio
 
 from test_phase4 import MANIFEST_BASE, make_mod_file, make_package_manager
 
+pytestmark = pytest.mark.integration
+
 
 def test_for_module_derives_all_four_official_subpaths(tmp_path):
     root = tmp_path / "my_module"

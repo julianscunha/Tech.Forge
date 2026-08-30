@@ -15,6 +15,8 @@ sys.path.insert(0, str(ROOT / "cli"))
 
 from techforge_cli.commands.platform import logs_cmd, dev_cmd
 
+pytestmark = pytest.mark.integration
+
 
 def test_logs_shows_last_lines(tmp_path, monkeypatch):
     """logs lê o arquivo e imprime as últimas N linhas."""

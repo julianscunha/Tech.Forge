@@ -26,6 +26,8 @@ from app.package_manager.enums import CompatibilityLevel
 from app.module_trust.trust import TrustLevel
 from app.core.settings import settings
 
+pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def test_db():

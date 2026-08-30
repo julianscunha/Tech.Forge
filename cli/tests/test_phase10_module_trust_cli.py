@@ -1,5 +1,8 @@
 """Fase 10 — CLI: verify-module, integrity check, publishers list/show."""
 from __future__ import annotations
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 def test_verify_module_cmd_registered():

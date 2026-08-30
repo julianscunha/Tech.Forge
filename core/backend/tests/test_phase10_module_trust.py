@@ -14,6 +14,8 @@ ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 sys.path.insert(0, str(ROOT / "cli"))
 
+pytestmark = pytest.mark.integration
+
 
 def _write_package(tmp_path: Path, files: dict[str, str]) -> Path:
     """Cria um diretório de pacote 'instalado' fictício em tmp_path com os arquivos dados."""

@@ -25,6 +25,8 @@ from app.doc_engine.search import DocIndex, DocSearchEngine
 from app.doc_engine.indexer import DocIndexer
 from app.doc_engine import AIContextExporter
 
+pytestmark = pytest.mark.unit
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

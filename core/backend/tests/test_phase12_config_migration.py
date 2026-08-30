@@ -27,6 +27,8 @@ from test_phase4 import make_package_manager
 
 from app.package_manager.enums import UpdateStatus
 
+pytestmark = pytest.mark.integration
+
 MANIFEST_V1 = {
     "id": "cfg_mig_pkg",
     "name": "Cfg Migration Pkg",

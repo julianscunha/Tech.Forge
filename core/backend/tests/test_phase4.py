@@ -30,6 +30,8 @@ from app.package_manager.models import PackageInfo
 from app.package_manager.operation_log import OperationLog
 from app.package_manager.repository import LocalRepositoryProvider
 
+pytestmark = pytest.mark.integration
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

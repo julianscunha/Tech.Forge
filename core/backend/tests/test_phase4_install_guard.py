@@ -17,6 +17,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from test_phase4 import make_package_manager, make_mod_file, MANIFEST_BASE
 from app.package_manager.enums import InstallStatus
 
+pytestmark = pytest.mark.unit
+
 
 def test_rejects_id_already_registered_invalid(tmp_path):
     """ID presente no registry com status INVALID → instalação rejeitada."""

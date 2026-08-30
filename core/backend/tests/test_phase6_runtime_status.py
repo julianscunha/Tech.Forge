@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 import app.runtime as rt_mod
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture()
 def fresh_runtime(monkeypatch):

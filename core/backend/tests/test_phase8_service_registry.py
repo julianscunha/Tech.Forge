@@ -24,6 +24,8 @@ from app.doc_engine.models import ServiceContract, ServiceExport
 from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
 from app.service_registry.registry import ServiceRegistry
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture()
 def client():

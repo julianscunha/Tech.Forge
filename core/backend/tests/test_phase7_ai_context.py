@@ -14,6 +14,8 @@ import pytest
 ROOT = Path(__file__).parent.parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture()
 def ai_context():

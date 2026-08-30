@@ -29,6 +29,8 @@ from app.package_manager.enums import CompatibilityLevel, InstallStatus
 from app.module_trust.trust import TrustLevel
 from app.core.settings import settings
 
+pytestmark = pytest.mark.integration
+
 
 def make_test_mod_file(tmp: Path, module_id: str, version: str) -> Path:
     """Create a minimal valid .mod file for testing."""

@@ -28,6 +28,8 @@ from techforge_cli.packager.builder import PackageBuilder
 from techforge_sdk.contracts import ModuleContract, ModuleMetadata, HealthResult
 from techforge_sdk import create_sdk, TechForgeSDK
 
+pytestmark = pytest.mark.integration
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

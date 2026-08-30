@@ -6,6 +6,7 @@ mesma lógica, reutilizável por qualquer módulo, não só o Catálogo.
 Run:  cd core/backend && .venv/Scripts/python.exe -m pytest tests/test_phase12_ttl_cache.py -q
 """
 from __future__ import annotations
+import pytest
 
 import sys
 import time
@@ -15,6 +16,8 @@ ROOT = Path(__file__).parent.parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from app.storage.cache import TTLCache
+
+pytestmark = pytest.mark.unit
 
 
 def test_get_returns_none_on_cache_miss():

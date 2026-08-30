@@ -18,6 +18,8 @@ sys.path.insert(0, str(ROOT / "cli"))
 
 from techforge_cli.commands.docs import docs_cmd
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture()
 def runner():

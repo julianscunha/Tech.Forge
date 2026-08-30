@@ -29,6 +29,8 @@ from app.doc_engine.completeness import (
 from app.doc_engine.api_yaml_parser import APIYamlParser, _normalize_returns
 from app.doc_engine.models import ServiceContract, ServiceExport
 
+pytestmark = pytest.mark.unit
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

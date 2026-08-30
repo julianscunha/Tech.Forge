@@ -13,6 +13,7 @@ delega pra thread via `asyncio.to_thread`.
 Run:  cd core/backend && .venv/Scripts/python.exe -m pytest tests/test_phase12_migrations.py -q
 """
 from __future__ import annotations
+import pytest
 
 import sqlite3
 import sys
@@ -26,6 +27,8 @@ from sqlalchemy import create_engine
 import app.api  # noqa: F401 — registra todos os models em Base.metadata (mesma ordem da produção)
 from app.db import migrations
 from app.db.database import Base
+
+pytestmark = pytest.mark.unit
 
 
 def _sqlite_url(tmp_path: Path) -> tuple[str, Path]:

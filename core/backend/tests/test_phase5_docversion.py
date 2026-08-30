@@ -18,6 +18,8 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from app.module_engine.manifest import ManifestParser
 
+pytestmark = pytest.mark.unit
+
 
 BASE_MANIFEST = {
     "id": "ver_mod", "name": "Ver Mod", "version": "1.0.0",

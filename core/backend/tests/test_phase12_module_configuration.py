@@ -22,6 +22,8 @@ from app.models.module_configuration import ModuleConfiguration  # noqa: F401 â€
 from app.module_engine.manifest import ConfigField
 from app.services.module_configuration import ConfigValidationError, get_config, save_config, validate_config
 
+pytestmark = pytest.mark.integration
+
 FIELDS = [
     ConfigField(id="retention_days", type="integer", default=30),
     ConfigField(id="enabled", type="boolean", default=True),

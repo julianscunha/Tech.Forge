@@ -21,6 +21,8 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from techforge_cli.commands.modules import modules_cmd
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture()
 def runner():

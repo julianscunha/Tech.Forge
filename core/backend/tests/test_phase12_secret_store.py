@@ -28,6 +28,8 @@ from app.security.secret_store import (
 )
 from app.security.redaction import SecretRedactionFilter
 
+pytestmark = pytest.mark.integration
+
 
 class FakeBackend(SecretStoreBackend):
     def __init__(self):

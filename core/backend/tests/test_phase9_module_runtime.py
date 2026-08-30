@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT / "cli"))
 
 from app.module_engine.enums import ModuleStatus
 
+pytestmark = pytest.mark.integration
+
 
 # ── Slice 1 — Loader único (§10) ───────────────────────────────────────────────
 

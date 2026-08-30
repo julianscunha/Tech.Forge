@@ -23,6 +23,8 @@ from app.main import app
 from app.module_engine.enums import ModuleStatus
 from app.module_engine.registry import ModuleEntry, registry
 
+pytestmark = pytest.mark.integration
+
 MODULE_ID = "cfg_api_test"
 
 MANIFEST_RAW = {

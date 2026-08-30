@@ -18,6 +18,8 @@ sys.path.insert(0, str(ROOT / "cli"))
 from app.module_engine.manifest import ManifestParser
 from app.module_engine.enums import ModuleStatus
 
+pytestmark = pytest.mark.integration
+
 
 def write_manifest(mod: Path, module_id: str = "mod", module_type: str = "application",
                    dependencies: list[dict] | None = None) -> None:

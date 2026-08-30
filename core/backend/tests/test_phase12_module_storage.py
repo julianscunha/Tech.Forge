@@ -22,6 +22,8 @@ from app.db.database import Base
 from app.models.module_kv_store import ModuleKVStoreRow  # noqa: F401 — registra a tabela
 from app.services.module_storage import ModuleKVStorage, ModuleStorageError
 
+pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture()
 async def session_factory(tmp_path):

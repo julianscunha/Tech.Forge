@@ -20,6 +20,8 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from techforge_cli.commands.catalog import catalog_cmd
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture()
 def runner():

@@ -22,6 +22,8 @@ from app.main import app
 from app.db.database import AsyncSessionLocal
 from app.db.storage import StorageProvider
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture()
 def client():

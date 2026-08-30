@@ -31,6 +31,8 @@ from app.module_engine.registry import ModuleRegistry, ModuleEntry
 from app.module_engine.enums import ModuleStatus
 from datetime import datetime
 
+pytestmark = pytest.mark.unit
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

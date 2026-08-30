@@ -20,6 +20,8 @@ import pytest
 
 from app.module_engine.manifest import ManifestError, ManifestParser
 
+pytestmark = pytest.mark.unit
+
 
 BASE_MANIFEST = {
     "id": "cfg_mod", "name": "Cfg Mod", "version": "1.0.0",

@@ -16,6 +16,8 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from techforge_cli.commands.validate_module import validate_module_cmd
 
+pytestmark = pytest.mark.integration
+
 
 def _make_module(tmp_path: Path, with_docs: bool = True) -> Path:
     mod = tmp_path / "my_mod"

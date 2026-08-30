@@ -16,6 +16,9 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent.parent.parent
+
+pytestmark = pytest.mark.unit
+
 LAUNCHER_DIR = REPO / "launcher"
 sys.path.insert(0, str(LAUNCHER_DIR))
 sys.path.insert(0, str(REPO / "core" / "backend"))

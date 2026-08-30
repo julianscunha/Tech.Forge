@@ -18,6 +18,8 @@ from app.package_manager.models import PackageInfo
 from app.models.notifications import Notification
 from app.db.database import Base
 
+pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def test_db():

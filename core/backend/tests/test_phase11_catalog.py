@@ -11,6 +11,8 @@ from app.package_manager.models import PackageInfo
 from app.package_manager.enums import CompatibilityLevel
 from app.module_trust.trust import TrustLevel
 
+pytestmark = pytest.mark.unit
+
 
 class TestCatalogSource:
     """Test CatalogSource enum values."""

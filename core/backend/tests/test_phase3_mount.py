@@ -16,6 +16,8 @@ from fastapi import FastAPI
 
 from app.module_engine.plugin_loader import mount_module_routers
 
+pytestmark = pytest.mark.unit
+
 
 def test_double_mount_does_not_duplicate_routes():
     """Chamar mount 2× não deve duplicar rotas de módulos já montados."""
