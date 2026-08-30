@@ -32,6 +32,15 @@ logs/pids/
 # Runtime state (gerado, não versionar)
 modules/installed/*/data/settings.json
 
+# Módulos instalados via Marketplace/CLI — dado local do usuário, não do
+# produto. hello_world/veeam_m365 são módulos de referência versionados
+# (usados por testes e CI), todo o resto fica de fora do repositório.
+modules/installed/*
+!modules/installed/hello_world/
+!modules/installed/veeam_m365/
+modules/repository/*.mod
+modules/cache/*.mod
+
 # Artefato acidental de rodar scripts/pytest com cwd=core/backend
 # (settings.MODULES_INSTALLED_PATH resolve relativo ao CWD)
 /core/backend/modules/
