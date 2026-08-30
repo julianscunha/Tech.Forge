@@ -8,6 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.error_registry import ErrorRecord
+from app.observability.diagnostic_codes import resolve_diagnostic_code
 
 
 class ErrorRegistryService:
@@ -22,8 +23,10 @@ class ErrorRegistryService:
         module_id: Optional[str] = None,
         execution_id: Optional[str] = None,
     ) -> ErrorRecord:
+        diagnostic = resolve_diagnostic_code(source)
         entry = ErrorRecord(source=source, message=message, detail=detail,
-                            module_id=module_id, execution_id=execution_id)
+                            module_id=module_id, execution_id=execution_id,
+                            code=diagnostic.code if diagnostic else None)
         db.add(entry)
         await db.commit()
         await db.refresh(entry)

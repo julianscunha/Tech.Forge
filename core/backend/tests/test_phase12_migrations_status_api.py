@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "core" / "backend"))
 
 from fastapi.testclient import TestClient
 
+from app.db.migrations import head_revision
 from app.main import app
 
 pytestmark = pytest.mark.integration
@@ -33,6 +34,8 @@ def test_migrations_status_reports_head_and_current_up_to_date(client):
     resp = client.get("/api/v1/system/migrations/status")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["head"] == "0005"
-    assert data["current"] == "0005"
+    # Compara com o head real dos arquivos de migration (não hardcoded) —
+    # senão este teste precisa ser editado a cada nova migration adicionada.
+    assert data["head"] == head_revision()
+    assert data["current"] == head_revision()
     assert data["up_to_date"] is True

@@ -20,6 +20,7 @@ class ErrorRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     source: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # execution|dependency|runtime
+    code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)  # TF-EXECUTION-001 etc.
     message: Mapped[str] = mapped_column(Text, nullable=False)
     detail: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     module_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
