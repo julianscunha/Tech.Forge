@@ -60,6 +60,33 @@ class TestSingleInstance:
         assert L.already_running() is False
 
 
+# ── Port guard (regressão: start() ignorava processos órfãos na porta) ─────────
+
+class TestPortGuard:
+    def test_port_in_use_false_when_nothing_listening(self):
+        assert L._port_in_use("127.0.0.1", 1) is False
+
+    def test_port_in_use_true_when_socket_bound(self):
+        import socket
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(1)
+        port = srv.getsockname()[1]
+        try:
+            assert L._port_in_use("127.0.0.1", port) is True
+        finally:
+            srv.close()
+
+    def test_start_refuses_when_port_occupied_by_orphan(self, clean_state, monkeypatch):
+        # already_running() diz "não" (sem pidfile), mas a porta já está
+        # ocupada por um processo que o launcher não conhece — start() não
+        # pode simplesmente subir um segundo backend por cima.
+        monkeypatch.setattr(L, "_port_in_use", lambda host, port: True)
+        ok, msg = L.start(splash=False)
+        assert ok is False
+        assert str(L.BACKEND_PORT) in msg
+
+
 # ── Process helpers (§11) ──────────────────────────────────────────────────────
 
 class TestProcessHelpers:
@@ -118,6 +145,15 @@ class TestStatus:
     def test_summary_shape_matches_spec(self, clean_state):
         keys = set(L.status().summary().keys())
         assert {"launcher", "backend", "frontend", "database", "runtime"} == keys
+
+    def test_backend_not_reported_stopped_when_orphan_holds_port(self, clean_state, monkeypatch):
+        """Regressão: sem pidfile (stale/limpo) mas com um processo órfão
+        ainda ouvindo a porta, status() mentia 'STOPPED' — o usuário via
+        tudo parado no `techforge status` enquanto múltiplos processos
+        disputavam a porta e o SQLite por trás."""
+        monkeypatch.setattr(L, "_port_in_use", lambda host, port: True)
+        summary = L.status().summary()
+        assert summary["backend"]["state"] != "STOPPED"
 
     def test_launcher_reported_ready_after_start_cli_process_exits(self, clean_state, monkeypatch):
         """Regressão: `techforge start` roda em foreground, sobe o backend,

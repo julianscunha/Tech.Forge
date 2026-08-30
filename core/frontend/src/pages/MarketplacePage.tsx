@@ -4,6 +4,7 @@ import {
   CheckCircle2, ArrowUpCircle, AlertCircle,
 } from 'lucide-react'
 import { marketplaceApi, catalogApi, type CatalogListParams } from '@/lib/api'
+import { useNavStore } from '@/store/nav'
 import { PackageCard } from '@/components/marketplace/PackageCard'
 import { PackageDetailPanel } from '@/components/marketplace/PackageDetailPanel'
 import { OperationFeedback } from '@/components/marketplace/OperationFeedback'
@@ -126,7 +127,10 @@ export function MarketplacePage() {
     try {
       const res = await op()
       setFeedback({ success: res.success, message: res.message, status: res.status })
-      if (res.success) await fetchAll()
+      if (res.success) {
+        await fetchAll()
+        useNavStore.getState().refresh()
+      }
     } catch (e) {
       setFeedback({ success: false, message: e instanceof Error ? e.message : 'Erro' })
     } finally {
@@ -141,7 +145,11 @@ export function MarketplacePage() {
     try {
       const res = await marketplaceApi.importMod(file)
       setFeedback({ success: res.success, message: res.message, status: res.status })
-      if (res.success) { await fetchAll(); setTab('installed') }
+      if (res.success) {
+        await fetchAll()
+        setTab('installed')
+        useNavStore.getState().refresh()
+      }
     } catch (err) {
       setFeedback({ success: false, message: err instanceof Error ? err.message : 'Import failed' })
     } finally {
@@ -160,7 +168,10 @@ export function MarketplacePage() {
       try {
         const res = await marketplaceApi.install(module.module_id)
         setFeedback({ success: res.success, message: res.message, status: res.status })
-        if (res.success) await fetchCatalog()
+        if (res.success) {
+          await fetchCatalog()
+          useNavStore.getState().refresh()
+        }
       } catch (e) {
         setFeedback({ success: false, message: e instanceof Error ? e.message : 'Erro na instalação' })
       } finally {
@@ -420,6 +431,7 @@ export function MarketplacePage() {
           onSuccess={() => {
             fetchCatalog()
             fetchAll()
+            useNavStore.getState().refresh()
           }}
         />
       )}

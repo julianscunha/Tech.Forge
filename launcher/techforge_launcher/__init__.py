@@ -253,6 +253,21 @@ def already_running() -> bool:
     return bool(pid and _pid_alive(int(pid)))
 
 
+def _port_in_use(host: str, port: int) -> bool:
+    """True when something is already listening on host:port.
+
+    Independent of the pidfile: catches the case where a process the
+    launcher lost track of (started manually, or survived a `stop` that
+    didn't reach it) is still bound to the port. Starting a second backend
+    on top of it doesn't fail loudly — it silently produces two processes
+    racing over the same SQLite file, which surfaces later as random
+    500s. This check is what stops that from happening.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.5)
+        return sock.connect_ex((host, port)) == 0
+
+
 # ── Health probes ──────────────────────────────────────────────────────────────
 
 def _http_ok(url: str, timeout: float = 2.0) -> bool:
@@ -321,6 +336,13 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
     if already_running():
         logger.info("start requested but platform already running")
         return True, "TechForge já está em execução."
+
+    if _port_in_use(BACKEND_HOST, BACKEND_PORT):
+        msg = (f"Porta {BACKEND_PORT} já está em uso por outro processo "
+               f"(não iniciado por este launcher). Encerre-o antes de "
+               f"rodar `techforge start` de novo.")
+        logger.error(msg)
+        return False, msg
 
     from techforge_launcher.splash import Splash
     splash_ui = Splash(enabled=splash)
@@ -442,6 +464,14 @@ def status() -> PlatformState:
         ps.backend = ComponentStatus("Backend", "READY" if healthy else "FAILING")
         ps.database = ComponentStatus("Database", "READY" if db_ok else "FAILING")
         ps.runtime = ComponentStatus("Runtime", "READY" if rt_ok else "FAILING")
+    elif _port_in_use(BACKEND_HOST, BACKEND_PORT):
+        # Sem pidfile nosso, mas algo responde na porta — órfão que o
+        # launcher perdeu o rastro (start manual, ou stop que não alcançou
+        # o processo). "STOPPED" aqui seria uma mentira.
+        detail = f"porta {BACKEND_PORT} ocupada por processo não rastreado"
+        ps.backend = ComponentStatus("Backend", "UNKNOWN", detail=detail)
+        ps.database = ComponentStatus("Database", "UNKNOWN", detail=detail)
+        ps.runtime = ComponentStatus("Runtime", "UNKNOWN", detail=detail)
     else:
         ps.backend = ComponentStatus("Backend", "STOPPED")
         ps.database = ComponentStatus("Database", "STOPPED")
