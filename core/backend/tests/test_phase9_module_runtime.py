@@ -545,6 +545,54 @@ class TestSDKServices:
         from techforge_sdk.services import ServicesSDK
         assert ServicesSDK("consumer_mod").get("aws_cost_service") is None
 
+    def test_invoke_posts_kwargs_and_returns_parsed_json(self, monkeypatch):
+        import json as _json
+        import urllib.request
+        from techforge_sdk.services import ServicesSDK
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["url"] = req.full_url
+            captured["method"] = req.get_method()
+            captured["body"] = _json.loads(req.data)
+            return _FakeHTTPResponse(_json.dumps({"logical_cores": 8}).encode())
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        result = ServicesSDK("consumer_mod").invoke("system_information_service", "get_cpu_info")
+        assert result == {"logical_cores": 8}
+        assert captured["method"] == "POST"
+        assert captured["url"].endswith("/services/system_information_service/invoke/get_cpu_info")
+        assert captured["body"] == {}
+
+    def test_invoke_raises_typed_error_from_http_error_body(self, monkeypatch):
+        import io
+        import json as _json
+        import urllib.error
+        import urllib.request
+        from techforge_sdk.services import ServiceInvokeError, ServicesSDK
+
+        def fake_urlopen(req, timeout=None):
+            body = _json.dumps({"detail": {"code": "SERVICE_NOT_FOUND", "message": "nope"}}).encode()
+            raise urllib.error.HTTPError(req.full_url, 404, "Not Found", None, io.BytesIO(body))
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        with pytest.raises(ServiceInvokeError) as exc_info:
+            ServicesSDK("consumer_mod").invoke("ghost", "ping")
+        assert exc_info.value.code == "SERVICE_NOT_FOUND"
+
+    def test_invoke_raises_unreachable_error_when_core_down(self, monkeypatch):
+        import urllib.request
+        from techforge_sdk.services import ServiceInvokeError, ServicesSDK
+
+        def fake_urlopen(req, timeout=None):
+            raise OSError("connection refused")
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        with pytest.raises(ServiceInvokeError) as exc_info:
+            ServicesSDK("consumer_mod").invoke("system_information_service", "get_cpu_info")
+        assert exc_info.value.code == "SERVICE_UNREACHABLE"
+
 
 class TestSDKRuntime:
 

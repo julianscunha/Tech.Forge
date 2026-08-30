@@ -1,19 +1,47 @@
 """
 /api/v1/services — Service Registry (Fase 8 §23)
 ====================================================
-Somente consulta — nenhuma rota genérica de invocação pública (§23: não
-permitir execução arbitrária de serviços por API genérica).
+Majoritariamente consulta. §23 veda "execução arbitrária de serviços por
+API genérica pública", mas abre exceção explícita para "necessidade
+arquitetural justificada" — é o caso de /invoke abaixo: um módulo roda no
+mesmo processo do Core mas o SDK nunca importa `app.*` diretamente (regra
+de isolamento SDK/Core), então precisa de uma rota HTTP local pra
+consumir a capacidade pública de outro módulo (dependência declarada no
+manifest, Fase 8.1). Não é execução arbitrária: `invoke()` só aceita
+exports já declarados no contrato público (`docs/contracts/api.yaml`) do
+serviço, validados (tipo, obrigatoriedade) antes de rodar.
 """
 from __future__ import annotations
 
 from dataclasses import asdict
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel
 
+from app.service_registry.errors import (
+    CapabilityNotFoundError,
+    ContractViolationError,
+    InvalidArgumentsError,
+    ServiceDisabledError,
+    ServiceExecutionFailedError,
+    ServiceNotFoundError,
+    ServiceUnavailableError,
+)
+from app.service_registry.invoker import invoke
 from app.service_registry.registry import service_registry
 
 router = APIRouter(prefix="/services", tags=["service-registry"])
+
+_ERROR_STATUS = {
+    ServiceNotFoundError: 404,
+    CapabilityNotFoundError: 404,
+    ServiceDisabledError: 503,
+    ServiceUnavailableError: 503,
+    ContractViolationError: 422,
+    InvalidArgumentsError: 422,
+    ServiceExecutionFailedError: 500,
+}
 
 
 class ServiceExportRead(BaseModel):
@@ -87,3 +115,21 @@ async def get_service_contract(service_id: str) -> ServiceContractRead:
     if descriptor is None or descriptor.contract is None:
         raise HTTPException(404, f"Contract not found for service: {service_id!r}")
     return ServiceContractRead(**asdict(descriptor.contract))
+
+
+@router.post("/{service_id}/invoke/{export_name}",
+             summary="Invoke a contract-declared export (§13/§23 exception — see module docstring)")
+def invoke_service(
+    service_id: str,
+    export_name: str,
+    kwargs: dict[str, Any] = Body(default_factory=dict),
+) -> Any:
+    # def (não async def): invoke() é síncrono e usa asyncio.run() pra
+    # exports async — chamado de dentro do loop do FastAPI, isso quebraria.
+    # Starlette roda handlers `def` puro numa threadpool, fora do loop.
+    try:
+        return invoke(service_id, export_name, **kwargs)
+    except tuple(_ERROR_STATUS) as exc:
+        raise HTTPException(
+            _ERROR_STATUS[type(exc)], {"code": exc.code, "message": str(exc)}
+        ) from None

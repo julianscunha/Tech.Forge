@@ -399,6 +399,37 @@ class TestServicesAPI:
         assert resp.status_code == 200
         assert resp.json() == []
 
+    def test_invoke_endpoint_returns_export_result(self, client):
+        resp = client.post("/api/v1/services/hello_world/invoke/ping", json={})
+        assert resp.status_code == 200
+        assert resp.json() == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
+
+    def test_invoke_endpoint_passes_kwargs(self, client):
+        resp = client.post(
+            "/api/v1/services/veeam_m365/invoke/calculate_storage",
+            json={"users": 500, "mailbox_quota_gb": 50},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["total_gb"] == 25000.0
+
+    def test_invoke_endpoint_unknown_service_returns_404(self, client):
+        resp = client.post("/api/v1/services/ghost_service/invoke/ping", json={})
+        assert resp.status_code == 404
+        assert resp.json()["detail"]["code"] == "SERVICE_NOT_FOUND"
+
+    def test_invoke_endpoint_unknown_export_returns_404(self, client):
+        resp = client.post("/api/v1/services/hello_world/invoke/does_not_exist", json={})
+        assert resp.status_code == 404
+        assert resp.json()["detail"]["code"] == "CAPABILITY_NOT_FOUND"
+
+    def test_invoke_endpoint_missing_argument_returns_422(self, client):
+        resp = client.post(
+            "/api/v1/services/veeam_m365/invoke/calculate_storage",
+            json={"mailbox_quota_gb": 50},
+        )
+        assert resp.status_code == 422
+        assert resp.json()["detail"]["code"] == "INVALID_ARGUMENTS"
+
 
 class TestDocsContractsExposeCapabilities:
     """Fase 7's /docs/contracts route (consumida pelo Developer Center) deve
