@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Optional
 
 from app.module_engine.loader import LoaderResult
+from app.observability.events import event_bus
 
 _last_result: Optional[LoaderResult] = None
 
@@ -19,6 +20,9 @@ _last_result: Optional[LoaderResult] = None
 def store(result: LoaderResult) -> None:
     global _last_result
     _last_result = result
+    event_bus.publish("module_loader.scan", scanned=result.scanned, installed=result.installed,
+                      disabled=result.disabled, invalid=result.invalid,
+                      incompatible=result.incompatible)
 
 
 def get() -> Optional[LoaderResult]:

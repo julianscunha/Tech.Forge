@@ -20,6 +20,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Callable, Optional
 
+from app.observability.events import event_bus
+
 
 def current_frontend_mode(dist_path: Optional["object"] = None) -> str:
     """Modo de entrega do frontend (§14): static | dev | none.
@@ -94,6 +96,7 @@ class TechForgeRuntime:
     async def fire_startup(self, detail: str = "") -> None:
         event = RuntimeEvent("startup", detail)
         self.events.append(event)
+        event_bus.publish("runtime.startup", detail=detail)
         if self.state is RuntimeState.BOOTSTRAPPING:
             self.state = RuntimeState.READY
             self.started_at = event.timestamp
@@ -101,6 +104,7 @@ class TechForgeRuntime:
     async def fire_shutdown(self, detail: str = "") -> None:
         event = RuntimeEvent("shutdown", detail)
         self.events.append(event)
+        event_bus.publish("runtime.shutdown", detail=detail)
         self.state = RuntimeState.STOPPED
         for handler in self._shutdown_handlers:
             try:
@@ -145,7 +149,9 @@ class TechForgeRuntime:
             result[name] = alive
             if not alive and self.state in (RuntimeState.READY, RuntimeState.BOOTSTRAPPING):
                 self.state = RuntimeState.DEGRADED
-                self.events.append(RuntimeEvent("degraded", f"{name} (pid {pid}) não está mais em execução"))
+                detail = f"{name} (pid {pid}) não está mais em execução"
+                self.events.append(RuntimeEvent("degraded", detail))
+                event_bus.publish("runtime.degraded", component=name, pid=pid, detail=detail)
         return result
 
     # ── Status ────────────────────────────────────────────────────────────────

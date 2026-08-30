@@ -10,6 +10,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from app.observability.events import event_bus
+
 logger = logging.getLogger("techforge.pkg_log")
 
 
@@ -53,6 +55,9 @@ class OperationLog:
         self._entries.append(entry)
         if len(self._entries) > self.MAX_ENTRIES:
             self._entries = self._entries[-self.MAX_ENTRIES:]
+
+        event_bus.publish(f"package_manager.{operation}", module_id=module_id,
+                          version=version, status=status, message=message, **details)
 
         log_fn = logger.error if status == "failed" else logger.info
         log_fn("[pkg:%s] %s %s v%s — %s", operation, status, module_id, version, message)
