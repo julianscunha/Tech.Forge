@@ -49,6 +49,13 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized.")
 
+    from app.db.database import AsyncSessionLocal
+    from app.services.execution_history import ExecutionHistoryService
+    async with AsyncSessionLocal() as db:
+        removed = await ExecutionHistoryService.cleanup_old(db, settings.EXECUTION_HISTORY_RETENTION_DAYS)
+        if removed:
+            logger.info("Execution history cleanup: %d old entries removed.", removed)
+
     loader = ModuleLoader()
     result = await loader.scan_installed()
     loader_journal.store(result)

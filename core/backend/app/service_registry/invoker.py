@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 import uuid
 
 from app.core.settings import settings
@@ -116,18 +117,54 @@ def invoke(service_id: str, export_name: str, **kwargs):
 
     metric_emitter.counter("module_executions").inc()
     execution_id = str(uuid.uuid4())
+    start = time.monotonic()
     with bind_log_context(module_id=descriptor.module_id, execution_id=execution_id):
         try:
-            with metric_emitter.timer("execution_duration"):
-                result = func(**kwargs)
-                if asyncio.iscoroutine(result):
-                    result = asyncio.run(result)
+            result = func(**kwargs)
+            if asyncio.iscoroutine(result):
+                result = asyncio.run(result)
+            duration = time.monotonic() - start
+            metric_emitter.histogram("execution_duration").observe(duration)
+            _persist_execution_history(execution_id, descriptor.module_id, "SUCCESS", duration)
             return result
         except Exception as exc:
+            duration = time.monotonic() - start
             metric_emitter.counter("execution_failures").inc()
+            metric_emitter.histogram("execution_duration").observe(duration)
+            _persist_execution_history(execution_id, descriptor.module_id, "FAILED", duration, str(exc))
             # §15 — não expor stack trace interno de outro módulo ao chamador;
             # o detalhe fica só no log do Core.
             logger.warning("Execution of %s.%s failed: %s", service_id, export_name, exc)
             raise ServiceExecutionFailedError(
                 f"Execution of '{service_id}.{export_name}' failed"
             ) from None
+
+
+def _persist_execution_history(execution_id: str, module_id: str, status: str,
+                                duration_seconds: float, error_summary: str | None = None) -> None:
+    """Grava no Execution History (Fase 14 §23). Observability nunca pode
+    quebrar a execução real do módulo (spec §37) — se já estamos dentro de
+    um event loop rodando, não dá pra usar asyncio.run() aqui; a
+    persistência é pulada silenciosamente (logada em debug) em vez de
+    lançar."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        logger.debug("Skipping execution history persistence: already inside a running event loop")
+        return
+
+    async def _write() -> None:
+        from app.db.database import AsyncSessionLocal
+        from app.services.execution_history import ExecutionHistoryService
+        async with AsyncSessionLocal() as db:
+            await ExecutionHistoryService.record(
+                db, execution_id=execution_id, module_id=module_id, status=status,
+                duration_seconds=duration_seconds, error_summary=error_summary,
+            )
+
+    try:
+        asyncio.run(_write())
+    except Exception:
+        logger.exception("Failed to persist execution history for %s", execution_id)

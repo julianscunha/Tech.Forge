@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     LOG_RETENTION_DAYS: dict[str, int] = {
         "DEBUG": 7, "INFO": 30, "WARNING": 30, "ERROR": 90, "CRITICAL": 90,
     }
+    EXECUTION_HISTORY_RETENTION_DAYS: int = 90
 
     # Launcher (Phase 6)
     FRONTEND_PORT: int = 5173
