@@ -87,6 +87,6 @@ Plano: `tasks/phase15-plan.md`.
 
 **Teste**: `pytest tests -q` (backend) → 690 passed, 3 skipped, sem alteração de contagem (slice de tooling, não adicionou teste novo); `cli && pytest tests -q` → 105 passed; `npm run lint` e `npm run build` → limpos.
 
-**Commit**: (a seguir)
+**Commit**: `4124796`
 
 **Commit**: (a seguir)
