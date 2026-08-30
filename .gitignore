@@ -39,3 +39,11 @@ modules/installed/*/data/settings.json
 .vscode/
 .idea/
 *.swp
+
+# Agent tooling (config/skills locais — não fazem parte do produto)
+.claude/
+.agents/
+
+# Test/lint caches
+.pytest_cache/
+.ruff_cache/
