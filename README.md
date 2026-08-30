@@ -54,6 +54,9 @@ Se você quer ver o que já existe pra instalar, ou criar um módulo novo,
 
 ## 🏗️ Arquitetura
 
+<details>
+<summary><b>Diagrama (Desktop, Core Backend, Core Frontend)</b></summary>
+
 ```mermaid
 flowchart LR
     subgraph Desktop
@@ -79,7 +82,12 @@ flowchart LR
     B <--> F
 ```
 
+</details>
+
 ### O fluxo de um módulo
+
+<details>
+<summary><b>Diagrama (create → validate → package → install → runtime)</b></summary>
 
 ```mermaid
 flowchart TD
@@ -95,6 +103,8 @@ flowchart TD
     J --> K["Doc Engine indexa docs do módulo<br/>completeness check + busca global"]
     K --> L["Update com backup · Remove com cleanup"]
 ```
+
+</details>
 
 ---
 
@@ -194,6 +204,47 @@ CORS_ORIGINS=["http://localhost:5173"]
 
 Trocar `DATABASE_URL` prepara migração futura para PostgreSQL — dependências
 específicas de SQLite ficam isoladas na camada de dados.
+</details>
+
+---
+
+## 🧪 Testes
+
+721 testes no backend (`core/backend/tests/`), organizados por nível via
+`pytest` markers (`unit`/`integration`/`contract`/`e2e`/`smoke`/`regression`,
+`--strict-markers`); 113 no CLI (`cli/tests/`). CI roda tudo automaticamente
+em cada push/PR ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+```bash
+cd core/backend
+python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt
+
+.venv/Scripts/python.exe -m pytest tests -q            # suíte completa
+.venv/Scripts/python.exe -m pytest tests -m unit -q    # só um nível
+.venv/Scripts/python.exe -m ruff check ../../core/backend/app ../../cli ../../sdk  # static checks
+```
+
+```bash
+cd core/frontend
+npm run lint     # eslint, zero-warnings policy
+npm run build    # tsc -b && vite build
+```
+
+```bash
+cd cli
+python -m pytest tests -q
+```
+
+<details>
+<summary><b>Release Readiness (Fase 15) — gate agregado antes de uma release</b></summary>
+
+```bash
+techforge release-check                             # 5 checks vivos + pytest + npm build
+techforge release-check --skip-tests --skip-build    # só os checks vivos (mais rápido)
+techforge modules quality <id>                       # relatório de qualidade de um módulo
+```
+
+Sai com código != 0 (`Release: BLOCKED`) se qualquer checagem falhar.
 </details>
 
 ---
