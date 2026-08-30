@@ -4,8 +4,7 @@ from app.api.routes.catalog import router as catalog_router
 from app.api.routes.categories import router as categories_router
 from app.api.routes.dependencies import dependencies_router
 from app.api.routes.dependencies import modules_router as dependencies_modules_router
-from app.api.routes.diagnostics import diagnostics_router
-from app.api.routes.diagnostics import modules_diagnostics_router
+from app.api.routes.diagnostics import diagnostics_router, modules_diagnostics_router
 from app.api.routes.docs import router as docs_router
 from app.api.routes.docs_context import router as docs_context_router
 from app.api.routes.health import router as health_router
