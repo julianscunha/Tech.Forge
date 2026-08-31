@@ -63,6 +63,11 @@ export const registryApi = {
   getModule: (moduleId: string, developerMode = false) =>
     request<ModuleEntry>(`/registry/modules/${moduleId}?developer_mode=${developerMode}`),
 
+  rescan: () =>
+    request<{ scanned: number; installed: number; invalid: number; routers_mounted: string[] }>(
+      '/registry/rescan', { method: 'POST' }
+    ),
+
   getLoaderJournal: () =>
     request<LoaderResult>('/registry/loader/journal'),
 }

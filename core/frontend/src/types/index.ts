@@ -484,6 +484,7 @@ export interface DiagnosticsHealth {
     modules_installed: number
     modules_enabled: number
     categories_registered: number
+    paths: { install_dir: string; user_data_dir: string }
   }
   storage: { database: boolean; writable: boolean }
   runtime: {

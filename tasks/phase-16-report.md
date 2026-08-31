@@ -79,3 +79,17 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `6d8dc58`
 
+### Slice 6 — Developer Mode real (frontend)
+
+**Arquivos**: `core/backend/app/services/system_diagnostics.py` (modificado, +`paths`), `core/backend/app/api/routes/registry.py` (modificado, +`POST /registry/rescan`), `core/backend/tests/test_phase16_developer_mode.py` (novo), `core/frontend/src/types/index.ts` (modificado), `core/frontend/src/lib/api.ts` (modificado, +`registryApi.rescan`), `core/frontend/src/pages/SettingsPage.tsx` (modificado, card "Developer Mode").
+
+**O quê**: `SystemDiagnosticService.snapshot()` (Fase 14) ganhou `platform.paths.{install_dir,user_data_dir}` (Slice 1), já reexposto de graça em `/diagnostics/health`. `POST /api/v1/registry/rescan` — reusa `PackageManager._hot_reload()` (scan + doc reindex + service registry sync, mesmo caminho corrigido nesta sessão pro bug de reinstalação sem restart) e depois `mount_module_routers(app)` pra montar routers de módulos ainda não montados. `SettingsPage` ganhou um card "Developer Mode" com toggle (mesmo `devmode.ts`, agora consumido também fora de `ModulesPage`) — quando ativo, mostra os dois paths reais e um botão "Recarregar módulos" que chama o rescan e mostra o resultado.
+
+**Decisão-chave**: nenhuma API de dados nova de verdade — `/diagnostics/health` já existia e só ganhou um campo; o único endpoint genuinamente novo é o rescan, que não duplica lógica (reusa `_hot_reload` + `mount_module_routers`, ambos já existentes de fases anteriores).
+
+**Aceite**: com Developer Mode desligado (padrão), nenhuma seção de paths/reload aparece; ligado, mostra os paths reais e o rescan funciona sem reiniciar o processo.
+
+**Teste**: `pytest tests -q` → 883 passed, 3 skipped (era 881 — 2 novos). `ruff check core/backend/app cli sdk` limpo. `npm run lint`/`npm run build` limpos. Verificado ao vivo: `techforge start` real → `curl /diagnostics/health` → paths reais retornados; `curl -X POST /registry/rescan` → `{"scanned":6,"installed":3,"invalid":3,"routers_mounted":[]}` (idempotente, nenhum router novo pois já estavam todos montados).
+
+**Commit**: _(pendente)_
+

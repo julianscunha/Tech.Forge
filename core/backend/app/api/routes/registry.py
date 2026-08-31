@@ -5,7 +5,7 @@ These endpoints expose the in-memory ModuleRegistry to the frontend.
 They are distinct from /api/v1/modules (which queries SQLite) because
 the runtime registry contains live status data that may differ from the DB.
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel as _BaseModel
 
 from app.module_engine import journal as loader_journal
@@ -125,6 +125,29 @@ async def get_loader_journal() -> LoaderResultRead:
             for ev in result.journal
         ],
     )
+
+
+@router.post("/rescan", summary="Fase 16 §38 — Developer Mode: force reload de módulos")
+async def rescan_registry(request: Request) -> dict:
+    """
+    Refaz o scan de modules/installed/ sem reiniciar o processo — mesmo
+    mecanismo do hot-reload pós-install/update (`PackageManager._hot_reload`),
+    disparado manualmente. Depois monta o router de qualquer módulo que
+    ainda não estava montado (§38: "reload" pro Developer Mode).
+    """
+    from app.module_engine.plugin_loader import mount_module_routers
+    from app.package_manager.manager import package_manager
+
+    await package_manager._hot_reload()
+    mount_result = mount_module_routers(request.app)
+
+    result = loader_journal.get()
+    return {
+        "scanned": result.scanned if result else 0,
+        "installed": result.installed if result else 0,
+        "invalid": result.invalid if result else 0,
+        "routers_mounted": mount_result.mounted,
+    }
 
 
 # ── Navigation tree (§7.1) ────────────────────────────────────────────────────

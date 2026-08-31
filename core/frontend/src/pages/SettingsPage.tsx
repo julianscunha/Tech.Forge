@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Settings, Database, GitBranch, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { Settings, Database, GitBranch, Clock, CheckCircle2, XCircle, Code2, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { systemApi, platformConfigApi } from '@/lib/api'
+import { systemApi, platformConfigApi, registryApi, diagnosticsApi } from '@/lib/api'
 import { useTimezoneStore } from '@/store/timezone'
-import type { StorageStatus, MigrationsStatus, PlatformConfig } from '@/types'
+import { useDevModeStore } from '@/store/devmode'
+import type { StorageStatus, MigrationsStatus, PlatformConfig, DiagnosticsHealth } from '@/types'
 
 // Fallback pra navegadores sem Intl.supportedValuesOf (Safari < 17) — a
 // lista real usa a API nativa quando disponível.
@@ -24,7 +25,11 @@ export function SettingsPage() {
   const [storage, setStorage] = useState<StorageStatus | null>(null)
   const [migrations, setMigrations] = useState<MigrationsStatus | null>(null)
   const [config, setConfig] = useState<PlatformConfig | null>(null)
+  const [health, setHealth] = useState<DiagnosticsHealth | null>(null)
+  const [rescanMessage, setRescanMessage] = useState<string | null>(null)
+  const [rescanning, setRescanning] = useState(false)
   const { timezone, setTimezone } = useTimezoneStore()
+  const { developerMode, toggleDeveloperMode } = useDevModeStore()
 
   useEffect(() => {
     systemApi.storageStatus().then(setStorage).catch(() => setStorage(null))
@@ -32,12 +37,74 @@ export function SettingsPage() {
     platformConfigApi.get().then(setConfig).catch(() => setConfig(null))
   }, [])
 
+  useEffect(() => {
+    if (!developerMode) return
+    diagnosticsApi.health().then(setHealth).catch(() => setHealth(null))
+  }, [developerMode])
+
+  async function handleRescan() {
+    setRescanning(true)
+    setRescanMessage(null)
+    try {
+      const result = await registryApi.rescan()
+      setRescanMessage(`${result.installed} módulo(s) instalado(s), ${result.routers_mounted.length} rota(s) montada(s).`)
+    } catch (err) {
+      setRescanMessage(err instanceof Error ? err.message : 'Falha ao recarregar módulos.')
+    } finally {
+      setRescanning(false)
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-6 pt-4 pb-6 space-y-6">
       <div className="flex items-center gap-2">
         <Settings size={18} className="text-[hsl(var(--accent))]" />
         <h1 className="text-lg font-semibold text-[hsl(var(--text))]">Configurações</h1>
       </div>
+
+      <Card icon={Code2} title="Developer Mode">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-[hsl(var(--text-muted))] max-w-[80%]">
+            Expõe paths reais da instalação, acesso a diagnósticos técnicos
+            e permite forçar o recarregamento de módulos sem reiniciar.
+          </p>
+          <button
+            onClick={toggleDeveloperMode}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded text-xs font-medium transition-colors',
+              developerMode
+                ? 'bg-[hsl(var(--accent-muted))] text-[hsl(var(--accent))]'
+                : 'bg-[hsl(var(--bg))] border border-[hsl(var(--border-subtle))] text-[hsl(var(--text-muted))]'
+            )}
+          >
+            {developerMode ? 'Ativado' : 'Desativado'}
+          </button>
+        </div>
+
+        {developerMode && (
+          <div className="pt-2 mt-2 border-t border-[hsl(var(--border-subtle))] space-y-2">
+            <Row label="Install dir" value={health?.platform.paths.install_dir ?? '—'} />
+            <Row label="User data dir" value={health?.platform.paths.user_data_dir ?? '—'} />
+            <div className="flex items-center justify-between pt-1">
+              <button
+                onClick={handleRescan}
+                disabled={rescanning}
+                className={cn(
+                  'flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded',
+                  'bg-[hsl(var(--bg))] border border-[hsl(var(--border-subtle))]',
+                  'text-[hsl(var(--text))] disabled:opacity-50'
+                )}
+              >
+                <RefreshCw size={12} className={rescanning ? 'animate-spin' : ''} />
+                Recarregar módulos
+              </button>
+              {rescanMessage && (
+                <span className="text-[10px] text-[hsl(var(--text-muted))]">{rescanMessage}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
 
       <Card icon={Clock} title="Fuso horário">
         <p className="text-xs text-[hsl(var(--text-muted))] mb-2">

@@ -12,6 +12,7 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.paths import install_dir, user_data_dir
 from app.core.settings import settings
 from app.module_runtime.state import module_runtime_registry
 from app.runtime import runtime
@@ -39,6 +40,10 @@ class SystemDiagnosticService:
                 "modules_installed": await ModuleService.count_installed(db),
                 "modules_enabled": await ModuleService.count_enabled(db),
                 "categories_registered": await CategoryService.count(db),
+                "paths": {  # Fase 16 §38 — só exibido na UI quando Developer Mode está ativo
+                    "install_dir": str(install_dir()),
+                    "user_data_dir": str(user_data_dir()),
+                },
             },
             "storage": {
                 "database": storage_health.database,
