@@ -68,4 +68,4 @@ O dado assinado é `canonical_manifest_bytes(raw)` — o dict do manifesto seria
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - **Verificação manual ao vivo, ponta a ponta, com chaves e módulo reais**: `techforge trust generate-keypair` gerou um par Ed25519 real; `techforge sign-module` assinou um módulo real; `techforge package-module` empacotou o `.mod` com a assinatura embutida; publisher real registrado com `trust_status=TRUSTED` e a chave pública real; módulo instalado via `POST /marketplace/import` real → `GET /modules/{id}/trust` retornou `"trust_level":"TRUSTED","signature_status":"VALID"` — **primeira vez que `TRUSTED` é alcançado de verdade na plataforma**. Em seguida, o `manifest.yaml` já instalado foi adulterado em disco e o endpoint `/verify` reexecutado: o integrity check (hash por arquivo) capturou a divergência antes mesmo da assinatura entrar em jogo, e o trust level caiu para `MODIFIED` — as duas camadas de defesa (integridade de arquivo + assinatura de manifesto) atuando corretamente em conjunto.
 
-**Commit**: _(pendente)_
+**Commit**: `21d7110`
