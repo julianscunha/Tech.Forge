@@ -12,7 +12,7 @@ from app.module_engine import journal as loader_journal
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.plugin_loader import mount_module_routers
 from app.observability.logging_setup import configure_logging
-from app.observability.notifications_bridge import wire_notifications
+from app.observability.notifications_bridge import drain_pending_notifications, wire_notifications
 from app.observability.retention import cleanup_old_logs
 from app.observability.startup_diagnostics import time_step
 from app.runtime import runtime
@@ -141,6 +141,11 @@ async def lifespan(app: FastAPI):
 
     # Phase 6 — Runtime: coordinated shutdown
     await runtime.fire_shutdown("backend stopped")
+
+    # Fase 17 — espera notificações de segurança agendadas em background
+    # terminarem antes do loop fechar (evita task pendente sendo destruída
+    # no meio do shutdown).
+    await drain_pending_notifications()
 
 
 def _mount_static_frontend(app: FastAPI) -> bool:

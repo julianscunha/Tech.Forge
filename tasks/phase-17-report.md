@@ -212,3 +212,36 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - Verificação manual ao vivo: backend real subido, `curl /api/v1/modules/hello_world/sbom` retornou o SBOM real do módulo `hello_world` de fato instalado na plataforma.
 
 **Commit**: `e6a2485`
+
+### Slice 8 — Security UI (frontend) + notificações de segurança
+
+**Arquivos**
+- `core/frontend/src/lib/trust.ts` (novo) — `describeTrust()`: traduz `integrity_status`/`signature_status`/publisher revogado em frase legível + lista de `warnings`
+- `core/frontend/src/components/modules/ModuleDetailPanel.tsx` — seção "Trust & Integrity" usa `describeTrust()` (frase clara em vez de enum cru); nova seção "Security Warnings" condicional
+- `core/backend/app/observability/notifications_bridge.py` — `_handle_critical_event` passa a tratar `security.signature_invalid`/`security.integrity_failure`/`security.module_blocked` (além do `runtime.degraded` já existente); **corrige um bug real e sério** descoberto durante a verificação ao vivo (ver abaixo)
+- `core/backend/app/main.py` — shutdown do app espera `drain_pending_notifications()`
+- `core/backend/tests/test_phase17_security_notifications.py` (novo, 6 testes)
+
+**O quê**
+Trust/Integrity/Publisher/Signature já existiam desde a Fase 10 no `ModuleDetailPanel`; faltava linguagem clara (era enum cru, ex. `NOT_CONFIGURED`) e um bloco de avisos explícito. `describeTrust()` resolve isso com frases no estilo do exemplo do spec ("Verified — Package integrity confirmed. Publisher signature not configured."). "Capabilities" do spec §38 já é coberto pela seção "Dependências" existente (`target_type=capability`) — não há um conceito de "capability provider" separado no Core (confirmado por investigação: só existe como alvo de dependência, gap pré-existente da Fase 8, fora de escopo). Notificação só pra 3 eventos de segurança relevantes (assinatura inválida, integridade comprometida, instalação bloqueada) — eventos de operação normal continuam sem notificar.
+
+**Bug real encontrado e corrigido durante a verificação ao vivo**
+`_handle_critical_event` desistia silenciosamente ("Skipping notification: already inside a running event loop") sempre que o evento era publicado de dentro de um handler `async def` — que é exatamente o caso de `install()`/`get_module_trust()`/`verify_module_integrity()` (todos rodam no mesmo loop do uvicorn). Isso significava que **nenhuma notificação de segurança jamais seria criada em produção** — só "funcionava" nos testes porque eles chamam a função de fora de qualquer loop (via `asyncio.run()`). Só foi descoberto porque a verificação ao vivo (instalar um zip bomb real e checar `/notifications`) não mostrou nada, apesar da suíte automatizada (que só testava o caminho sync) estar toda verde. Corrigido com `loop.create_task()` quando já há um loop rodando, guardando as tasks em `_pending_tasks` e esperando-as no shutdown do app (`drain_pending_notifications()`) — sem isso, testes que usam `TestClient` viravam flaky (task vazando "Event loop is closed" pra um teste seguinte, não relacionado).
+
+**Decisão-chave**
+Fire-and-forget puro (`create_task` sem tracking) causou 3 testes intermitentes em runs de suíte completa (passavam isolados, falhavam em conjunto) — a causa raiz era a task ainda pendente quando o loop de um `TestClient` de teste fechava. Resolvido fazendo o shutdown do app (`lifespan`) esperar as tasks pendentes — correto tanto em produção (loop nunca fecha até o processo morrer) quanto em teste (loop fecha só depois do `with TestClient(app)` disparar o shutdown, que agora espera).
+
+**Aceite**
+- `npm run lint`/`npm run build` limpos.
+- TRUSTED/VERIFIED/UNVERIFIED/INVALID/REVOKED nunca aparecem "nus" — sempre acompanhados de uma frase.
+- Notificação real e observável via API pra `MODULE_BLOCKED` (provado ao vivo).
+
+**Teste**
+- `pytest tests/test_phase17_security_notifications.py tests/test_phase14_notifications_bridge.py -q` — 12 passed (inclui teste específico que reproduz o bug do loop rodando).
+- Suíte completa backend, **2 execuções consecutivas** (pra garantir que a flakiness sumiu de verdade): `pytest tests -q` — 935 passed, 3 skipped, ambas as vezes.
+- Suíte completa CLI: `pytest tests -q` (em `cli/`) — 130 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+- `npm run lint` (frontend) — limpo. `npm run build` — sucesso.
+- Verificação manual ao vivo: bundle real servido pela plataforma (`techforge start`, desktop mode) contém as novas strings ("Security Warnings", "Publisher signature not configured"); zip bomb real importado via `POST /marketplace/import` → `GET /notifications` mostrou a notificação real criada (`"Segurança — ...: Instalação bloqueada por exceder limites de segurança."`) — confirmando o fix do bug de verdade, não só a suíte automatizada.
+
+**Commit**: _(pendente)_

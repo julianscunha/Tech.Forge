@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { X, AlertCircle, AlertTriangle, Terminal } from 'lucide-react'
+import { X, AlertCircle, AlertTriangle, ShieldAlert, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
 import { ModuleConfigSection } from './ModuleConfigSection'
 import { TrustBadge } from '@/components/marketplace/TrustBadge'
+import { describeTrust } from '@/lib/trust'
 import { dependenciesApi, moduleTrustApi } from '@/lib/api'
 import type { ModuleEntry, Dependency, ModuleTrust, ModuleConfigField } from '@/types'
 
@@ -103,25 +104,42 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
             </p>
           </Section>
 
-          {/* Trust & Integrity (Fase 10) */}
-          {trust && (
-            <Section title="Trust & Integrity">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-[hsl(var(--text-muted))]">Trust Level</span>
-                <TrustBadge level={trust.trust_level} />
-              </div>
-              <Field label="Integridade" value={trust.integrity_status} mono />
-              <Field label="Assinatura" value={trust.signature_status} mono />
-              {trust.publisher ? (
-                <>
-                  <Field label="Publisher" value={trust.publisher.name} />
-                  <Field label="Publisher Trust Status" value={trust.publisher.trust_status} mono />
-                </>
-              ) : (
-                <Field label="Publisher" value="(não declarado)" />
-              )}
-            </Section>
-          )}
+          {/* Trust & Integrity (Fase 10, linguagem clara — Fase 17 §38/§39) */}
+          {trust && (() => {
+            const { summary, warnings } = describeTrust(trust)
+            return (
+              <>
+                <Section title="Trust & Integrity">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs text-[hsl(var(--text-muted))]">Trust Level</span>
+                    <TrustBadge level={trust.trust_level} />
+                  </div>
+                  <p className="text-xs text-[hsl(var(--text-muted))] leading-relaxed">
+                    {summary}
+                  </p>
+                  {trust.publisher ? (
+                    <>
+                      <Field label="Publisher" value={trust.publisher.name} />
+                      <Field label="Publisher Trust Status" value={trust.publisher.trust_status} mono />
+                    </>
+                  ) : (
+                    <Field label="Publisher" value="(não declarado)" />
+                  )}
+                </Section>
+
+                {warnings.length > 0 && (
+                  <Section title="Security Warnings">
+                    {warnings.map((w, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-[hsl(var(--danger))]">
+                        <ShieldAlert size={12} className="flex-shrink-0 mt-0.5" />
+                        <span>{w}</span>
+                      </div>
+                    ))}
+                  </Section>
+                )}
+              </>
+            )
+          })()}
 
           {/* Configuration (Fase 12) */}
           {configFields.length > 0 && (
