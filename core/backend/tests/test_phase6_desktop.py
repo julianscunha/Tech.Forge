@@ -88,3 +88,38 @@ def test_spa_fallback_unknown_route_serves_index(tmp_path, monkeypatch):
     resp = client.get("/some/spa/route")
     assert resp.status_code == 200
     assert "SPA" in resp.text
+
+
+def test_spa_fallback_does_not_shadow_module_routes_in_desktop_mode(tmp_path, monkeypatch):
+    """Regressão real: em modo desktop, NENHUMA rota de módulo respondia —
+    _mount_static_frontend() era chamado em create_app() (síncrono, antes
+    do app subir), então o catch-all `/{full_path:path}` ficava registrado
+    ANTES das rotas de módulo (montadas depois, dentro do lifespan). Starlette
+    casa rotas pela ordem de registro, não pela mais específica — então o
+    catch-all sempre vencia, e QUALQUER endpoint de módulo (ex: ping de
+    hello_world) devolvia 500 (`raise FileNotFoundError` não tratado) em vez
+    de rodar de verdade. Fix: _mount_static_frontend() só é chamado dentro
+    do lifespan(), depois de mount_module_routers()."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html>SPA</html>", encoding="utf-8")
+
+    monkeypatch.setattr(main_mod.settings, "SERVE_STATIC_FRONTEND", True)
+    monkeypatch.setattr(main_mod.settings, "FRONTEND_DIST_PATH", dist)
+
+    # _mounted_module_ids é global e persiste entre apps criados por outros
+    # testes na mesma sessão pytest — sem isso, mount_module_routers() pula
+    # hello_world achando que já está montado (numa app de outro teste).
+    from app.module_engine.plugin_loader import _mounted_module_ids
+    _mounted_module_ids.clear()
+
+    from fastapi.testclient import TestClient
+    test_app = main_mod.create_app()
+    with TestClient(test_app) as client:
+        resp = client.get("/api/v1/modules/hello_world/ping")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
+
+        # Caminho /api/* genuinely inexistente ainda deve dar 404, não 500.
+        resp_missing = client.get("/api/v1/modules/hello_world/does-not-exist")
+        assert resp_missing.status_code == 404

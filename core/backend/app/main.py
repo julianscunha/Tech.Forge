@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
@@ -81,6 +81,15 @@ async def lifespan(app: FastAPI):
         "Plugin Loader: %d router(s) mounted, %d failed.",
         len(mounted.mounted), len(mounted.failed),
     )
+
+    # Fase 6 §10 — Desktop mode (no-op se SERVE_STATIC_FRONTEND=false). Montado
+    # só agora, DEPOIS do Plugin Loader: o catch-all de SPA casa qualquer
+    # caminho, então se viesse antes (como em create_app(), síncrono) ele
+    # intercepta toda rota de módulo montada depois — Starlette resolve pela
+    # ordem de registro, nunca pela mais específica. Bug real: nenhuma rota
+    # de módulo respondia em modo desktop antes desta correção.
+    with time_step("static_frontend_mount"):
+        _mount_static_frontend(app)
 
     # Phase 5 — Documentation Engine
     with time_step("doc_indexer"):
@@ -163,9 +172,15 @@ def _mount_static_frontend(app: FastAPI) -> bool:
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
-        """SPA fallback: any non-API path serves index.html."""
+        """SPA fallback: any non-API path serves index.html.
+
+        Só é alcançável de fato por caminhos /api/* que nenhuma rota real
+        bateu — este catch-all é montado por último de propósito (ver
+        lifespan(), depois de mount_module_routers()), senão ele intercepta
+        toda rota de módulo antes dela ser registrada (Starlette casa rotas
+        na ordem de registro, não pela mais específica)."""
         if full_path.startswith("api/"):
-            raise FileNotFoundError(full_path)
+            raise HTTPException(status_code=404, detail=f"Not found: /{full_path}")
         candidate = dist / full_path
         if full_path and candidate.is_file():
             return FileResponse(candidate)
@@ -192,8 +207,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(api_router)
-    # Fase 6 §10 — Desktop mode (no-op se SERVE_STATIC_FRONTEND=false)
-    _mount_static_frontend(app)
     return app
 
 
