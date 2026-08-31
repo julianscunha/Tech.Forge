@@ -108,5 +108,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` → 886 passed, 3 skipped (era 883 — 3 novos: 1 do entry point, 2 de paths). `ruff check core/backend/app cli sdk` limpo. **Verificado ao vivo, de ponta a ponta, com o artefato real**: limpei `%LOCALAPPDATA%\TechForge` (simulando clean machine), rodei `techforge-backend.exe` diretamente (sem `.venv` ativo) → `curl /platform/ready` → `{"ready":true,"state":"ready"}` HTTP 200; `/system/version` e `/platform/status` responderam; confirmei os diretórios `config/`, `logs/`, `modules/` criados de fato em `%LOCALAPPDATA%\TechForge\TechForge`; migrações Alembic rodaram do zero (baseline → 0006) só de logs do processo real.
 
-**Commit**: _(pendente)_
+**Commit**: `8edf965`
 
