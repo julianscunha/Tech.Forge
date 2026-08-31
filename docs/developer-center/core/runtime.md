@@ -29,7 +29,7 @@ await runtime.fire_shutdown("backend stopped") # no teardown
 Handlers podem ser registrados com `runtime.on_startup(fn)` e
 `runtime.on_shutdown(fn)`. Falha em um handler nunca bloqueia o shutdown.
 
-## O que NÃO faz nesta fase
+## O que não faz
 
 - Dependências entre módulos
 - Service Registry

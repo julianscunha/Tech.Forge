@@ -81,7 +81,7 @@ configuration:
 ```
 
 Tipos suportados: `string`, `integer`, `float`, `boolean` — **sem tipo lista/array**
-nesta fase (limitação conhecida, ver "Limitações" abaixo).
+por ora (limitação conhecida, ver [`docs/limitations.md`](../../limitations.md)).
 
 Parseado e validado em `ManifestParser.parse()` (`app/module_engine/manifest.py`
 — `ConfigField`, `parse_configuration_fields()`): campo sem `id`/`type`, tipo
@@ -181,14 +181,14 @@ Tabela: `module_kv_store(module_id, key, value_json)`, chave primária composta.
 
 Um módulo que precise de schema relacional próprio continua livre de usar
 SQLAlchemy diretamente — o Core não impede, mas também não oferece uma API de
-provisionamento assistida nesta fase (ver "Limitações").
+provisionamento assistida (ver [`docs/limitations.md`](../../limitations.md)).
 
 ---
 
 ## Filesystem Paths oficiais
 
 `ModulePaths` (`app/module_runtime/paths.py`) substitui o `Path` solto que
-`ModuleExecutionContext.paths` expunha antes desta fase:
+`ModuleExecutionContext.paths` expunha antes:
 
 ```python
 context.paths.root      # modules/installed/<id>/ — código + manifest
@@ -221,7 +221,7 @@ context.secrets.delete("api_key")
 ```
 
 Mesmo isolamento estrutural do Module Storage API — `module_id` fixado na
-construção. `rotate()` (Fase 17) levanta `SecretStoreError` se a key nunca
+construção. `rotate()` levanta `SecretStoreError` se a key nunca
 foi criada. `set()`/`rotate()`/`delete()` publicam `security.secret_created`/
 `security.secret_rotated`/`security.secret_deleted` no EventBus — nunca com
 o valor do segredo no payload (ver `module-trust.md`).
@@ -277,10 +277,7 @@ Export de configuração de módulo já é o próprio `GET /modules/{id}/config`
 3. **Secret Store depende do backend nativo do SO.** Sem fallback definido
    para SO sem backend `keyring` compatível (ex.: Linux headless sem
    D-Bus/Secret Service).
-4. **`eslint` não está declarado em `package.json`** (`npm run lint` falha) —
-   bug pré-existente, não introduzido nesta fase, não corrigido (fora de
-   escopo).
-5. **Frontend desta fase não foi verificado visualmente em navegador real** —
+4. **Frontend não foi verificado visualmente em navegador real** —
    sem ferramenta de browser automation disponível durante a implementação;
    `npm run build` (tsc + vite) e a integração de API foram confirmados.
 

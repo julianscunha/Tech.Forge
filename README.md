@@ -151,7 +151,7 @@ TechForge/
 ├── launcher/                  # Splash · single-instance · health-readiness · shutdown ordenado
 ├── cli/techforge_cli/         # create/validate/package-module · start/stop/status
 ├── sdk/python/                # SDK para desenvolvedores de módulos
-├── docs/                      # INDEX.md · phases/ · developer-center/ · architecture.md
+├── docs/                      # INDEX.md · architecture/ · adr/ · developer-center/ · limitations.md · roadmap.md
 ├── config/                    # .env
 └── tests/ → core/backend/tests/  # 850 testes pytest (unit/integration/contract/e2e/smoke)
 ```
@@ -433,29 +433,10 @@ CLI: `techforge diagnostics` · `techforge modules diagnostics <id>` · `techfor
 
 ## 🗺️ Roadmap
 
-Cronograma detalhado por fase em [`docs/phases/`](docs/phases/) · status real
-de implementação em [`tasks/phase-audit.md`](tasks/phase-audit.md).
-
-**✅ Entregue**: Core (FastAPI + React/TS + SQLite) · Module System (loader,
-validação, navegação) · Marketplace & Package Manager (install/activate/
-deactivate/remove com rollback) · Developer Center & Doc Engine · Launcher &
-Runtime (modo Desktop) · Documentation Compliance Checker · Service Registry
-& Dependency Governance · Module Runtime & Execution · Security, Integrity &
-Module Trust · Marketplace Distribution (catálogo multi-fonte) ·
-Configuration & Persistence (migrations, config de módulo, Secret Store) ·
-Platform Quality & Release Engineering (CI, testes por nível, Release
-Readiness Report) · Observability, Telemetry & Diagnostics (logs
-estruturados, métricas, Error Registry, correlação de falhas, Dashboard
-incrementado, página `/diagnostics`).
-
-**🔜 Próximo**: ver [`tasks/phase-audit.md`](tasks/phase-audit.md) para a
-ordem recomendada das fases restantes (Desktop dist / Security hardening /
-Finalization).
-
-**⏸️ Adiado** (decisão de foco em single-user/Desktop, retomado só com
-necessidade real de negócio): Central Server & Multi-User Readiness,
-distribuição de módulos por fontes externas, release público do ecossistema,
-governança de longo prazo.
+Ver [`docs/roadmap.md`](docs/roadmap.md) para o que já está pronto e o que
+depende de decisões de produto ainda em aberto (multiusuário/servidor
+central, ecossistema público de módulos). Limitações conhecidas e decisões
+conscientes de escopo estão em [`docs/limitations.md`](docs/limitations.md).
 
 ---
 
@@ -479,8 +460,11 @@ cd core/frontend && npm run lint && npm run build
 |---|---|
 | [`docs/INDEX.md`](docs/INDEX.md) | Índice categorizado de toda a documentação |
 | [`docs/architecture.md`](docs/architecture.md) | Arquitetura do Core |
+| [`docs/architecture/`](docs/architecture/) | Inventário de componentes, contratos públicos, mapa de dependências |
+| [`docs/adr/`](docs/adr/) | Decisões de arquitetura registradas (ADRs) |
+| [`docs/limitations.md`](docs/limitations.md) | Limitações conhecidas e decisões conscientes de escopo |
+| [`docs/roadmap.md`](docs/roadmap.md) | O que vem a seguir |
 | [`docs/developer-center/guides/core-development-setup.md`](docs/developer-center/guides/core-development-setup.md) | Setup do Core |
-| [`docs/phases/`](docs/phases/) | Specs das 22 fases (escopo + critérios de aceitação) |
 | [`docs/developer-center/`](docs/developer-center/) | Guias, referência do manifest, exemplos |
 
 ---

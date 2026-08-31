@@ -124,7 +124,7 @@ techforge runtime module <id>
 techforge runtime initialize <id>
 ```
 
-## O que foi deliberadamente deixado fora desta fase
+## O que foi deliberadamente deixado fora de escopo
 
 - `POST /runtime/modules/{id}/execute` e `/cancel`: sem uma
   ação de execução de negócio real declarada por nenhum módulo hoje, um

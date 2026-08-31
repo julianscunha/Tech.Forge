@@ -105,7 +105,7 @@ Combina integridade + publisher + assinatura:
 | `MODIFIED` | Integridade indica arquivo alterado ou inesperado (tem prioridade sobre a assinatura — um arquivo adulterado é `MODIFIED` mesmo que a assinatura "antiga" ainda combine com o manifest não-adulterado). |
 | `INVALID` | Manifest de integridade corrompido, arquivo ausente, ou publisher revogado. |
 
-`TRUSTED` é real e alcançável desde a Fase 17 — confirmado em produção:
+`TRUSTED` é real e alcançável — confirmado em produção:
 assinar um módulo, registrar o publisher com `trust_status=TRUSTED` e a
 `public_key` correspondente, instalar, e `GET .../trust` retorna
 `TRUSTED` de verdade.
@@ -171,8 +171,8 @@ por Trust Level isolado (`allows_install` sempre `True` — bloqueio real
 é via integridade/limites de recursos), mas sinaliza aviso
 (`requires_warning`) pra qualquer coisa abaixo de `VERIFIED`.
 `ServerSecurityPolicy` não está implementada — levanta
-`NotImplementedError` deliberadamente (Server é fase futura, mesmo
-racional da Fase 13 adiada).
+`NotImplementedError` deliberadamente (modo servidor multiusuário
+continua fora de escopo, ver [`docs/roadmap.md`](../../roadmap.md)).
 
 ## Resource limits na extração de pacotes (defesa contra zip bomb)
 
@@ -227,4 +227,4 @@ obrigatório, RBAC, SSO, MFA, análise de malware, marketplace remoto.
 Infraestrutura central de revogação (CRL/OCSP-like) — revogação hoje é
 uma flag manual no Publisher Registry, decisão consciente dado o foco
 single-user/local-first. Conflito de capability entre providers
-continua só reportado, não resolvido (gap pré-existente da Fase 8).
+continua só reportado, não resolvido (ver [`docs/limitations.md`](../../limitations.md)).

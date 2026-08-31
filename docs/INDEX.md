@@ -6,9 +6,8 @@ domain: [governanca-setup]
 
 # Índice da Documentação — TechForge
 
-> Organizado por audiência. Docs em português; cada fase define escopo,
-> "o que não implementar" e critérios de aceitação. Status de implementação:
-> [`tasks/phase-audit.md`](../tasks/phase-audit.md).
+> Organizado por audiência. Docs em português. Limitações conhecidas e
+> decisões conscientes de escopo: [`limitations.md`](limitations.md).
 
 ## 1. Comece por aqui
 
@@ -64,47 +63,14 @@ domain: [governanca-setup]
 | [governance/documentation-first-principle](developer-center/governance/documentation-first-principle.md) | Documentation First + Definition of Done documental |
 | [context-map.yaml](context-map.yaml) | Help contextual: context_id → doc_id |
 
-## 5. Fases do projeto (specs)
+## 5. Limitações e roadmap
 
-Status real em [`tasks/phase-audit.md`](../tasks/phase-audit.md). Relatórios e
-planos por fase em [`tasks/`](../tasks/).
-
-### Implementadas ✅
-
-| Fase | Spec | Tema |
-|---|---|---|
-| 1 | [phases/01](phases/01-Fase-01-Foundation.md) | Foundation (FastAPI + React/TS + SQLite) |
-| 2 | [phases/02](phases/02-Fase-02-Core-Architecture.md) | Core Architecture + Notification Foundation |
-| 3 | [phases/03](phases/03-Fase-03-Module-System.md) | Module System (loader, validação, navegação) |
-| 4 | [phases/04](phases/04-Fase-04-Marketplace-Package-Manager.md) | Marketplace & Package Manager (activate/deactivate) |
-| 5 | [phases/05](phases/05-Fase-05-Developer-Center.md) | Developer Center & Doc Engine |
-| 6 | [phases/06](phases/06-Fase-06-Launcher-Runtime.md) | Launcher & Runtime (modo Desktop) |
-| 7 | [phases/07](phases/07-Fase-07-Documentation-Compliance-Checker.md) | Documentation Compliance Checker |
-| 8 | [phases/08](phases/08-Fase-08-Service-Registry.md) | Service Registry: descoberta via contratos |
-| 8.1 | [phases/08.1](phases/08.1-Fase-08.1-Dependency-Governance.md) | Dependency Governance: declaração, direção, ciclos, lifecycle |
-| 9 | [phases/09](phases/09-Fase-09-Module-Runtime-Execution.md) | Module Runtime & Execution: lifecycle hooks reais, ExecutionContext, Focus Mode |
-| 10 | [phases/10](phases/10-Fase-10-Security-Integrity-Module-Trust.md) | Security, Integrity & Module Trust: hash por-arquivo, publisher, trust level |
-| 11 | [phases/11](phases/11-Fase-11-Module-Marketplace-Distribution.md) | Marketplace Distribution |
-| 12 | [phases/12](phases/12-Fase-12-Configuration-Data-Persistence.md) | Configuration & Persistence |
-| 15 | [phases/15](phases/15-Fase-15-Platform-Quality-Testing-Release-Engineering.md) | Quality, Testing & Release |
-
-### Adiadas (decisão do usuário — sem prioridade de multiusuário/servidor/ecossistema externo agora)
-
-| Fase | Spec | Tema |
-|---|---|---|
-| 13 | [phases/13](phases/13-Fase-13-Central-Server-Multi-User-Readiness.md) | Central Server Readiness (Linux) |
-| 18.1 | [phases/18.1](phases/18.1-Fase-18.1-External-Module-Sources-Module-Declaration.md) | External Module Sources |
-| 19 | [phases/19](phases/19-Fase-19-Public-Release-Readiness-Open-Ecosystem.md) | Public Release Readiness |
-| 20 | [phases/20](phases/20-Fase-20-Long-Term-Core-Governance-Ecosystem-Maintenance.md) | Governança de longo prazo |
-
-### Pendentes (ordem recomendada: 14 → 16 → 17 → 18)
-
-| Fase | Spec | Tema |
-|---|---|---|
-| 14 | [phases/14](phases/14-Fase-14-Observability-Telemetry-Diagnostics.md) | Observability & Diagnostics |
-| 16 | [phases/16](phases/16-Fase-16-Desktop-Distribution-User-Experience.md) | Desktop Distribution & UX |
-| 17 | [phases/17](phases/17-Fase-17-Platform-Security-Trust-Hardening.md) | Security Hardening |
-| 18 | [phases/18](phases/18-Fase-18-Platform-Finalization-Architecture-Consolidation.md) | Finalização & Consolidação |
+| Doc | Tema |
+|---|---|
+| [limitations](limitations.md) | Limitações conhecidas e decisões conscientes de escopo |
+| [roadmap](roadmap.md) | O que já está pronto e o que depende de decisão futura |
+| [architecture/](architecture/) | Inventário de componentes, contratos públicos, mapa de dependências |
+| [adr/](adr/) | Decisões de arquitetura registradas |
 
 ## 6. Exemplos de módulos (referência)
 

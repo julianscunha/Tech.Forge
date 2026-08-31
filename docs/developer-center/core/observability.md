@@ -123,7 +123,7 @@ Um assinante que falha nunca derruba quem publicou.
 
 ## Diagnostics
 
-`SystemDiagnosticService` consolida Health (Fase 1) + Storage + Runtime
+`SystemDiagnosticService` consolida Health + Storage + Runtime
 + Module Health num snapshot único — sem endpoint `/ready` (não se
 aplica a Desktop single-instância).
 
@@ -154,7 +154,7 @@ duration_seconds), com retenção configurável
 `execution_id` é gerado por chamada e amarrado ao Log Context durante
 toda a invocação (sucesso ou falha) — qualquer log emitido nesse
 intervalo carrega a correlação automaticamente. `ModuleExecutionContext`
-(Fase 9) tem seu próprio `runtime_id`, mantido como estava; `execution_id`
+tem seu próprio `runtime_id`, mantido como estava; `execution_id`
 é um campo novo e independente, não uma renomeação.
 
 ### Failure correlation

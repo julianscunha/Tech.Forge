@@ -2,12 +2,12 @@
 title: Desktop Distribution
 category: arquitetura-core
 domain: [arquitetura-core]
-tags: [core, phase-16, desktop, paths, packaging, developer-mode]
+tags: [core, desktop, paths, packaging, developer-mode]
 ---
 
 # Desktop Distribution
 
-Fase 16 — transforma o TechForge numa aplicação corporativa de fácil
+Transforma o TechForge numa aplicação corporativa de fácil
 instalação/uso, separando explicitamente **Application Install** (código)
 de **User Data** (dados do usuário), sem exigir Python/Node instalados na
 máquina do usuário final. Ver também [core/launcher](launcher.md) para o
@@ -27,7 +27,7 @@ Resolução de `install_dir()`:
 - **Congelado** (`sys.frozen`, executável PyInstaller): diretório do
   próprio `sys.executable`. `Path(__file__)` dentro de um bundle congelado
   não tem relação com a árvore real — usar `__file__` aqui foi um bug real
-  encontrado empacotando o backend pela primeira vez (Fase 16 Slice 7).
+  encontrado empacotando o backend pela primeira vez.
 - **Não congelado** (dev/CI): raiz do repositório (`Path(__file__)` × 5
   parents), como sempre foi.
 
@@ -35,8 +35,7 @@ Resolução de `user_data_dir()`, em ordem:
 
 1. `TECHFORGE_DATA_DIR` (env var, override explícito — útil pra testes/CI)
 2. Mesmo diretório de `install_dir()`, se ele contiver `.git` (árvore de
-   dev — preserva 100% do comportamento anterior à Fase 16, `pytest`/
-   `techforge start` locais não mudam nada)
+   dev — `pytest`/`techforge start` locais não mudam nada)
 3. `platformdirs.user_data_dir("TechForge", "TechForge")` — produção
    instalada (`%LOCALAPPDATA%\TechForge\TechForge` no Windows)
 
@@ -68,13 +67,13 @@ descobertas rodando o `.exe` de verdade (não visíveis testando com mocks):
   código Python importado — a análise estática do PyInstaller nunca os
   veria sozinha.
 
-Escopo desta fase: só o executável do backend. Instalador Windows GUI
+Escopo atual: só o executável do backend. Instalador Windows GUI
 (Inno Setup/MSI), auto-update e uninstall formais ficam fora — ver
-`tasks/phase-audit.md`, Known Issues da Fase 16.
+[`docs/limitations.md`](../../limitations.md).
 
 ## Safe Mode e paths reais na UI
 
-Ver [core/launcher — Safe Mode](launcher.md#safe-mode-fase-16-1618) para o
+Ver [core/launcher — Safe Mode](launcher.md#safe-mode) para o
 mecanismo. Developer Mode (Settings → Developer Mode) expõe
 `install_dir`/`user_data_dir` reais (via `GET /diagnostics/health`,
 `platform.paths`) e um botão "Recarregar módulos"
@@ -84,14 +83,14 @@ chamado após install/update/remove.
 
 ## `techforge repair-check`
 
-Reaproveita o integrity manifest da Fase 10 (hash SHA-256 por arquivo,
+Reaproveita o integrity manifest do Module Trust (hash SHA-256 por arquivo,
 `app/module_trust/integrity.py`) aplicado ao código do próprio Core
 (`app/module_trust/core_repair.py`), não a módulos. `--generate` grava
 `core-integrity.json` na raiz da instalação a partir do estado atual;
 sem flag, compara contra o disco agora. Só verifica — nunca tenta
 restaurar nada automaticamente (spec §33).
 
-## Fora de escopo desta fase (decisão consciente)
+## Fora de escopo (decisão consciente)
 
 - Instalador Windows GUI completo — só o script de build do backend.
 - Update flow do Core além do "arquiteturalmente previsto" (a separação
@@ -99,6 +98,6 @@ restaurar nada automaticamente (spec §33).
 - Uninstall com opções formais e Repair "restaurar componentes" além da
   verificação de `repair-check`.
 - Proxy corporativo além de confirmar que nada assume acesso direto à
-  internet (já era verdade antes desta fase).
+  internet.
 
-Ver `tasks/phase-audit.md` para o registro consolidado.
+Ver [`docs/limitations.md`](../../limitations.md) para o registro consolidado.

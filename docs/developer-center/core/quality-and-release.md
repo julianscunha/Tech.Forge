@@ -107,7 +107,7 @@ reprovaria o padrão de fetch-on-mount usado em todo o codebase.
 (`app/core/settings.py`) — exposta em `GET /api/v1/system/version` e
 `techforge version` (acesso direto, funciona com a plataforma parada).
 
-**Multiple-sources-of-truth eliminadas nesta fase**: CLI tinha
+**Multiple-sources-of-truth eliminadas**: CLI tinha
 `click.version_option("1.0.0")` hardcoded; `core/frontend/package.json`
 tinha `"version"` independente. Ambos agora derivam de/são travados contra
 `PLATFORM_VERSION`.
@@ -139,7 +139,7 @@ Passo a passo pra cortar uma release nova do Core:
    não força seção vazia) + `Known Issues` com as limitações que
    realmente importam pra quem vai usar a release (não é o lugar pra
    despejar todo débito técnico interno — isso fica em
-   `tasks/phase-audit.md`). **Cada bullet/parágrafo numa linha só, sem
+   [`docs/limitations.md`](../../limitations.md)). **Cada bullet/parágrafo numa linha só, sem
    quebra manual no meio do texto** — o corpo do GitHub Release usa o
    modo "gfm" de renderização (igual issue/PR/comentário), onde toda
    quebra de linha simples vira `<br>` literal; isso NÃO acontece com

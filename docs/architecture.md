@@ -7,7 +7,7 @@ domain: [governanca-setup]
 # TechForge — Architecture
 
 > Documento de arquitetura viva do Core. Conteúdo detalhado por domínio
-> vive em `docs/INDEX.md`, `docs/developer-center/` e `docs/phases/`.
+> vive em `docs/INDEX.md` e `docs/developer-center/`.
 
 ## Visão geral
 
@@ -46,7 +46,7 @@ launcher/  cli/  sdk/  config/  logs/
 
 ## Princípios
 
-- **Core mínimo**: estável, leve, sem domínios de negócio; extensão via hooks marcados ("PLUGIN LOADER HOOK", "Phase N").
+- **Core mínimo**: estável, leve, sem domínios de negócio; extensão via hooks marcados no código ("PLUGIN LOADER HOOK") indicando pontos de extensão futuros.
 - **Modularidade**: manifest.yaml → validação → registro → navegação por metadados → montagem de routers.
 - **Configuração centralizada**: `app/core/settings.py`; nada de URLs/portas/caminhos hardcoded.
 - **Local First, Server Ready**: single-process hoje; sem decisões que impeçam servidor multiusuário no futuro.

@@ -33,8 +33,8 @@ depender de caminho hardcoded — ver `app/core/paths.py`.
 
 ## Instalação
 
-Não há instalador Windows GUI (Inno Setup/MSI) nesta fase — pendência
-registrada em `tasks/phase-audit.md`. Hoje: distribuir o executável
+Não há instalador Windows GUI (Inno Setup/MSI) hoje — pendência
+registrada em [`docs/limitations.md`](../../limitations.md). Hoje: distribuir o executável
 gerado por `scripts/build-backend.ps1` + o build de produção do frontend
 (`core/frontend/dist/`), ou o código-fonte completo com `techforge start`.
 
@@ -48,13 +48,14 @@ O Core inicia e funciona totalmente offline (`Core startup`, módulos
 locais, documentação local) sem internet. Configuração explícita de
 proxy HTTP/HTTPS/certificados corporativos ainda não existe como tela —
 item preparado arquiteturalmente (nenhuma lib assume conexão direta sem
-seguir configuração de proxy do SO), não implementado como UI nesta fase.
+seguir configuração de proxy do SO), sem tela de configuração dedicada
+ainda (ver [`docs/limitations.md`](../../limitations.md)).
 
 ## Logs
 
 - `logs/backend.log`, `logs/frontend.log`, `logs/launcher.log` —
   `techforge logs --backend|--frontend|--launcher [-n N] [--follow]`.
-- Formato JSON-lines para o backend (Fase 14), com rotação por tamanho
+- Formato JSON-lines para o backend, com rotação por tamanho
   (`LOG_MAX_BYTES`) e retenção configurável por nível (`LOG_RETENTION_DAYS`).
 - `techforge diagnostics` e a página Diagnostics agregam erros recentes,
   execuções e uso de recursos.
@@ -63,13 +64,13 @@ seguir configuração de proxy do SO), não implementado como UI nesta fase.
 
 Copiar o diretório de dados do usuário (ver tabela de Paths acima)
 preserva DB, módulos instalados e configuração. Não há ferramenta de
-backup automatizada nesta fase.
+backup automatizada ainda.
 
 ## Atualização
 
 Update flow completo do Core (check → download → validate → backup →
 install → restart → migration → validate) está previsto
-arquiteturalmente mas não implementado como fluxo de usuário nesta fase
+arquiteturalmente mas não implementado como fluxo de usuário ainda
 — reinstalar preservando o diretório de dados do usuário já cobre o caso
 prático hoje, dado que instalação e dados são fisicamente separados.
 

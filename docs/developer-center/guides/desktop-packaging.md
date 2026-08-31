@@ -2,10 +2,10 @@
 title: Empacotamento Desktop
 category: sdk-desenvolvimento
 domain: [sdk-desenvolvimento]
-tags: [guide, packaging, pyinstaller, phase-16]
+tags: [guide, packaging, pyinstaller]
 ---
 
-# Empacotamento Desktop (Fase 16)
+# Empacotamento Desktop
 
 Como gerar e depurar o build empacotado do backend. Complementa
 [core/desktop-distribution](../core/desktop-distribution.md) (arquitetura)
@@ -37,8 +37,8 @@ curl http://127.0.0.1:8000/api/v1/platform/ready
 ```
 
 Testes automatizados com mocks (`monkeypatch`) não pegam boa parte dos
-bugs de empacotamento — três apareceram só rodando o `.exe` de verdade na
-Fase 16 (import-by-string do uvicorn, `__file__` sem sentido dentro do
+bugs de empacotamento — três apareceram só rodando o `.exe` de verdade
+(import-by-string do uvicorn, `__file__` sem sentido dentro do
 bundle, diretórios de dados nunca criados). Sempre validar com o
 executável real antes de considerar um build pronto.
 
@@ -52,8 +52,8 @@ executável real antes de considerar um build pronto.
 | `ModuleNotFoundError: aiosqlite` | SQLAlchemy resolve o driver por string a partir da `DATABASE_URL`, PyInstaller não enxerga | `--hidden-import aiosqlite` no `build-backend.ps1` |
 | `install_dir()` aponta pra lugar sem sentido | `Path(__file__)` dentro do bundle não reflete a árvore real | `install_dir()` deve checar `sys.frozen` e usar `sys.executable` |
 
-## Escopo desta fase
+## Escopo atual
 
 Só o executável do backend, sem instalador Windows GUI (Inno
-Setup/MSI) — packaging validation em clean machine real (spec §44) fica
-pendente até existir um instalador de fato. Ver `tasks/phase-audit.md`.
+Setup/MSI) — packaging validation em clean machine real fica
+pendente até existir um instalador de fato. Ver [`docs/limitations.md`](../../limitations.md).

@@ -17,7 +17,7 @@ precisa desenvolver ou depurar o Core, veja o
 
 Hoje não existe um instalador gráfico (`.msi`/`.exe` de instalação) —
 esse é um item ainda não implementado, registrado em
-`tasks/phase-audit.md`. Instalação atual:
+[`docs/limitations.md`](../../limitations.md). Instalação atual:
 
 1. Obter o código-fonte (clone do repositório ou artefato de release).
 2. Seguir [core-development-setup](core-development-setup.md) uma única
@@ -71,7 +71,7 @@ versão nova disponível na fonte configurada).
 ## Desinstalar
 
 Fluxo formal de desinstalação (com opção de manter/apagar dados) ainda
-não existe — item registrado como pendente em `tasks/phase-audit.md`. Por
+não existe — item registrado como pendente em [`docs/limitations.md`](../../limitations.md). Por
 enquanto, remover a pasta local remove tudo (código e dados juntos, já
 que a separação instalação/dados só se aplica de fato num build
 empacotado e instalado via `platformdirs`).
