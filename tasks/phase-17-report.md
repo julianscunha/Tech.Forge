@@ -161,4 +161,4 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - Verificação manual ao vivo: não repetida nesta slice além dos testes de integração — o comportamento HTTP observável (trust_level, signature_status, bloqueio de zip bomb) já foi verificado contra a plataforma real nos Slices 1–3; a única coisa nova aqui é que essas mesmas transições agora também disparam eventos in-process via `event_bus` — sem um subscriber/sink externo ainda (isso é Slice 8/9, UI), não há como observar isso de fora via `curl`, então a prova real é o teste de integração usando o `event_bus` global de verdade (não um mock) através do `TestClient` real, DB real e criptografia real.
 
-**Commit**: _(pendente)_
+**Commit**: `360e17c` (+ `c644be4`, correção de line-endings em `manager.py` introduzida acidentalmente por um `sed` no commit anterior — conteúdo idêntico, só CRLF restaurado)
