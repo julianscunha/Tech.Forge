@@ -84,6 +84,7 @@ class AIContextExporter:
         cls,
         indexer: DocIndexer,
         include_categories: Optional[list[DocCategory]] = None,
+        publishers: Optional[dict] = None,
     ) -> str:
         """
         Generate the consolidated AI context Markdown document.
@@ -92,6 +93,11 @@ class AIContextExporter:
             indexer:             The DocIndexer instance to read from.
             include_categories:  Subset of categories to include.
                                  Defaults to all.
+            publishers:          {publisher_id: Publisher} pré-carregado pelo
+                                 caller assíncrono (Fase 17 §7 — este método
+                                 continua síncrono; sem isto, Trust Level nunca
+                                 passa de UNVERIFIED, mesmo com publisher_id
+                                 declarado no manifest).
 
         Returns:
             Single Markdown string ready to paste into an LLM context window.
@@ -221,13 +227,14 @@ class AIContextExporter:
                 publisher_field = raw.get("publisher")
                 publisher_id = (publisher_field.get("id")
                                if isinstance(publisher_field, dict) else publisher_field)
+                publisher = publishers.get(publisher_id) if publishers and publisher_id else None
                 signature_value = raw.get("signature")
                 signature_bytes = base64.b64decode(signature_value) if signature_value else None
                 signature_status = default_signature_provider.verify(
                     data=canonical_manifest_bytes(raw), signature=signature_bytes,
-                    public_key=None,  # Publisher Registry real: Fase 17 Slice 3
+                    public_key=publisher.public_key if publisher else None,
                 ).value
-                trust_level = TrustResolver.resolve(integrity_result.status, None, signature_status)
+                trust_level = TrustResolver.resolve(integrity_result.status, publisher, signature_status)
 
                 lines.append(f"### {e.module_id}")
                 lines.append(f"**Trust Level:** {trust_level.value}")

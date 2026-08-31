@@ -69,3 +69,35 @@ O dado assinado é `canonical_manifest_bytes(raw)` — o dict do manifesto seria
 - **Verificação manual ao vivo, ponta a ponta, com chaves e módulo reais**: `techforge trust generate-keypair` gerou um par Ed25519 real; `techforge sign-module` assinou um módulo real; `techforge package-module` empacotou o `.mod` com a assinatura embutida; publisher real registrado com `trust_status=TRUSTED` e a chave pública real; módulo instalado via `POST /marketplace/import` real → `GET /modules/{id}/trust` retornou `"trust_level":"TRUSTED","signature_status":"VALID"` — **primeira vez que `TRUSTED` é alcançado de verdade na plataforma**. Em seguida, o `manifest.yaml` já instalado foi adulterado em disco e o endpoint `/verify` reexecutado: o integrity check (hash por arquivo) capturou a divergência antes mesmo da assinatura entrar em jogo, e o trust level caiu para `MODIFIED` — as duas camadas de defesa (integridade de arquivo + assinatura de manifesto) atuando corretamente em conjunto.
 
 **Commit**: `21d7110`
+
+### Slice 3 — TrustResolver TRUSTED real + Publisher Registry nos validadores
+
+**Arquivos**
+- `cli/techforge_cli/validators/module_validator.py` — `_check_signature` corrigido (mesmo bug do Slice 2, `data=b""` + assinatura tratada como bytes crus, existia aqui também); comentário explica por que `public_key` continua `None` (validador síncrono/standalone, sem `AsyncSession`)
+- `core/backend/app/doc_engine/__init__.py` — `AIContextExporter.export()` ganha parâmetro opcional `publishers: dict[str, Publisher]`; seção "Module Trust" passa a resolver o publisher de verdade quando fornecido
+- `core/backend/app/api/routes/docs.py` — `GET /docs/export/ai-context` pré-carrega todos os publishers via `PublisherService.get_all(db)` e repassa
+- `cli/tests/test_phase17_validator_signature.py` (novo, 2 testes)
+- `core/backend/tests/test_phase17_ai_context_publishers.py` (novo, 2 testes)
+
+**O quê**
+Dois dos três consumidores síncronos/semi-síncronos de `SignatureProvider`/`TrustResolver` (premissa 8 do plano) tratados:
+1. `ModuleCLIValidator._check_signature` (CLI, `techforge validate-module`/`package-module`) — corrigido o mesmo bug de `data=b""` do Slice 2. Sem Publisher Registry (é um validador standalone, sem `AsyncSession`), o resultado agora é honestamente `NOT_CONFIGURED` para uma assinatura presente, em vez do antigo `UNSUPPORTED` (que mentia dizendo que não havia algoritmo disponível — havia, só faltava a chave).
+2. `AIContextExporter` (rota assíncrona `GET /docs/export/ai-context`, roda dentro do Core com acesso a DB) — ganhou um parâmetro opcional `publishers` pré-carregado pelo caller assíncrono, permitindo que a seção "Module Trust" resolva `TRUSTED`/`VERIFIED` de verdade, igual à rota `/modules/{id}/trust` já fazia desde a Fase 10.
+
+**Decisão-chave**
+`ModuleCLIValidator._check_trust` (Trust Level, distinto do check de assinatura) **continua** com `publisher=None` — decisão consciente, não um gap: é um validador síncrono e standalone, sem acesso a `AsyncSession`/DB, usado inclusive antes da plataforma existir num diretório (`techforge validate-module` num módulo em desenvolvimento). Essa limitação já estava documentada no código antes desta fase e permanece correta. `AIContextExporter.export()` manteve `publishers` como parâmetro **opcional** (não obrigatório) para não quebrar os ~15 call-sites de teste síncronos existentes que chamam `export()` sem esse argumento — comportamento antigo (`UNVERIFIED`) preservado quando omitido.
+
+**Aceite**
+- `techforge validate-module`/`package-module`: assinatura presente sem chave pública disponível → `NOT_CONFIGURED` (nunca mais `UNSUPPORTED`), nunca bloqueia.
+- `GET /docs/export/ai-context`: módulo com publisher `TRUSTED` e assinatura válida → seção "Module Trust" mostra `TRUSTED` de verdade.
+- Callers síncronos de `AIContextExporter.export()` sem o parâmetro `publishers` continuam funcionando sem alteração de comportamento.
+
+**Teste**
+- CLI: `pytest tests/test_phase17_validator_signature.py -q` — 2 passed.
+- Backend: `pytest tests/test_phase17_ai_context_publishers.py tests/test_phase5.py -q` — 55 passed (confirma zero regressão nos ~15 call-sites síncronos existentes).
+- Suíte completa backend: `pytest tests -q` — 907 passed, 3 skipped.
+- Suíte completa CLI: `pytest tests -q` (em `cli/`) — 126 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+- **Verificação manual ao vivo**: par de chaves real gerado, módulo real assinado e empacotado, publisher real registrado com `trust_status=TRUSTED`, módulo instalado via API real. `curl http://127.0.0.1:8000/api/v1/docs/export/ai-context` retornou `**Trust Level:** TRUSTED` e `**Publisher:** live_slice3_publisher` para o módulo — antes desta mudança, essa seção nunca passava de `UNVERIFIED`, mesmo com um publisher real cadastrado.
+
+**Commit**: _(pendente)_

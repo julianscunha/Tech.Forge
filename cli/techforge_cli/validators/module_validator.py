@@ -340,15 +340,26 @@ class ModuleCLIValidator:
 
     @staticmethod
     def _check_signature(report: ValidationReport, raw: dict) -> None:
-        """§10.11 — assinatura ausente/não suportada nunca bloqueia
-        (Fase 10 é abstração-only, sem Ed25519 real); só uma assinatura
-        presente E explicitamente inválida seria bloqueante, e isso não
-        pode acontecer ainda com NoOpSignatureProvider."""
-        from app.module_trust.signature import SignatureStatus, default_signature_provider
+        """§10.11 — este validador é síncrono/standalone (sem AsyncSession,
+        não consulta o Publisher Registry — mesma limitação de `_check_trust`
+        abaixo), então nunca tem a `public_key` pra verificar de verdade.
+        Reporta honestamente NOT_CONFIGURED nesse caso (Fase 17: antes da
+        Ed25519SignatureProvider real, uma assinatura presente reportava o
+        status enganoso UNSUPPORTED, como se não houvesse algoritmo — hoje
+        há, só falta a chave). Só uma assinatura explicitamente INVALID
+        (verificável apenas via GET /modules/{id}/trust, com DB) bloqueia."""
+        import base64
+
+        from app.module_trust.signature import (
+            SignatureStatus,
+            canonical_manifest_bytes,
+            default_signature_provider,
+        )
 
         signature = raw.get("signature")
+        signature_bytes = base64.b64decode(signature) if signature else None
         status = default_signature_provider.verify(
-            data=b"", signature=signature.encode() if signature else None, public_key=None)
+            data=canonical_manifest_bytes(raw), signature=signature_bytes, public_key=None)
         report.add(f"Signature: {status.value}", status != SignatureStatus.INVALID,
                    f"signature status: {status.value}", level="warning")
 

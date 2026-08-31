@@ -8,11 +8,13 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings as _settings
+from app.db.database import get_db
 from app.doc_engine import DocCompletenessChecker, doc_index, doc_indexer, doc_search
 from app.doc_engine.models import DocCategory
 from app.models.notifications import Notification
@@ -171,19 +173,23 @@ async def export_ai_context(
         description="Comma-separated DocCategory values to include. "
                     "Omit for all.",
     ),
+    db: AsyncSession = Depends(get_db),
 ) -> str:
     """
     Generate a single consolidated Markdown document suitable for pasting
     into an AI assistant (Claude, ChatGPT, Gemini) as platform context.
     """
     from app.doc_engine import AIContextExporter
+    from app.services.publisher import PublisherService
+
     cat_filter = None
     if categories:
         try:
             cat_filter = [DocCategory(c.strip()) for c in categories.split(",")]
         except ValueError as exc:
             raise HTTPException(400, str(exc))
-    return AIContextExporter.export(doc_indexer, cat_filter)
+    publishers = {p.id: p for p in await PublisherService.get_all(db)}
+    return AIContextExporter.export(doc_indexer, cat_filter, publishers=publishers)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
