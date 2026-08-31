@@ -77,5 +77,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Nota**: reproduzido de novo o bug conhecido (`tasks/phase-audit.md`, Fase 15) de encoding cp1252 do `rich` no console PowerShell/Windows ao imprimir `⚠`/`✗` — não é regressão desta fase, usei o mesmo workaround (`PYTHONIOENCODING=utf-8`) já documentado.
 
-**Commit**: _(pendente)_
+**Commit**: `6d8dc58`
 
