@@ -133,4 +133,4 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - Verificação manual ao vivo: backend real subido, `curl /api/v1/security/status` e `/api/v1/security/publishers` retornaram dados reais da plataforma (3 módulos instalados, contagens corretas); `techforge security status`, `techforge diagnostics security` e `techforge trust publishers` executados de verdade contra a API real, saída idêntica entre os aliases.
 
-**Commit**: _(pendente)_
+**Commit**: `0926d7a`
