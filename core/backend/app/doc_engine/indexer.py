@@ -141,6 +141,12 @@ class DocIndexer:
                 category=category,
             )
             for entry in entries:
+                # docs/developer-center/sdk/ mistura SDK Backend e SDK
+                # Frontend na mesma pasta — sem isso, frontend.md herdava
+                # a categoria da pasta (SDK_BACKEND) e a seção "SDK
+                # Frontend" do Developer Center ficava sempre vazia.
+                if subdir_name == "sdk" and entry.path.name == "frontend.md":
+                    entry.category = DocCategory.SDK_FRONTEND
                 self._index.add(entry)
                 count += 1
 

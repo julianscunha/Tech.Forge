@@ -349,6 +349,27 @@ class TestDocIndexer:
         assert count >= 1
         assert any(e.title == "Intro" for e in idx.all())
 
+    def test_sdk_frontend_md_gets_distinct_category_from_backend_md(self, tmp_path):
+        """Regressão: docs/developer-center/sdk/ tem backend.md e frontend.md
+        na mesma pasta — sem tratamento especial, os dois herdavam
+        SDK_BACKEND (categoria da pasta), e a seção "SDK Frontend" do
+        Developer Center ficava sempre vazia."""
+        docs_root = tmp_path / "developer-center"
+        sdk_dir = docs_root / "sdk"
+        sdk_dir.mkdir(parents=True)
+        make_md(sdk_dir, "backend.md", "# SDK Backend\n\nPython SDK.")
+        make_md(sdk_dir, "frontend.md", "# SDK Frontend\n\nReact SDK.")
+
+        idx = DocIndex()
+        indexer = DocIndexer(idx, docs_root=docs_root, installed_path=tmp_path / "installed")
+        indexer.rebuild()
+
+        backend_entry = next(e for e in idx.all() if e.path.name == "backend.md")
+        frontend_entry = next(e for e in idx.all() if e.path.name == "frontend.md")
+        assert backend_entry.category == DocCategory.SDK_BACKEND
+        assert frontend_entry.category == DocCategory.SDK_FRONTEND
+        assert len(idx.by_category(DocCategory.SDK_FRONTEND)) == 1
+
     def test_rebuild_indexes_module_docs(self, tmp_path):
         installed = tmp_path / "installed"
         installed.mkdir()
