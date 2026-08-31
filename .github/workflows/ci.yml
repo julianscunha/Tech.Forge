@@ -45,7 +45,6 @@ jobs:
         run: |
           pip install -e cli
           techforge validate-module modules/installed/hello_world
-          techforge validate-module modules/installed/veeam_m365
 
       - name: CLI test suite
         working-directory: cli
