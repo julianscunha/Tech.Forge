@@ -7,12 +7,18 @@
 
 Fase de consolidação (não de feature nova), executada em 9 slices
 sequenciais. Produziu 9 documentos novos em `docs/architecture/`, 6 ADRs
-em `docs/adr/`, um Technical Debt Registry formal com 15 itens
+em `docs/adr/`, um Technical Debt Registry formal com 20 itens
 (nenhum de prioridade Alta), corrigiu 3 gaps reais (frontend não
 compilado do `hello_world`, queries de `Notification` fora do serviço,
 URL duplicada no CLI), e validou o fluxo Desktop real ponta a ponta.
 Nenhuma alteração de comportamento de produto foi feita além dessas
 correções — o resto do trabalho é auditoria/documentação.
+
+Revisão pós-fechamento: os 15 itens iniciais cobriam só os achados novos
+das 9 revisões de arquitetura; uma checagem cruzada contra
+`tasks/phase-audit.md` mostrou que os 5 itens 🟡 (edge case/cosmético,
+baixa prioridade) já catalogados ali tinham ficado de fora do registro
+sem justificativa — adicionados como TD-016 a TD-020.
 
 ## Documentos produzidos
 
@@ -74,7 +80,7 @@ correções — o resto do trabalho é auditoria/documentação.
 | 31 | Deprecation policy existir | ✅ | `performance-resilience.md` §"Deprecation Policy" (nova) |
 | 32 | Quality Final Gate passar | ✅ | `platform-readiness-report.md` — todos os gates existentes PASS |
 | 33 | Platform Final Readiness Report existir | ✅ | `platform-readiness-report.md` |
-| 34 | Technical Debt Registry existir | ✅ | `technical-debt-registry.md` (15 itens) |
+| 34 | Technical Debt Registry existir | ✅ | `technical-debt-registry.md` (20 itens) |
 | 35 | ADRs existirem | ✅ | `docs/adr/001` a `006` |
 | 36 | Clean-room developer test passar | ❌ não executado | Requer sessão dedicada com ambiente limpo real — não coberto nesta fase |
 | 37 | AI clean-room test passar | ❌ não executado | Requer sessão dedicada só com AI Context + docs — não coberto nesta fase |
