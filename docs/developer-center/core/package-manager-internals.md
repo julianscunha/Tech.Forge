@@ -4,8 +4,8 @@ category: arquitetura-core
 domain: [arquitetura-core]
 ---
 
-> Nota: este documento foi movido da raiz de docs/ e é complementar à visão
-> canônica no Developer Center. Conteúdo histórico preservado.
+> Documentação técnica profunda, complementar à visão geral em
+> [Package Manager](package-manager.md).
 
 # TechForge — Package Manager & Marketplace
 

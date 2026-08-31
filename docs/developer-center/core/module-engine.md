@@ -118,36 +118,13 @@ API disponível em /api/v1/registry/modules
 
 **Localização:** `core/backend/app/module_engine/registry.py`
 
-**Responsabilidade:** armazenar e servir o estado runtime de todos os módulos.
+Singleton in-memory (`from app.module_engine.registry import registry`) que
+armazena e serve o estado runtime de todos os módulos — é a fonte única de
+verdade consultada por toda a aplicação (navegação, APIs, Marketplace).
 
-**Singleton de processo:** `from app.module_engine.registry import registry`
-
-**API:**
-
-```python
-# Leitura
-registry.all()                          # → list[ModuleEntry]
-registry.get("hello_world")             # → ModuleEntry | None
-registry.by_status(ModuleStatus.INSTALLED)
-registry.by_category("Backup")
-registry.count_total
-registry.count_installed
-registry.categories                     # → list[str] ordenada
-
-# Escrita (apenas durante startup)
-registry.register(entry)
-registry.set_status("hello_world", ModuleStatus.DISABLED)
-registry.deregister("hello_world")
-registry.clear()
-```
-
-**Extensão via Marketplace:**
-```python
-# Instalar em runtime sem reiniciar
-await marketplace.install(module_id)
-registry.register(new_entry)
-router.include_router(module_backend.router)  # plugin loader dinâmico
-```
+API completa (leitura/escrita, estados possíveis, endpoints REST, hot
+reload após instalação/atualização em runtime) documentada em
+[Module Registry](module-registry.md).
 
 ---
 

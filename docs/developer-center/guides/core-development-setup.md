@@ -6,8 +6,10 @@ domain: [governanca-setup]
 
 # TechForge — Development Guide
 
-> Setup rápido de desenvolvimento do Core. Guia completo do Developer
-> Center em `docs/developer-center/guides/development-guide.md`.
+> Setup rápido de desenvolvimento do Core, multiplataforma. Guia completo
+> do Developer Center em `docs/developer-center/guides/development-guide.md`.
+> Problemas específicos do Windows (encoding, PATH, permissão de
+> `.venv\Scripts\activate`)? Veja [Setup Windows](setup-windows.md).
 
 ## Requisitos
 
@@ -62,5 +64,5 @@ npm run lint       # eslint --max-warnings 0 (qualquer warning falha)
 - Configuração somente via `app/core/settings.py` / env vars (`config/.env`) — nunca hardcode.
 - Rotas novas em `app/api/routes/`, schemas em `app/schemas/`, registradas no `api_router`.
 - Testes em `core/backend/tests/test_<escopo>.py`, estilo sync + `asyncio.run()` ou `TestClient`.
-- Commits: mensagens descritivas no padrão existente do log (`feat: Phase N — …`, `docs: …`).
-- Não antecipar features de fases futuras; hooks marcados com comentários "Phase N".
+- Commits: mensagem clara descrevendo a mudança, geralmente prefixada por um tipo curto (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`) — ver [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).
+- Não antecipar funcionalidades condicionadas a decisões de produto ainda em aberto — ver [`docs/roadmap.md`](../../roadmap.md).

@@ -10,6 +10,10 @@ order: 4
 
 O Package Manager é o único componente autorizado a escrever em `modules/installed/`. Todos os outros componentes interagem com módulos exclusivamente através dele.
 
+> Esta página é a visão geral. Para estrutura de diretórios, repository
+> providers e detalhes internos de implementação, veja
+> [Package Manager — Internals](package-manager-internals.md).
+
 ## Operações
 
 ### Instalar
