@@ -214,20 +214,27 @@ Keychain, Secret Service no Linux) por trás de uma abstração trocável
 (`SecretStoreBackend`) — sem criptografia própria.
 
 ```python
-context.secrets.set("api_key", "sk-...")
-value = context.secrets.get("api_key")   # None se ausente
+context.secrets.set("api_key", "sk-...")           # cria (1a vez) ou sobrescreve
+value = context.secrets.get("api_key")              # None se ausente
+context.secrets.rotate("api_key", "sk-new-...")     # troca EXPLICITA de um valor existente
 context.secrets.delete("api_key")
 ```
 
 Mesmo isolamento estrutural do Module Storage API — `module_id` fixado na
-construção.
+construção. `rotate()` (Fase 17) levanta `SecretStoreError` se a key nunca
+foi criada. `set()`/`rotate()`/`delete()` publicam `security.secret_created`/
+`security.secret_rotated`/`security.secret_deleted` no EventBus — nunca com
+o valor do segredo no payload (ver `module-trust.md`).
 
 **Redação em log** (`app/security/redaction.py::SecretRedactionFilter`): todo
-valor já gravado via `SecretStore` que aparecer em qualquer mensagem de log é
-substituído por `***REDACTED***`. Instalado no **Handler** do logger raiz, não
-no **Logger** — um `Filter` anexado a um `Logger` só roda quando aquele logger
-é o originador do registro; registros propagados de loggers filhos
-(`techforge.module.*`) vão direto pros Handlers dos ancestrais.
+valor já gravado via `SecretStore` que aparecer em qualquer mensagem de log,
+mais qualquer campo de nome sensível (`password`, `token`, `api_key`,
+`secret`, `private_key`, `credentials`, `authorization` — incluindo o header
+`Authorization: Bearer xxx` inteiro) é substituído por `***REDACTED***`.
+Instalado no **Handler** do logger raiz, não no **Logger** — um `Filter`
+anexado a um `Logger` só roda quando aquele logger é o originador do
+registro; registros propagados de loggers filhos (`techforge.module.*`) vão
+direto pros Handlers dos ancestrais.
 
 ---
 

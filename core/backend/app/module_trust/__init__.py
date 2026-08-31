@@ -13,6 +13,12 @@ from app.module_trust.integrity import (
 )
 from app.module_trust.provenance import InstallSource, resolve_install_source
 from app.module_trust.publisher import PublisherTrustStatus, PublisherType
+from app.module_trust.security_policy import (
+    DesktopSecurityPolicy,
+    SecurityPolicy,
+    ServerSecurityPolicy,
+    default_security_policy,
+)
 from app.module_trust.signature import (
     Ed25519SignatureProvider,
     NoOpSignatureProvider,
@@ -35,4 +41,5 @@ __all__ = [
     "Ed25519SignatureProvider", "default_signature_provider",
     "generate_ed25519_keypair", "canonical_manifest_bytes",
     "verify_module_integrity",
+    "SecurityPolicy", "DesktopSecurityPolicy", "ServerSecurityPolicy", "default_security_policy",
 ]
