@@ -186,3 +186,29 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - `ruff check core/backend/app cli sdk` — all checks passed.
 
 **Commit**: `5804c19`
+
+### Slice 7 — SBOM / Supply Chain metadata mínimo
+
+**Arquivos**
+- `core/backend/app/api/routes/module_verification.py` — `GET /modules/{id}/sbom` (`SBOMRead`/`SBOMDependencyRead`)
+- `core/backend/tests/test_phase17_sbom.py` (novo, 3 testes)
+
+**O quê**
+`{module, version, dependencies[], publisher, checksum, signature_status}` — reaproveita `DependencyParser.parse()` (Fase 8.1, já existente) pras dependências declaradas no manifest e `get_module_trust()` (mesmo endpoint do Slice 2/3) pra publisher/signature_status. Sem formato SPDX/CycloneDX, sem lib nova, nenhuma lógica de resolução duplicada.
+
+**Decisão-chave**
+`checksum` reflete honestamente `raw.get("checksum")` — o mesmo campo `Optional[str]` que já existe no manifest desde antes desta fase (paralelo ao `signature`), nunca fabricado. A maioria dos módulos não vai ter esse campo declarado (retorna `null`) — isso é o "mínimo honesto" do plano, não um bug.
+
+**Aceite**
+- Payload reflete dependências reais declaradas no manifest (module e capability, required e opcional).
+- `checksum`/`publisher`/`signature_status` vêm de fontes já existentes, sem duplicação.
+- 404 pra módulo desconhecido.
+
+**Teste**
+- `pytest tests/test_phase17_sbom.py -q` — 3 passed.
+- Suíte completa backend: `pytest tests -q` — 926 passed, 3 skipped.
+- Suíte completa CLI: `pytest tests -q` (em `cli/`) — 130 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+- Verificação manual ao vivo: backend real subido, `curl /api/v1/modules/hello_world/sbom` retornou o SBOM real do módulo `hello_world` de fato instalado na plataforma.
+
+**Commit**: _(pendente)_

@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
 from app.db.database import get_db
+from app.dependency_engine.parser import DependencyParser
 from app.module_engine.registry import registry
 from app.module_trust.integrity import verify_integrity
 from app.module_trust.signature import (
@@ -135,4 +136,43 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
         module_id=module_id, trust_level=trust_level.value,
         integrity_status=integrity_result.status.value, signature_status=signature_status,
         publisher=publisher,
+    )
+
+
+class SBOMDependencyRead(BaseModel):
+    target_type:   str
+    target_id:     str
+    version_range: Optional[str] = None
+    required:      bool
+
+
+class SBOMRead(BaseModel):
+    module:           str
+    version:          str
+    dependencies:     list[SBOMDependencyRead]
+    publisher:        Optional[PublisherRead] = None
+    checksum:         Optional[str] = None
+    signature_status: str
+
+
+@router.get("/{module_id}/sbom", response_model=SBOMRead,
+            summary="Minimal Software Bill of Materials (§31/§32) — no SPDX/CycloneDX")
+async def get_module_sbom(module_id: str, db: AsyncSession = Depends(get_db)) -> SBOMRead:
+    """Reaproveita dependency_engine (dependências já declaradas) + Trust/
+    Publisher (`get_module_trust`) — nenhuma lógica de resolução duplicada."""
+    entry = registry.get(module_id)
+    if entry is None:
+        raise HTTPException(404, f"Module not found: {module_id!r}")
+
+    trust = await get_module_trust(module_id, db)
+    raw = entry.manifest_raw or {}
+    dependencies = DependencyParser.parse(raw.get("dependencies") or [])
+
+    return SBOMRead(
+        module=module_id, version=entry.version,
+        dependencies=[SBOMDependencyRead(
+            target_type=d.target_type.value, target_id=d.target_id,
+            version_range=d.version_range, required=d.required) for d in dependencies],
+        publisher=trust.publisher, checksum=raw.get("checksum"),
+        signature_status=trust.signature_status,
     )
