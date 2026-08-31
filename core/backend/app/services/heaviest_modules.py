@@ -1,11 +1,10 @@
-"""HeaviestModulesService — Fase 14 Slice 18 (Dashboard).
+"""HeaviestModulesService (Dashboard).
 
 "Qual módulo é mais pesado" via proxy real e barato — espaço em disco
 (exato) + duração média de execução + taxa de falha (já coletados pelo
 Execution History). Não tenta atribuir CPU/memória por módulo: eles
 rodam no mesmo processo/heap/GIL do Core, então essa medida não seria
-confiável sem reabrir o module_runtime inteiro (fora de escopo, decisão
-já registrada em tasks/phase14-plan.md).
+confiável sem reabrir o module_runtime inteiro (fora de escopo).
 """
 from __future__ import annotations
 

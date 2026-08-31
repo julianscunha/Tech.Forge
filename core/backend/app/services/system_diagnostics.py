@@ -1,9 +1,7 @@
-"""SystemDiagnosticService — Fase 14 §15.
+"""SystemDiagnosticService.
 
-Consolida Health (Fase 1) + Storage (Fase 12) + Runtime (Fase 6) + Module
-Health (Fase 9) num serviço único — sem inventar um `/ready` novo (não se
-aplica a Desktop single-instância; ver decisão registrada em
-tasks/phase14-plan.md).
+Consolida Health + Storage + Runtime + Module Health num serviço único —
+sem inventar um `/ready` novo (não se aplica a Desktop single-instância).
 """
 from __future__ import annotations
 

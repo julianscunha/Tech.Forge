@@ -42,15 +42,18 @@ arquivo por arquivo). "Docs" indica se há artigo dedicado em
   `system_health_check`, `system_information_service`) importa `app.*`
   diretamente — confirmado via grep nos 3 arquivos `backend/main.py`
   existentes. Fronteira respeitada.
-- **Module SDK** (`sdk/python/`) não foi auditado nesta slice (fora do
-  escopo de `core/backend/app/`) — candidato a slice futura se o SDK
-  crescer.
+- **Module SDK** (`sdk/python/`) não foi auditado nesta revisão (fora do
+  escopo de `core/backend/app/`) — candidato a uma revisão dedicada se o
+  SDK crescer.
 - **UI** (`core/frontend/src/`): não auditado componente-a-componente
   aqui (ver [`ui-api-cli-consolidation.md`](ui-api-cli-consolidation.md)).
 
-## Gap conhecido reconfirmado
+## Gap conhecido, já corrigido
 
-`modules/installed/hello_world/frontend/` ainda só tem `index.tsx`
-(não compilado) — o contrato de Module Frontend exige JS/ESM
-compilado. Gap 🔴 desde a Fase 3, ainda aberto (ver
-`tasks/phase-audit.md`).
+`modules/installed/hello_world/frontend/` só tinha `index.tsx` (não
+compilado) — o contrato de Module Frontend exige JS/ESM compilado, o que
+fazia o dynamic import falhar em runtime. Corrigido (ver
+[`documentation-consolidation.md`](documentation-consolidation.md)).
+`system_information_service` tem o mesmo padrão de `.tsx` não servível,
+mas com UI mínima — registrado no [Technical Debt Registry](technical-debt-registry.md)
+em vez de corrigido junto.

@@ -1,6 +1,5 @@
-"""Fase 12 Slice 1 — Storage abstraction + health.
+"""Storage abstraction + health.
 
-Spec docs/phases/12 §3 (Storage Provider) e §24 (Persistence health):
 GET /api/v1/system/storage/status deve reportar se o banco está disponível
 e se é gravável.
 

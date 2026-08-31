@@ -46,11 +46,11 @@ async def get_platform_status(db: AsyncSession = Depends(get_db)) -> PlatformSta
     )
 
 
-@router.get("/health", response_model=PlatformHealthCheck, summary="Spec Phase 1 health check")
+@router.get("/health", response_model=PlatformHealthCheck, summary="Platform health check")
 async def get_platform_health_check(db: AsyncSession = Depends(get_db)) -> PlatformHealthCheck:
     """
-    Health check mínimo da Fase 1 (docs/phases/01 §5):
-    status + nome da plataforma + versão. Usado pelo Launcher.
+    Health check mínimo: status + nome da plataforma + versão. Usado
+    pelo Launcher.
     """
     try:
         await db.execute(text("SELECT 1"))

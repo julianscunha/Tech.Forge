@@ -70,8 +70,8 @@ class NoOpSignatureProvider(SignatureProvider):
 
     def sign(self, data: bytes, private_key: bytes) -> bytes:
         raise NotImplementedError(
-            "Signing is not implemented in this phase — SignatureProvider "
-            "is abstraction-only (Fase 10 decision, see tasks/phase10-plan.md)."
+            "NoOpSignatureProvider is abstraction-only and does not "
+            "implement signing — use Ed25519SignatureProvider."
         )
 
     def verify(self, data: bytes, signature: Optional[bytes],

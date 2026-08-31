@@ -1,7 +1,6 @@
-"""Fase 1 — Health Check da spec: GET /api/v1/platform/health.
+"""Health Check: GET /api/v1/platform/health.
 
-Spec docs/phases/01 §5/§19.4: resposta deve identificar status, nome da
-plataforma e versão.
+Resposta deve identificar status, nome da plataforma e versão.
 
 Run:  cd core/backend && .venv/Scripts/python.exe -m pytest tests/test_phase1_health.py -q
 """

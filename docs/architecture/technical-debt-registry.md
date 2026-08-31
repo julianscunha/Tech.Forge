@@ -8,9 +8,10 @@ tags: [architecture, consolidation]
 # TechForge Core — Technical Debt Registry
 
 > Consolida achados não corrigidos das revisões de arquitetura em
-> `docs/architecture/*.md` mais os gaps reais remanescentes de
-> `tasks/phase-audit.md` que não dependem de infraestrutura ainda
-> inexistente (instalador Windows, servidor central). Registrar
+> `docs/architecture/*.md` mais os gaps reais remanescentes descritos em
+> [`docs/limitations.md`](../limitations.md) que não dependem de
+> infraestrutura ainda inexistente (instalador Windows, servidor
+> central). Registrar
 > dívida não é escondê-la nem resolvê-la às cegas — é torná-la visível
 > pra decisão futura.
 
@@ -37,6 +38,6 @@ tags: [architecture, consolidation]
 | TD-019 | CLI | `techforge validate-module` quebra no console PowerShell/Windows por encoding cp1252 (glifos do `rich`) | Baixo — não reproduzido em CI (Ubuntu/UTF-8), só afeta experiência local no Windows | Baixa | Corrigir exigiria decidir entre forçar UTF-8 no console ou trocar os glifos do `rich` por ASCII — nenhuma opção óbvia sem trade-off | Se afetar um usuário final, não só desenvolvimento local |
 | TD-020 | Packaging | Packaging validation em clean machine 100% real nunca executada — só simulada limpando `%LOCALAPPDATA%\TechForge` numa máquina que ainda tem o repo/`.venv` presentes | Baixo — valida lógica de paths/migrations, não o fluxo de instalação ponta a ponta | Baixa | Testável de verdade só depois de existir instalador (mesma dependência do TD de instalador Windows) | Quando o instalador Windows GUI existir |
 
-**Achados NÃO incluídos nesta tabela por decisão consciente** (infraestrutura pendente, fora do escopo desta consolidação): ausência de instalador Windows GUI, testes de upgrade/failure-recovery que dependem de um fluxo de update formal, e qualquer item condicionado a decisão futura sobre servidor central multi-usuário — todos já registrados em `tasks/phase-audit.md` com essa mesma justificativa.
+**Achados NÃO incluídos nesta tabela por decisão consciente** (infraestrutura pendente, fora do escopo desta consolidação): ausência de instalador Windows GUI, testes de upgrade/failure-recovery que dependem de um fluxo de update formal, e qualquer item condicionado a decisão futura sobre servidor central multi-usuário — todos já registrados em [`docs/limitations.md`](../limitations.md) com essa mesma justificativa.
 
 **Achado descartado por não ser dívida real**: 3 diretórios de módulo órfãos sem manifesto encontrados no ambiente de teste durante a validação do fluxo Desktop — é resíduo do próprio ambiente de desenvolvimento, não um problema de arquitetura.

@@ -1,4 +1,4 @@
-"""Fase 2 — Notification Foundation (spec docs/phases/02 §10).
+"""Notification Foundation.
 
 Estrutura simples de notificações do Core com níveis info/warning/error/success.
 

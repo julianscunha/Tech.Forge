@@ -11,9 +11,10 @@ tags: [architecture, consolidation]
 > [`public-contracts.md`](public-contracts.md) e
 > [`registry-consolidation.md`](registry-consolidation.md).
 
-## Hello World frontend fix (§19-20)
+## Hello World frontend fix
 
-Gap 🔴 desde a Fase 3 (registrado em `tasks/phase-audit.md`): o endpoint
+Gap real, já registrado em [`docs/limitations.md`](../limitations.md)
+como resolvido: o endpoint
 de assets (`api/routes/module_assets.py::_ALLOWED_SUFFIXES`) só serve
 `.js`/`.mjs` (e outros assets estáticos), nunca `.tsx` — confirmado no
 código, não é suposição. `hello_world/manifest.yaml` apontava
@@ -30,8 +31,8 @@ negócio nova. `manifest.yaml` atualizado (`entry_frontend:
 frontend/index.js`); `index.tsx` antigo removido (morto assim que o
 manifest deixou de apontar pra ele).
 
-`tasks/phase-audit.md` atualizado: gap do `entry_frontend` não
-compilado marcado ✅ resolvido.
+`docs/limitations.md` não lista mais este item — gap do `entry_frontend`
+não compilado está resolvido.
 
 **Achado colateral não corrigido**: `system_information_service/frontend/index.tsx`
 tem exatamente o mesmo problema (`.tsx` não servível pelo allowlist),

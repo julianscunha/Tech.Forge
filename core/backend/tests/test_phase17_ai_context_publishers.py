@@ -1,7 +1,6 @@
-"""Fase 17 Slice 3 — AIContextExporter consulta o Publisher Registry real.
+"""AIContextExporter consulta o Publisher Registry real.
 
-Gap conhecido (tasks/phase-audit.md, premissa 8 do plano da Fase 17): a
-seção "Module Trust" do AI Context sempre resolvia trust_level com
+Gap corrigido: a seção "Module Trust" do AI Context sempre resolvia trust_level com
 `publisher=None`, mesmo quando o módulo declarava um publisher_id real —
 nunca passava de UNVERIFIED. `export()` agora aceita um dict opcional
 `{publisher_id: Publisher}` (pré-carregado pela rota assíncrona via
