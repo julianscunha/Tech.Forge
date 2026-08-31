@@ -2,12 +2,11 @@
 title: Documentation Consolidation
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Documentation + AI Context Consolidation
 
-> Fase 18 (Platform Finalization & Architecture Consolidation), Slice 5.
 > Ver também [`core-inventory.md`](core-inventory.md),
 > [`public-contracts.md`](public-contracts.md) e
 > [`registry-consolidation.md`](registry-consolidation.md).
@@ -31,8 +30,8 @@ negócio nova. `manifest.yaml` atualizado (`entry_frontend:
 frontend/index.js`); `index.tsx` antigo removido (morto assim que o
 manifest deixou de apontar pra ele).
 
-`tasks/phase-audit.md` atualizado: item da Fase 3 marcado ✅ resolvido
-(Fase 18 Slice 5).
+`tasks/phase-audit.md` atualizado: gap do `entry_frontend` não
+compilado marcado ✅ resolvido.
 
 **Achado colateral não corrigido**: `system_information_service/frontend/index.tsx`
 tem exatamente o mesmo problema (`.tsx` não servível pelo allowlist),
@@ -40,26 +39,27 @@ mas não foi corrigido nesta slice — está fora do escopo explícito
 (gap conhecido era só o do `hello_world`) e sua UI é mínima
 (`export default function SystemInformationServicePage() { return null }`,
 Service Module sem UI obrigatória). Registrado como novo item de débito
-técnico pro Technical Debt Registry (Slice 9).
+técnico no Technical Debt Registry.
 
 ## Contradições de documentação (§17)
 
-Varredura focada (não exaustiva) comparando os 3 documentos novos de
-`docs/architecture/` (Slices 1-4) contra `docs/architecture.md`
-(pré-existente) e `docs/developer-center/core/module-trust.md`:
+Varredura focada (não exaustiva) comparando os documentos novos de
+`docs/architecture/` contra `docs/architecture.md` (pré-existente) e
+`docs/developer-center/core/module-trust.md`:
 
 - **Lifecycle de módulo** (`docs/architecture.md:93-94`, `INSTALLED ⇄
   DISABLED` / `DISABLED → REMOVED`): consistente com o que
-  `public-contracts.md` (Slice 2) confirmou no código real. Sem
+  `public-contracts.md` confirmou no código real. Sem
   contradição — o doc pré-existente já usa os nomes reais, não o
   enum de exemplo de 7 estados da spec.
 - **Trust gate na instalação** (`module-trust.md`): já documenta
   corretamente que `DesktopSecurityPolicy.allows_install()` é sempre
   `True` e que `requires_warning()` "sinaliza aviso" — o texto em si
-  não contradiz o código. O problema (achado 5 da Slice 3) é que
-  `requires_warning()` nunca é chamado por nenhum call-site — é uma
-  lacuna de integração, não uma contradição de documentação. Já
-  registrado no Technical Debt Registry, não duplicado aqui.
+  não contradiz o código. O problema (achado já registrado em
+  `registry-consolidation.md`) é que `requires_warning()` nunca é
+  chamado por nenhum call-site — é uma lacuna de integração, não uma
+  contradição de documentação. Já registrado no Technical Debt
+  Registry, não duplicado aqui.
 
 **Nenhuma contradição factual nova encontrada** nesta varredura entre
 os documentos oficiais auditados.
@@ -107,7 +107,7 @@ corrigir `system_information_service` no futuro.
 | Hello World frontend | Corrigido — gap 🔴 da Fase 3 fechado |
 | Contradições de docs | Nenhuma nova encontrada na varredura focada |
 | AI Context | Confirmado gerado só de fontes oficiais, sem regra duplicada |
-| Example modules | `system_information_service` tem o mesmo gap de frontend não compilado — registrado como débito técnico (Slice 9) |
+| Example modules | `system_information_service` tem o mesmo gap de frontend não compilado — registrado como débito técnico no Technical Debt Registry |
 
 **Pytest**: suíte completa — 949 passed, 3 skipped, sem regressão
 (único teste que toca o asset `.tsx` do hello_world já era tolerante a

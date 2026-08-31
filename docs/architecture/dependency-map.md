@@ -2,12 +2,12 @@
 title: Dependency Map
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Dependency Map
 
-> Fase 18, Slice 1. Gerado a partir de imports reais
+> Gerado a partir de imports reais
 > (`ast-grep outline --items imports` sobre `core/backend/app/`), não
 > hipotético. Ver também [`core-inventory.md`](core-inventory.md).
 
@@ -60,9 +60,8 @@ recém-ativado sem reiniciar o processo (hot activation).
 necessário dado que não há reinício de processo na ativação — não tem
 solução óbvia mais barata sem introduzir um padrão de registro de
 router mais indireto (ex.: `app` injetado via `Depends`/estado
-compartilhado). Vira item no Technical Debt Registry (Slice 9); não
-corrigido nesta fase (spec §48 pede não reescrever componentes
-estáveis sem necessidade).
+compartilhado). Vira item no Technical Debt Registry; não corrigido
+por ora (evitar reescrever um componente estável sem necessidade real).
 
 ## Achado 2 — rotas acessando `models.*` diretamente, pulando o service
 
@@ -78,7 +77,7 @@ existe e é o caminho oficial, mas 3 call-sites specific fazem `select()`
 direto no model em vez de adicionar o método que falta ao serviço.
 Duplicação pequena (mesmo padrão de query repetido 3x fora do
 serviço). Candidato a limpeza de baixo risco, registrado como débito
-técnico (Slice 9) em vez de tocado às cegas aqui.
+técnico em vez de tocado às cegas aqui.
 
 ## Achado 3 — `api/routes/security.py` importa de `api/routes/module_verification.py`
 
@@ -129,6 +128,6 @@ volta desses consumidores. O único "ciclo" real é o Achado 1
   cópia paralela pra UI/Installer.
 - Service Registry: só `service_registry.registry.service_registry`.
 
-Consistente com a regra "fonte única de verdade" do CLAUDE.md — as
-Fases 8/8.1/9/10 já foram fechadas com essa exigência, e a Fase 18 só
-confirma que continua verdade, sem achado de duplicação real aqui.
+Consistente com a regra "fonte única de verdade" do CLAUDE.md — esta
+verificação apenas confirma que continua verdade no código atual, sem
+achado de duplicação real aqui.

@@ -2,15 +2,14 @@
 title: Storage & Configuration Consolidation
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Storage & Configuration Consolidation
 
-> Fase 18 (Platform Finalization & Architecture Consolidation), Slice 4.
-> **Checkpoint 1 do plano** — suíte completa (backend + CLI) rodada ao
-> final desta slice. Ver também [`core-inventory.md`](core-inventory.md)
-> e [`public-contracts.md`](public-contracts.md) (já documentam
+> Suíte completa (backend + CLI) validada como checkpoint ao final desta
+> revisão. Ver também [`core-inventory.md`](core-inventory.md) e
+> [`public-contracts.md`](public-contracts.md) (já documentam
 > `StorageProvider`/`ModuleSecretStore` como contratos Stable).
 
 ## Platform Storage vs Module Storage (§15)

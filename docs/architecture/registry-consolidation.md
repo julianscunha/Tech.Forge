@@ -2,12 +2,11 @@
 title: Registry Consolidation
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Registry / Package / Dependency / Runtime Consolidation
 
-> Fase 18 (Platform Finalization & Architecture Consolidation), Slice 3.
 > Verificação empírica contra o código real (`ast-grep outline` + grep de
 > chamadas), não confirmação por memória do CLAUDE.md. Ver também
 > [`core-inventory.md`](core-inventory.md), [`dependency-map.md`](dependency-map.md)
@@ -21,7 +20,7 @@ Versions, States, Dependencies, Trust, Integrity.
 
 | Dado | Fonte única confirmada | Evidência |
 |---|---|---|
-| Installed Modules | `module_engine.registry.registry` (singleton `ModuleRegistry`) | `registry.all()` — nenhum outro dict/lista paralela de módulos instalados encontrado em `api/routes` ou `services` (reconfirma achado da Slice 1) |
+| Installed Modules | `module_engine.registry.registry` (singleton `ModuleRegistry`) | `registry.all()` — nenhum outro dict/lista paralela de módulos instalados encontrado em `api/routes` ou `services` (reconfirma achado de [`core-inventory.md`](core-inventory.md)) |
 | Active Modules | `ModuleEntry.is_active` / `registry.by_status(ModuleStatus.INSTALLED)` | Mesmo objeto do registry, não uma segunda lista |
 | Versions | `ModuleEntry.version` (campo do próprio registry entry) | Não há tabela/cache de versão separada; `PackageInfo.installed_version` (package_manager) é lido do mesmo registry, não duplicado |
 | States | `ModuleEntry.status` (`ModuleStatus` enum) | Único enum administrativo; ver nota de fatiamento em 3 camadas já documentada em `public-contracts.md` (§10) — não é duplicação, é fatiamento por responsabilidade (Administrative vs Runtime vs Package job) |
@@ -30,8 +29,8 @@ Versions, States, Dependencies, Trust, Integrity.
 | Integrity | `integrity.json` por módulo (filesystem, escrito em `write_integrity_manifest`) + `verify_module_integrity()` (compara hash atual vs. manifest) | Fonte única = arquivo em disco por módulo; único ponto de verificação (`module_trust/verification.py:22`), chamado no boot (`main.py:114`) e sob demanda (`module_verification.py:64`) |
 
 **Conclusão §11**: nenhum registry/estado paralelo encontrado. Confirma e
-reforça o achado já registrado na Slice 1 ("Nenhum resolver/registry
-duplicado encontrado").
+reforça o achado já registrado em [`core-inventory.md`](core-inventory.md)
+("Nenhum resolver/registry duplicado encontrado").
 
 ## §12 — Package lifecycle consolidation
 
@@ -69,7 +68,7 @@ existe, decisão de produto existe, ligação entre os dois nunca foi feita).
 Não corrigido nesta slice — decisão de UX (`requires_warning` deveria virar
 um campo no response de install/`PackageInfo` consumido pela UI?) não é
 "consolidação óbvia de baixo risco", registrado como item de débito técnico
-para a Slice 9.
+no Technical Debt Registry.
 
 O fluxo de **update** (`manager.py::update()`) segue o mesmo padrão —
 não verificado com o mesmo detalhe nesta slice por já compartilhar a
@@ -93,7 +92,7 @@ são cada um uma única classe, usados consistentemente:
   não há resolver duplicado para UI.
 
 **Conclusão §13**: confirmado, sem achado novo. Nenhum resolver paralelo
-para UI, Runtime ou Installer — reforça o achado da Slice 1.
+para UI, Runtime ou Installer — reforça o achado de [`core-inventory.md`](core-inventory.md).
 
 ## §14 — Runtime consolidation
 

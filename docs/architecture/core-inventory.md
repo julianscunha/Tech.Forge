@@ -2,12 +2,11 @@
 title: Core Inventory
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Inventário de Componentes
 
-> Fase 18 (Platform Finalization & Architecture Consolidation), Slice 1.
 > Construído a partir do código real (`ast-grep outline` sobre
 > `core/backend/app/`), não de memória/spec. Ver também
 > [`dependency-map.md`](dependency-map.md) para o mapa de dependências.
@@ -47,7 +46,7 @@ arquivo por arquivo). "Docs" indica se há artigo dedicado em
   escopo de `core/backend/app/`) — candidato a slice futura se o SDK
   crescer.
 - **UI** (`core/frontend/src/`): não auditado componente-a-componente
-  nesta slice (fica pra Slice 6, UI consolidation, per plano).
+  aqui (ver [`ui-api-cli-consolidation.md`](ui-api-cli-consolidation.md)).
 
 ## Gap conhecido reconfirmado
 

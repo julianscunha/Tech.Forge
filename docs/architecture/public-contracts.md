@@ -2,16 +2,15 @@
 title: Public Contracts
 category: governanca-setup
 domain: [governanca-setup]
-tags: [architecture, fase-18, consolidation]
+tags: [architecture, consolidation]
 ---
 
 # TechForge Core — Public Contracts Inventory
 
-> Fase 18 (Platform Finalization & Architecture Consolidation), Slice 2.
 > Catálogo construído a partir do código real (`ast-grep outline` sobre
-> `core/backend/app/`), não da lista de exemplo do §7 da spec — os nomes
-> abaixo são os nomes reais das classes quando divergem do exemplo.
-> Ver também [`core-inventory.md`](core-inventory.md) e
+> `core/backend/app/`), não da lista de exemplo da spec de arquitetura —
+> os nomes abaixo são os nomes reais das classes quando divergem do
+> exemplo. Ver também [`core-inventory.md`](core-inventory.md) e
 > [`dependency-map.md`](dependency-map.md).
 
 ## Catálogo
@@ -36,7 +35,7 @@ Adotada nesta slice, sem mudança de comportamento:
 
 - **Stable** — mudança de assinatura exige depreciação anunciada antes da remoção (ver `deprecation-and-migration` quando essa fase existir). É o padrão pra contratos em uso desde fases fechadas sem histórico de breaking change.
 - **Experimental** — mudanças podem ocorrer com aviso em release notes, sem ciclo de depreciação formal. Reservado a contratos que ainda não têm um segundo consumidor real provando a abstração.
-- **Deprecated** — não aplicável nesta fase (Fase 18 não é fase de remoção). Nenhum contrato do catálogo foi classificado assim.
+- **Deprecated** — não aplicável no momento (nenhum ciclo de remoção em andamento). Nenhum contrato do catálogo foi classificado assim.
 
 Apenas `SystemDiagnosticService` recebeu classificação Experimental; todos os demais são Stable.
 
@@ -115,6 +114,6 @@ correto (deactivate preserva dados e reversibilidade; remove é exclusão real;
 nenhuma UI mostra módulo removido) — mas o nome de cada estado diverge do
 enum de exemplo da spec, e o lifecycle está fatiado em 3 enums (Package job /
 Administrative / Runtime) em vez de um único enum de 7 estados. Isso é
-consistente com o achado 4 já registrado na Slice 1 (colisão de nome entre os
-dois `RuntimeState`/estados) — mantido como observação para o Technical Debt
-Registry (Slice 9), não corrigido aqui.
+consistente com o achado já registrado em [`dependency-map.md`](dependency-map.md)
+(colisão de nome entre os dois `RuntimeState`/estados) — mantido como
+observação para o Technical Debt Registry, não corrigido aqui.
