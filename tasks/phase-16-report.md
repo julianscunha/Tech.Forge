@@ -91,5 +91,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` → 883 passed, 3 skipped (era 881 — 2 novos). `ruff check core/backend/app cli sdk` limpo. `npm run lint`/`npm run build` limpos. Verificado ao vivo: `techforge start` real → `curl /diagnostics/health` → paths reais retornados; `curl -X POST /registry/rescan` → `{"scanned":6,"installed":3,"invalid":3,"routers_mounted":[]}` (idempotente, nenhum router novo pois já estavam todos montados).
 
-**Commit**: _(pendente)_
+**Commit**: `f7eeb85`
 
