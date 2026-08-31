@@ -2,7 +2,10 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
+from app.core.paths import install_dir, user_data_dir
+
+BASE_DIR = install_dir()
+USER_DATA_DIR = user_data_dir()
 
 
 class Settings(BaseSettings):
@@ -32,7 +35,7 @@ class Settings(BaseSettings):
     FRONTEND_READY_TIMEOUT: int = 60    # seconds waiting for frontend READY
 
     # Database
-    DATABASE_URL: str = f"sqlite+aiosqlite:///{BASE_DIR}/config/techforge.db"
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{USER_DATA_DIR}/config/techforge.db"
 
     # Frontend static serving — Desktop mode (Fase 6 §10)
     SERVE_STATIC_FRONTEND: bool = False
@@ -47,14 +50,17 @@ class Settings(BaseSettings):
         "https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/main/modules"
     )
 
-    # Paths
-    MODULES_INSTALLED_PATH: Path = BASE_DIR / "modules" / "installed"
-    MODULES_REPOSITORY_PATH: Path = BASE_DIR / "modules" / "repository"
-    MODULES_CACHE_PATH: Path = BASE_DIR / "modules" / "cache"
-    LOGS_PATH: Path = BASE_DIR / "logs"
+    # Paths — dados do usuário (Fase 16 §11/§12/§13): DB, módulos, logs.
+    # Coincide com BASE_DIR em árvore de desenvolvimento; em produção
+    # instalada, resolve para o diretório de dados do SO (app/core/paths.py).
+    MODULES_INSTALLED_PATH: Path = USER_DATA_DIR / "modules" / "installed"
+    MODULES_REPOSITORY_PATH: Path = USER_DATA_DIR / "modules" / "repository"
+    MODULES_CACHE_PATH: Path = USER_DATA_DIR / "modules" / "cache"
+    LOGS_PATH: Path = USER_DATA_DIR / "logs"
     BASE_DIR: Path = BASE_DIR
+    USER_DATA_DIR: Path = USER_DATA_DIR
 
-    model_config = {"env_file": str(BASE_DIR / "config" / ".env"), "extra": "ignore"}
+    model_config = {"env_file": str(USER_DATA_DIR / "config" / ".env"), "extra": "ignore"}
 
 
 settings = Settings()
