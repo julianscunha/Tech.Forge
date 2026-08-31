@@ -20,6 +20,7 @@ from app.api.routes.platform_config import router as platform_config_router
 from app.api.routes.publishers import router as publishers_router
 from app.api.routes.registry import router as registry_router
 from app.api.routes.release import router as release_router
+from app.api.routes.security import router as security_router
 from app.api.routes.services import router as services_router
 from app.api.routes.system import router as system_router
 from app.runtime.routes import router as runtime_router
@@ -52,3 +53,4 @@ api_router.include_router(release_router)               # Fase 15 — Release Re
 api_router.include_router(module_quality_router)        # Fase 15 — Module Quality / Release Readiness
 api_router.include_router(diagnostics_router)           # Fase 14 — Observability / Diagnostics
 api_router.include_router(modules_diagnostics_router)   # Fase 14 — Observability / Diagnostics (per-module)
+api_router.include_router(security_router)              # Fase 17 — Security & Trust overview

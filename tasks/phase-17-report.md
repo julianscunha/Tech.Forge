@@ -101,3 +101,36 @@ Dois dos três consumidores síncronos/semi-síncronos de `SignatureProvider`/`T
 - **Verificação manual ao vivo**: par de chaves real gerado, módulo real assinado e empacotado, publisher real registrado com `trust_status=TRUSTED`, módulo instalado via API real. `curl http://127.0.0.1:8000/api/v1/docs/export/ai-context` retornou `**Trust Level:** TRUSTED` e `**Publisher:** live_slice3_publisher` para o módulo — antes desta mudança, essa seção nunca passava de `UNVERIFIED`, mesmo com um publisher real cadastrado.
 
 **Commit**: `c77bebe`
+
+### Slice 4 — `/api/v1/security/*` + CLI de segurança
+
+**Arquivos**
+- `core/backend/app/api/routes/security.py` (novo) — `GET /security/status`, `GET /security/publishers`
+- `core/backend/app/api/__init__.py` — registra `security_router`
+- `cli/techforge_cli/commands/security.py` (novo) — `techforge security status`
+- `cli/techforge_cli/commands/module_trust.py` — `techforge trust publishers` (alias)
+- `cli/techforge_cli/commands/diagnostics.py` — `techforge diagnostics security` (alias)
+- `cli/techforge_cli/main.py` — registra `security_cmd`
+- `core/backend/tests/test_phase17_security_status.py` (novo, 3 testes)
+- `cli/tests/test_phase17_security_cli.py` (novo, 4 testes)
+
+**O quê**
+`GET /security/status` agrega o Trust Level de todos os módulos instalados (reusando `list_modules_trust`, já existente desde a Fase 10) em contagens por trust level + total de módulos sem assinatura + total de publishers revogados. `GET /security/publishers` é um alias de `GET /publishers` sob o prefixo pedido pelo spec. Três comandos CLI, todos clientes HTTP finos sem lógica duplicada: `techforge security status`, `techforge trust publishers` (chama o mesmo callback de `publishers list`), `techforge diagnostics security` (chama o mesmo callback de `security status`).
+
+**Decisão-chave**
+Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre serviços já existentes (`list_modules_trust`, `PublisherService.get_all`), conforme o aceite do plano.
+
+**Aceite**
+- `GET /security/status` reflete corretamente as contagens reais (por trust level, não assinados, publishers revogados).
+- `GET /security/publishers` retorna exatamente o mesmo payload de `GET /publishers`.
+- Os 3 comandos CLI reusam os mesmos endpoints/callbacks — sem duplicação.
+
+**Teste**
+- Backend: `pytest tests/test_phase17_security_status.py -q` — 3 passed.
+- CLI: `pytest tests/test_phase17_security_cli.py -q` — 4 passed.
+- Suíte completa backend: `pytest tests -q` — 910 passed, 3 skipped.
+- Suíte completa CLI: `pytest tests -q` (em `cli/`) — 130 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+- Verificação manual ao vivo: backend real subido, `curl /api/v1/security/status` e `/api/v1/security/publishers` retornaram dados reais da plataforma (3 módulos instalados, contagens corretas); `techforge security status`, `techforge diagnostics security` e `techforge trust publishers` executados de verdade contra a API real, saída idêntica entre os aliases.
+
+**Commit**: _(pendente)_

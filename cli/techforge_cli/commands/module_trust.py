@@ -126,7 +126,13 @@ def publishers_show_cmd(publisher_id):
 
 @click.group("trust")
 def trust_cmd():
-    """Manage Ed25519 keypairs used to sign modules."""
+    """Manage Ed25519 keypairs and inspect trust (Fase 17)."""
+
+
+@trust_cmd.command("publishers")
+def trust_publishers_cmd():
+    """List all known publishers (alias of `publishers list`, under `trust`)."""
+    publishers_list_cmd.callback()
 
 
 @trust_cmd.command("generate-keypair")

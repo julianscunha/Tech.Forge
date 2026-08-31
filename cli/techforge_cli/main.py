@@ -46,6 +46,7 @@ from techforge_cli.commands.platform import (
 from techforge_cli.commands.release import release_check_cmd
 from techforge_cli.commands.repair import repair_check_cmd
 from techforge_cli.commands.runtime import runtime_cmd
+from techforge_cli.commands.security import security_cmd
 from techforge_cli.commands.services import services_cmd
 from techforge_cli.commands.storage import storage_cmd
 from techforge_cli.commands.validate_module import validate_module_cmd
@@ -95,8 +96,9 @@ cli.add_command(runtime_cmd)    # Fase 9 — runtime status/modules/module/initi
 cli.add_command(verify_module_cmd)  # Fase 10 — verify-module
 cli.add_command(integrity_cmd)      # Fase 10 — integrity check
 cli.add_command(publishers_cmd)     # Fase 10 — publishers list/show
-cli.add_command(trust_cmd)          # Fase 17 — trust generate-keypair
+cli.add_command(trust_cmd)          # Fase 17 — trust generate-keypair/publishers
 cli.add_command(sign_module_cmd)    # Fase 17 — sign-module
+cli.add_command(security_cmd)       # Fase 17 — security status
 cli.add_command(start_cmd)     # Phase 6
 cli.add_command(stop_cmd)      # Phase 6
 cli.add_command(status_cmd)    # Phase 6

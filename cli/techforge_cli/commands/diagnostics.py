@@ -82,6 +82,13 @@ def diagnostics_errors_cmd(limit: int) -> None:
     console.print(table)
 
 
+@diagnostics_cmd.command("security")
+def diagnostics_security_cmd() -> None:
+    """Show aggregate security posture (alias of `security status`, Fase 17)."""
+    from techforge_cli.commands.security import security_status_cmd
+    security_status_cmd.callback()
+
+
 @diagnostics_cmd.command("export")
 @click.option("--format", "fmt", type=click.Choice(["json", "txt", "zip"]), default="json",
              show_default=True, help="Formato do export.")
