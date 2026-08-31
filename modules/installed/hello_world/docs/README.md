@@ -1,44 +1,44 @@
-# hello_world Module
+# Módulo hello_world
 
-**Category:** Examples  
-**Vendor:** TechForge  
-**Version:** 1.0.0  
-**Status:** Reference / Architecture validation
+**Categoria:** Examples
+**Vendor:** TechForge
+**Versão:** 1.0.0
+**Status:** Referência / Validação de arquitetura
 
 ---
 
-## Purpose
+## Objetivo
 
-This module exists solely to validate the Phase 2 plugin architecture.
-It is **not** a functional tool.
+Este módulo existe só pra validar a arquitetura de plugins da Fase 2.
+Ele **não** é uma ferramenta funcional.
 
-It demonstrates:
-- A valid `manifest.yaml` with all required fields.
-- The required directory structure (`backend/`, `frontend/`, `assets/`, `docs/`, `tests/`).
-- The backend entry point contract (`router`, lifecycle hooks).
-- The frontend entry point contract (default export, lifecycle hooks).
-- Automatic registration in the ModuleRegistry at startup.
-- Appearance in the Modules page with status `INSTALLED`.
+Demonstra:
+- Um `manifest.yaml` válido com todos os campos obrigatórios.
+- A estrutura de diretórios obrigatória (`backend/`, `frontend/`, `assets/`, `docs/`, `tests/`).
+- O contrato do ponto de entrada do backend (`router`, lifecycle hooks).
+- O contrato do ponto de entrada do frontend (export default, lifecycle hooks).
+- Registro automático no ModuleRegistry na inicialização.
+- Aparição na página de Módulos com status `INSTALLED`.
 
-## What it does NOT do
+## O que ele NÃO faz
 
-- No real business logic.
-- No database interaction.
-- No external API calls.
-- No UI rendering (the frontend component is a stub).
+- Nenhuma lógica de negócio real.
+- Nenhuma interação com banco de dados.
+- Nenhuma chamada a API externa.
+- Nenhuma renderização de UI (o componente de frontend é um stub).
 
-## Lifecycle
+## Ciclo de vida
 
-| Event       | Behavior         |
+| Evento       | Comportamento         |
 |-------------|------------------|
 | `install()` | No-op            |
 | `enable()`  | No-op            |
 | `disable()` | No-op            |
 | `upgrade()` | No-op            |
-| `health_check()` | Returns `{status: "ok"}` |
+| `health_check()` | Retorna `{status: "ok"}` |
 | `uninstall()` | No-op          |
 
-## How to use as a template
+## Como usar como template
 
-Copy this entire directory to `modules/installed/<your_module_id>/`,
-update `manifest.yaml`, and implement the backend and frontend entry points.
+Copie este diretório inteiro pra `modules/installed/<id_do_seu_modulo>/`,
+atualize o `manifest.yaml` e implemente os pontos de entrada de backend e frontend.
