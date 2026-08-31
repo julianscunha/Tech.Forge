@@ -29,6 +29,8 @@ from techforge_cli.commands.migrations import migrations_cmd
 from techforge_cli.commands.module_trust import (
     integrity_cmd,
     publishers_cmd,
+    sign_module_cmd,
+    trust_cmd,
     verify_module_cmd,
 )
 from techforge_cli.commands.modules import modules_cmd
@@ -93,6 +95,8 @@ cli.add_command(runtime_cmd)    # Fase 9 — runtime status/modules/module/initi
 cli.add_command(verify_module_cmd)  # Fase 10 — verify-module
 cli.add_command(integrity_cmd)      # Fase 10 — integrity check
 cli.add_command(publishers_cmd)     # Fase 10 — publishers list/show
+cli.add_command(trust_cmd)          # Fase 17 — trust generate-keypair
+cli.add_command(sign_module_cmd)    # Fase 17 — sign-module
 cli.add_command(start_cmd)     # Phase 6
 cli.add_command(stop_cmd)      # Phase 6
 cli.add_command(status_cmd)    # Phase 6

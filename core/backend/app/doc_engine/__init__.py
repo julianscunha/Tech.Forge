@@ -12,6 +12,7 @@ AI context export:
 """
 from __future__ import annotations
 
+import base64
 import logging
 from pathlib import Path
 from typing import Optional
@@ -205,7 +206,7 @@ class AIContextExporter:
         from app.core.settings import settings
         from app.module_engine.enums import ModuleStatus as _MS
         from app.module_trust.integrity import verify_integrity
-        from app.module_trust.signature import default_signature_provider
+        from app.module_trust.signature import canonical_manifest_bytes, default_signature_provider
         from app.module_trust.trust import TrustResolver
 
         installed_entries = [e for e in module_registry.all() if e.status == _MS.INSTALLED]
@@ -221,9 +222,10 @@ class AIContextExporter:
                 publisher_id = (publisher_field.get("id")
                                if isinstance(publisher_field, dict) else publisher_field)
                 signature_value = raw.get("signature")
+                signature_bytes = base64.b64decode(signature_value) if signature_value else None
                 signature_status = default_signature_provider.verify(
-                    data=b"", signature=signature_value.encode() if signature_value else None,
-                    public_key=None,
+                    data=canonical_manifest_bytes(raw), signature=signature_bytes,
+                    public_key=None,  # Publisher Registry real: Fase 17 Slice 3
                 ).value
                 trust_level = TrustResolver.resolve(integrity_result.status, None, signature_status)
 

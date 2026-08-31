@@ -14,10 +14,13 @@ from app.module_trust.integrity import (
 from app.module_trust.provenance import InstallSource, resolve_install_source
 from app.module_trust.publisher import PublisherTrustStatus, PublisherType
 from app.module_trust.signature import (
+    Ed25519SignatureProvider,
     NoOpSignatureProvider,
     SignatureProvider,
     SignatureStatus,
+    canonical_manifest_bytes,
     default_signature_provider,
+    generate_ed25519_keypair,
 )
 from app.module_trust.trust import TrustLevel, TrustResolver
 from app.module_trust.verification import verify_module_integrity
@@ -28,6 +31,8 @@ __all__ = [
     "InstallSource", "resolve_install_source",
     "PublisherType", "PublisherTrustStatus",
     "TrustLevel", "TrustResolver",
-    "SignatureStatus", "SignatureProvider", "NoOpSignatureProvider", "default_signature_provider",
+    "SignatureStatus", "SignatureProvider", "NoOpSignatureProvider",
+    "Ed25519SignatureProvider", "default_signature_provider",
+    "generate_ed25519_keypair", "canonical_manifest_bytes",
     "verify_module_integrity",
 ]

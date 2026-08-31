@@ -526,10 +526,12 @@ class TestSignatureProviderAbstraction:
         with pytest.raises(TypeError):
             SignatureProvider()
 
-    def test_default_signature_provider_is_noop_instance(self):
-        from app.module_trust.signature import default_signature_provider, NoOpSignatureProvider
+    def test_default_signature_provider_is_ed25519_instance(self):
+        """Fase 17 Slice 2: Ed25519SignatureProvider substitui NoOpSignatureProvider
+        como default — assinatura real agora existe (era NoOp na Fase 10)."""
+        from app.module_trust.signature import Ed25519SignatureProvider, default_signature_provider
 
-        assert isinstance(default_signature_provider, NoOpSignatureProvider)
+        assert isinstance(default_signature_provider, Ed25519SignatureProvider)
 
 
 # ── Slice 5 — Provenance (§14) ──────────────────────────────────────────────────

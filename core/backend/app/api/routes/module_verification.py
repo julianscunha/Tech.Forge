@@ -6,6 +6,7 @@ polling: chamado manualmente, no startup, ou depois de update.
 """
 from __future__ import annotations
 
+import base64
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,7 +17,7 @@ from app.core.settings import settings
 from app.db.database import get_db
 from app.module_engine.registry import registry
 from app.module_trust.integrity import verify_integrity
-from app.module_trust.signature import default_signature_provider
+from app.module_trust.signature import canonical_manifest_bytes, default_signature_provider
 from app.module_trust.trust import TrustResolver
 from app.module_trust.verification import verify_module_integrity
 from app.schemas.publisher import PublisherRead
@@ -100,8 +101,9 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
     publisher = await PublisherService.get_by_id(db, publisher_id) if publisher_id else None
 
     signature_value = raw.get("signature")
+    signature_bytes = base64.b64decode(signature_value) if signature_value else None
     signature_status = default_signature_provider.verify(
-        data=b"", signature=signature_value.encode() if signature_value else None,
+        data=canonical_manifest_bytes(raw), signature=signature_bytes,
         public_key=publisher.public_key if publisher else None,
     ).value
 
