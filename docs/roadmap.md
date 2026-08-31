@@ -27,21 +27,27 @@ funciona com restrição conhecida está em [`limitations.md`](limitations.md).
 
 ## Decisões em aberto
 
-Duas frentes maiores estão deliberadamente pausadas, aguardando uma
-necessidade de negócio real em vez de serem antecipadas por especulação:
+Três frentes maiores estão deliberadamente pausadas, aguardando uma
+necessidade de negócio real em vez de serem antecipadas por especulação
+— cada uma com a visão detalhada em seu próprio documento:
 
-- **Suporte multiusuário / servidor central.** Hoje o TechForge é
-  otimizado para uso single-user em desktop. Um modo servidor
-  compartilhado (múltiplos usuários, autenticação, deployment
-  centralizado) exigiria decisões de arquitetura significativas
+- **[Servidor central & multiusuário](roadmap/multi-user-server.md).**
+  Hoje o TechForge é otimizado para uso single-user em desktop. Um modo
+  servidor compartilhado exigiria decisões de arquitetura significativas
   (concorrência, isolamento de dados por usuário, autenticação) que não
   fazem sentido implementar sem um caso de uso concreto puxando o
   design.
-- **Ecossistema público de módulos.** A plataforma já suporta múltiplas
-  fontes de catálogo (local, oficial, customizada via GitHub), mas abrir
-  isso para publicação de terceiros em escala — com curadoria, revisão de
-  segurança e distribuição pública — é uma decisão de produto e de
-  governança que ainda não foi tomada.
+- **[Ecossistema público de módulos](roadmap/external-module-ecosystem.md).**
+  A plataforma já suporta múltiplas fontes de catálogo (local, oficial,
+  customizada via GitHub), mas abrir isso para publicação de terceiros
+  em escala — com curadoria, revisão de segurança e distribuição
+  pública — é uma decisão de produto e de governança que ainda não foi
+  tomada.
+- **[Governança de longo prazo do Core](roadmap/long-term-governance.md).**
+  Uma vez que um ecossistema externo exista, o Core precisa de regras
+  formais pra continuar pequeno e estável em vez de crescer sem
+  controle a cada pedido de funcionalidade — essa governança depende
+  logicamente das duas frentes acima existirem primeiro.
 
 Enquanto essas decisões não acontecem, o próximo passo natural é
 **construir módulos reais** sobre o Core existente — a plataforma já foi

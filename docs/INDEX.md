@@ -69,6 +69,9 @@ domain: [governanca-setup]
 |---|---|
 | [limitations](limitations.md) | Limitações conhecidas e decisões conscientes de escopo |
 | [roadmap](roadmap.md) | O que já está pronto e o que depende de decisão futura |
+| [roadmap/multi-user-server](roadmap/multi-user-server.md) | Visão: servidor central & multiusuário |
+| [roadmap/external-module-ecosystem](roadmap/external-module-ecosystem.md) | Visão: ecossistema público de módulos |
+| [roadmap/long-term-governance](roadmap/long-term-governance.md) | Visão: governança de longo prazo do Core |
 | [architecture/](architecture/) | Inventário de componentes, contratos públicos, mapa de dependências |
 | [adr/](adr/) | Decisões de arquitetura registradas |
 
