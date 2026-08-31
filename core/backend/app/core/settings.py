@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     # CORS — frontend dev server
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
+    # Fase 17 §16/§18 — resource limits na extração de pacotes (defesa
+    # contra zip bomb: um .mod pequeno declarando conteúdo descomprimido
+    # gigante). Checados ANTES de extrair qualquer arquivo.
+    MAX_PACKAGE_UNCOMPRESSED_SIZE: int = 200_000_000  # 200MB
+    MAX_PACKAGE_FILE_COUNT: int = 5_000
+
     # Official module catalog (Fase 11) — index.json + .mod built by CI in
     # julianscunha/Tech.Forge.Modules, committed under modules/ on main.
     OFFICIAL_CATALOG_BASE_URL: str = (

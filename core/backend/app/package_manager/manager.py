@@ -35,6 +35,7 @@ from app.module_engine import journal as loader_journal
 from app.module_engine.enums import ModuleStatus
 from app.module_engine.loader import ModuleLoader
 from app.module_engine.registry import registry
+from app.package_manager.archive_safety import safe_extract
 from app.package_manager.compatibility import check_compatibility
 from app.package_manager.enums import (
     CompatibilityLevel,
@@ -224,10 +225,9 @@ class PackageManager:
             extract_tmp.mkdir(parents=True)
 
             with zipfile.ZipFile(mod_path) as zf:
-                # Only extract module content — skip META-INF/
-                for member in zf.namelist():
-                    if not member.startswith("META-INF/"):
-                        zf.extract(member, extract_tmp)
+                # Only extract module content — skip META-INF/. Fase 17
+                # §16/§18 — checa tamanho/contagem ANTES de extrair.
+                safe_extract(zf, extract_tmp, skip_prefix="META-INF/")
 
             # Atomic move: tmp → installed/<module_id>
             shutil.move(str(extract_tmp), str(target_dir))
@@ -426,9 +426,7 @@ class PackageManager:
             extract_tmp.mkdir(parents=True)
 
             with zipfile.ZipFile(mod_path) as zf:
-                for member in zf.namelist():
-                    if not member.startswith("META-INF/"):
-                        zf.extract(member, extract_tmp)
+                safe_extract(zf, extract_tmp, skip_prefix="META-INF/")
 
             shutil.rmtree(target_dir)
             shutil.move(str(extract_tmp), str(target_dir))
