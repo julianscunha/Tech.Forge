@@ -244,4 +244,4 @@ Fire-and-forget puro (`create_task` sem tracking) causou 3 testes intermitentes 
 - `npm run lint` (frontend) — limpo. `npm run build` — sucesso.
 - Verificação manual ao vivo: bundle real servido pela plataforma (`techforge start`, desktop mode) contém as novas strings ("Security Warnings", "Publisher signature not configured"); zip bomb real importado via `POST /marketplace/import` → `GET /notifications` mostrou a notificação real criada (`"Segurança — ...: Instalação bloqueada por exceder limites de segurança."`) — confirmando o fix do bug de verdade, não só a suíte automatizada.
 
-**Commit**: _(pendente)_
+**Commit**: `51b870f`
