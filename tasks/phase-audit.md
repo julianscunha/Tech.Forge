@@ -41,7 +41,7 @@ pra avaliar viabilidade de resolver, sem reabrir 15 arquivos toda vez.
 
 | Origem | Item | Status | Nota |
 |---|---|---|---|
-| Fase 3 | `hello_world` entrega `entry_frontend` como `.tsx` não compilado — o contrato do Module Frontend exige JS/ESM compilado | 🔴 | Confirmado ainda verdade em 2026-08-30 (`modules/installed/hello_world/frontend/index.tsx`); o mecanismo de dynamic import (`ModuleHost.tsx`) já é real, só falta o módulo de referência servir o formato certo |
+| Fase 3 | `hello_world` entrega `entry_frontend` como `.tsx` não compilado — o contrato do Module Frontend exige JS/ESM compilado | ✅ resolvido (Fase 18 Slice 5) | `frontend/index.tsx` substituído por `frontend/index.js` (JS puro, mesmo padrão de `system_health_check`), manifest atualizado. `system_information_service` tem o mesmo padrão de `.tsx` não servível — não corrigido nesta slice (UI mínima, `return null`, fora do escopo explícito), registrado como item novo pro Technical Debt Registry (Slice 9) |
 | Fase 4 | Hot-unload de módulo em runtime não implementado — desativar não descarrega módulo já montado, requer restart | 🔴 | Fase 9 (Module Runtime) citou como candidato mas não resolveu |
 | Fase 4 | `RemoteRepositoryProvider` continua stub (`NotImplementedError`), comentário no código ainda cita "Phase 5" | 🟡 código morto | Funcionalidade equivalente foi entregue por outro caminho (`CatalogAggregator`/`CustomCatalogProvider`, Fase 11) — classe ficou órfã, candidata a remoção simples |
 | Fase 6 | Launcher sem watchdog/restart automático (supervisão on-demand) | ⚪ | Spec pede explicitamente "diagnóstico > reinício automático" |
