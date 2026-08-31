@@ -59,6 +59,24 @@ class TestSingleInstance:
         clean_state.joinpath("state.json").write_text("{broken", encoding="utf-8")
         assert L.already_running() is False
 
+    def test_start_focuses_existing_instance_static_mode(self, clean_state, monkeypatch):
+        # Fase 16 §6 — "Focus existing application": reabre a URL em vez
+        # de só reportar "já em execução".
+        L._write_state({"backend_pid": os.getpid(), "frontend_mode": "static"})
+        opened = {}
+        monkeypatch.setattr(L.webbrowser, "open", lambda url: opened.setdefault("url", url))
+        ok, msg = L.start(splash=False)
+        assert ok is True
+        assert opened["url"] == L.BACKEND_URL
+
+    def test_start_focuses_existing_instance_dev_mode(self, clean_state, monkeypatch):
+        L._write_state({"backend_pid": os.getpid(), "frontend_mode": "dev"})
+        opened = {}
+        monkeypatch.setattr(L.webbrowser, "open", lambda url: opened.setdefault("url", url))
+        ok, msg = L.start(splash=False)
+        assert ok is True
+        assert opened["url"] == L.FRONTEND_URL
+
 
 # ── Port guard (regressão: start() ignorava processos órfãos na porta) ─────────
 

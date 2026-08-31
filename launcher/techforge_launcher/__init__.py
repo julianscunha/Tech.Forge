@@ -341,6 +341,20 @@ def _npm_exe() -> str:
     raise FileNotFoundError("npm not found on PATH")
 
 
+def _focus_existing_instance() -> None:
+    """Fase 16 §6 — 'Existing instance found → Focus existing application'.
+
+    Não há janela nativa (a UI é o browser padrão do usuário), então
+    'focar' é reabrir a mesma URL — o SO/browser geralmente reaproveita a
+    aba/janela já aberta em vez de criar uma nova."""
+    state = _read_state()
+    ui_url = BACKEND_URL if state.get("frontend_mode") == "static" else FRONTEND_URL
+    try:
+        webbrowser.open(ui_url)
+    except Exception as exc:  # pragma: no cover — ambiente sem browser
+        logger.warning("Could not reopen browser for existing instance: %s", exc)
+
+
 def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
     """
     Full startup sequence (§3). Returns (success, user_message).
@@ -354,7 +368,8 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
     t0 = time.time()
 
     if already_running():
-        logger.info("start requested but platform already running")
+        logger.info("start requested but platform already running — focusing existing instance")
+        _focus_existing_instance()
         return True, "TechForge já está em execução."
 
     if _port_in_use(BACKEND_HOST, BACKEND_PORT):

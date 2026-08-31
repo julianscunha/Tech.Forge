@@ -33,3 +33,19 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `a55bd4d`
 
+### Slice 3 — Single instance: focus existing
+
+**Arquivos**: `launcher/techforge_launcher/__init__.py` (modificado), `core/backend/tests/test_phase6_launcher.py` (modificado).
+
+**O quê**: `_focus_existing_instance()` — ao detectar instância viva, reabre a URL correta (`BACKEND_URL` em modo desktop/estático, `FRONTEND_URL` em modo dev, lido do `frontend_mode` persistido em `state.json`) em vez de só logar/retornar "já está em execução". Sem janela nativa própria, "focar" = reabrir a mesma URL — o browser/SO tipicamente reaproveita a aba já aberta.
+
+**Decisão-chave**: nenhuma — implementação direta conforme decidido no plano (a decisão de não usar WebView shell já tinha sido tomada antes do slice).
+
+**Aceite**: `start()` com instância viva chama `webbrowser.open` com a URL certa pro modo ativo (estático ou dev), sem tentar subir um segundo backend.
+
+**Teste**: `pytest tests -q` → 872 passed, 3 skipped (era 870 — 2 testes novos). `ruff check core/backend/app cli sdk` limpo. Verificado ao vivo: `techforge start` duas vezes seguidas com a plataforma real rodando → segunda chamada loga "focusing existing instance" e não sobe segundo backend (`launcher.log` real).
+
+**Checkpoint 1**: suíte completa ✅ + `techforge start/stop/status` manual com os paths novos em uso ✅ (dev tree, sem regressão).
+
+**Commit**: _(pendente)_
+
