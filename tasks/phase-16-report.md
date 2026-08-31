@@ -47,5 +47,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Checkpoint 1**: suíte completa ✅ + `techforge start/stop/status` manual com os paths novos em uso ✅ (dev tree, sem regressão).
 
-**Commit**: _(pendente)_
+**Commit**: `d93c5b8`
 
