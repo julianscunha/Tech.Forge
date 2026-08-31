@@ -16,10 +16,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   marketplace:    'Marketplace',
   faq:            'FAQ',
   module:         'Módulo',
+  'module-example': 'Exemplo de Módulo',
 }
 
 interface Props {
-  onSelect: (docId: string) => void
+  onSelect: (docId: string, category: string) => void
 }
 
 export function DocSearch({ onSelect }: Props) {
@@ -47,8 +48,8 @@ export function DocSearch({ onSelect }: Props) {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [query])
 
-  const handleSelect = (docId: string) => {
-    onSelect(docId)
+  const handleSelect = (docId: string, category: string) => {
+    onSelect(docId, category)
     setQuery('')
     setOpen(false)
     inputRef.current?.blur()
@@ -93,7 +94,7 @@ export function DocSearch({ onSelect }: Props) {
           {results.map(r => (
             <button
               key={r.doc_id}
-              onClick={() => handleSelect(r.doc_id)}
+              onClick={() => handleSelect(r.doc_id, r.category)}
               className={cn(
                 'w-full text-left px-3 py-2.5 flex items-start gap-2.5',
                 'hover:bg-[hsl(var(--bg-subtle))] transition-colors border-b border-[hsl(var(--border-subtle))] last:border-0',

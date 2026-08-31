@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   BookOpen, Code2, Layers, Puzzle, FileText, HelpCircle,
   Package, Zap, ChevronRight, Download, RefreshCw,
-  Store, LayoutGrid, ShieldCheck, GitBranch,
+  Store, LayoutGrid, ShieldCheck, GitBranch, Boxes,
 } from 'lucide-react'
 import { docsApi, servicesApi, dependenciesApi } from '@/lib/api'
 import { MarkdownRenderer } from '@/components/developer-center/MarkdownRenderer'
@@ -25,6 +25,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
   { id: 'intro',          label: 'Introdução',              icon: BookOpen,  category: 'intro'          },
   { id: 'architecture',   label: 'Arquitetura TechForge',   icon: Layers,    category: 'architecture'   },
   { id: 'guide',          label: 'Guia de Desenvolvimento', icon: Code2,     category: 'guide'          },
+  { id: 'modules',        label: 'Módulos Instalados',      icon: Boxes,     category: 'module'         },
   { id: 'sdk-backend',    label: 'SDK Backend',             icon: Zap,       category: 'sdk-backend'    },
   { id: 'sdk-frontend',   label: 'SDK Frontend',            icon: LayoutGrid, category: 'sdk-frontend'  },
   { id: 'service-module', label: 'Service Modules',         icon: Puzzle,    category: 'service-module' },
@@ -54,13 +55,28 @@ export function DeveloperCenterPage() {
     const section = SIDEBAR_SECTIONS.find(s => s.id === sectionId)
     if (!section) return
     setLoading(true)
-    setSelectedArticle(null)
+    // NÃO reseta selectedArticle aqui — isso roda toda vez que activeSection
+    // muda, inclusive quando é a busca navegando pra seção certa de um
+    // artigo que acabou de abrir (handleSearch muda activeSection E abre o
+    // artigo quase ao mesmo tempo; resetar aqui apagava o artigo numa
+    // corrida entre os dois fetches). Quem troca de seção de propósito
+    // (clique na sidebar) já reseta explicitamente no próprio onClick.
     setMermaidGraph(null)
     try {
       if (sectionId === 'dependency-graph') {
         const { mermaid } = await dependenciesApi.graph()
         setMermaidGraph(mermaid)
         setArticles([])
+        setContracts([])
+        setServiceStatus({})
+      } else if (sectionId === 'modules') {
+        // README/overview.md de cada módulo instalado + os exemplos por
+        // módulo (categorias distintas no indexador, mesma seção na UI).
+        const [overviews, examples] = await Promise.all([
+          docsApi.list('module'),
+          docsApi.list('module-example'),
+        ])
+        setArticles([...overviews, ...examples])
         setContracts([])
         setServiceStatus({})
       } else if (sectionId === 'service-module') {
@@ -93,11 +109,15 @@ export function DeveloperCenterPage() {
     finally { setLoading(false) }
   }
 
-  const handleSearch = (docId: string) => {
+  const handleSearch = (docId: string, category: string) => {
     openArticle(docId)
-    // Find and activate the right section
-    const entry = articles.find(a => a.id === docId)
-    if (entry) setActiveSection(entry.category)
+    // Resolve pela categoria do próprio resultado da busca, não pela lista
+    // de artigos já carregada na seção atual — o resultado quase sempre é
+    // de OUTRA seção (por isso o usuário estava buscando). "module-example"
+    // não tem seção própria na sidebar, cai na mesma seção de "module".
+    const resolvedCategory = category === 'module-example' ? 'module' : category
+    const section = SIDEBAR_SECTIONS.find(s => s.category === resolvedCategory)
+    if (section) setActiveSection(section.id)
   }
 
   const handleExportAI = async () => {
