@@ -77,7 +77,13 @@ _default_backend: SecretStoreBackend = KeyringSecretStore()
 
 
 class ModuleSecretStore:
-    """`context.secrets` — fachada isolada por módulo (Fase 12 §11)."""
+    """`context.secrets` — fachada isolada por módulo (Fase 12 §11).
+
+    Lifecycle explícito (Fase 17 §22-26): `set()` só audita criação
+    (primeira vez que a key existe); `rotate()` é o jeito nomeado de
+    trocar um valor existente — antes disso era só "chamar `set()` de
+    novo", sem distinção semântica nem evento de auditoria. Nenhum
+    evento carrega o valor do segredo, só `module_id`/`key`."""
 
     def __init__(self, module_id: str, backend: Optional[SecretStoreBackend] = None):
         self._module_id = module_id
@@ -87,7 +93,28 @@ class ModuleSecretStore:
         return self._backend.get(self._module_id, key)
 
     def set(self, key: str, value: str) -> None:
+        from app.observability.events import event_bus
+
+        is_new = self._backend.get(self._module_id, key) is None
         self._backend.set(self._module_id, key, value)
+        if is_new:
+            event_bus.publish("security.secret_created", module_id=self._module_id, key=key)
+
+    def rotate(self, key: str, new_value: str) -> None:
+        """Troca o valor de um segredo já existente. Levanta `SecretStoreError`
+        se a key nunca foi criada — rotacionar o que não existe é um erro
+        de uso, não um "criar silencioso" (use `set()` pra criar)."""
+        from app.observability.events import event_bus
+
+        if self._backend.get(self._module_id, key) is None:
+            raise SecretStoreError(f"Cannot rotate non-existent secret: {key!r}")
+        self._backend.set(self._module_id, key, new_value)
+        event_bus.publish("security.secret_rotated", module_id=self._module_id, key=key)
 
     def delete(self, key: str) -> None:
+        from app.observability.events import event_bus
+
+        existed = self._backend.get(self._module_id, key) is not None
         self._backend.delete(self._module_id, key)
+        if existed:
+            event_bus.publish("security.secret_deleted", module_id=self._module_id, key=key)

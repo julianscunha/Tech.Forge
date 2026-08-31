@@ -16,18 +16,27 @@ _REDACTED = "***REDACTED***"
 # Fase 14 §8 — não depender só de valor conhecido registrado no SecretStore;
 # mascarar também por nome de campo sensível, no formato key=value ou
 # JSON-style "key": "value". Cobre as chaves citadas literalmente no spec.
+# Fase 17 §25 — "authorization" explícito. Valor entre aspas pode conter
+# espaços (delimitado pela aspa de fechamento); valor sem aspas também
+# pode ("Authorization: Bearer xxx" tem espaço no meio) — sem isso, o
+# padrão antigo parava no primeiro espaço e só "Bearer" era redigido,
+# deixando o token de verdade exposto.
 _SENSITIVE_KEY_PATTERN = re.compile(
-    r'(?i)(["\']?)\b(password|passwd|api[_-]?key|token|secret|private[_-]?key|credentials?)\b\1'
-    r'(\s*[:=]\s*)'
-    r'(["\']?)([^"\',\s}]+)\4'
+    r'(?i)(?P<qk>["\']?)\b(?P<key>password|passwd|api[_-]?key|token|secret|'
+    r'private[_-]?key|credentials?|authorization)\b(?P=qk)'
+    r'(?P<sep>\s*[:=]\s*)'
+    r'(?:(?P<vq>["\'])(?P<qval>[^"\']+)(?P=vq)|(?P<val>[^"\',}]+))'
 )
 
 
 def _redact_by_key_pattern(message: str) -> str:
-    return _SENSITIVE_KEY_PATTERN.sub(
-        lambda m: f"{m.group(1)}{m.group(2)}{m.group(1)}{m.group(3)}{m.group(4)}{_REDACTED}{m.group(4)}",
-        message,
-    )
+    def _replace(m: re.Match) -> str:
+        prefix = f"{m.group('qk')}{m.group('key')}{m.group('qk')}{m.group('sep')}"
+        if m.group("vq"):
+            return f"{prefix}{m.group('vq')}{_REDACTED}{m.group('vq')}"
+        return f"{prefix}{_REDACTED}"
+
+    return _SENSITIVE_KEY_PATTERN.sub(_replace, message)
 
 
 class SecretRedactionFilter(logging.Filter):

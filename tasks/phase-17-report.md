@@ -162,3 +162,27 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - Verificação manual ao vivo: não repetida nesta slice além dos testes de integração — o comportamento HTTP observável (trust_level, signature_status, bloqueio de zip bomb) já foi verificado contra a plataforma real nos Slices 1–3; a única coisa nova aqui é que essas mesmas transições agora também disparam eventos in-process via `event_bus` — sem um subscriber/sink externo ainda (isso é Slice 8/9, UI), não há como observar isso de fora via `curl`, então a prova real é o teste de integração usando o `event_bus` global de verdade (não um mock) através do `TestClient` real, DB real e criptografia real.
 
 **Commit**: `360e17c` (+ `c644be4`, correção de line-endings em `manager.py` introduzida acidentalmente por um `sed` no commit anterior — conteúdo idêntico, só CRLF restaurado)
+
+### Slice 6 — Secret lifecycle explícito + redação
+
+**Arquivos**
+- `core/backend/app/security/secret_store.py` — `ModuleSecretStore.rotate(key, new_value)` nomeado; `set()`/`rotate()`/`delete()` publicam `security.secret_created`/`security.secret_rotated`/`security.secret_deleted`
+- `core/backend/app/security/redaction.py` — `_SENSITIVE_KEY_PATTERN` ganha `authorization`; valor capturado (quotado ou não) agora pode conter espaços, corrigindo um bug real: o padrão antigo parava no primeiro espaço, então `"Authorization: Bearer xxx"` só redigia a palavra "Bearer", deixando o token de verdade exposto
+- `core/backend/tests/test_phase17_secret_lifecycle.py` (novo, 8 testes)
+
+**O quê**
+`rotate()` é o jeito nomeado e auditável de trocar um segredo já existente — antes disso, era só chamar `set()` de novo, sem distinção semântica nem evento. `set()` só audita `SECRET_CREATED` na primeira vez que uma key existe (chamadas subsequentes via `set()` continuam mudando o valor, mas não geram evento — isso é o que `rotate()` passa a cobrir explicitamente). `delete()` audita `SECRET_DELETED` só quando a key de fato existia (idempotente, sem evento fantasma). Nenhum payload de evento carrega o valor do segredo — só `module_id`/`key`.
+
+**Decisão-chave**
+`rotate()` levanta `SecretStoreError` se a key nunca foi criada — rotacionar algo inexistente é erro de uso (use `set()` pra criar), não um "criar silencioso" disfarçado. Na redação, a correção do bug de captura (valor parava no primeiro espaço) foi aplicada de forma consciente ao padrão geral, não só à chave `authorization` — testado que não quebra os 6 casos parametrizados já existentes (a asserção deles usa `in`, substring, então continuam passando mesmo com a correção mais abrangente).
+
+**Aceite**
+- `rotate()` audita sem vazar o valor (novo nem antigo).
+- Teste de redação cobre `"Authorization: Bearer xxx"` sendo redigido por completo, não só parcialmente.
+
+**Teste**
+- `pytest tests/test_phase17_secret_lifecycle.py tests/test_phase14_redaction.py tests/test_phase12_secret_store.py -q` — 28 passed (zero regressão nos testes de redação/secret store pré-existentes).
+- **Checkpoint 2 (spec)**: suíte completa backend — `pytest tests -q` — 923 passed, 3 skipped. Suíte completa CLI — 130 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+
+**Commit**: _(pendente)_
