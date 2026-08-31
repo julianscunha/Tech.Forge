@@ -122,5 +122,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` → 886 passed, 3 skipped (sem testes novos — slice de documentação). Verificado ao vivo: `techforge start` real → `curl /docs/list?category=architecture` → `core/desktop-distribution` e `core/launcher` presentes; `curl /docs/list?category=guide` → os 3 guias novos presentes; `curl /docs/export/ai-context` → conteúdo novo presente (12 ocorrências dos termos-chave).
 
-**Commit**: _(pendente)_
+**Commit**: `ae3c8a1`
 
