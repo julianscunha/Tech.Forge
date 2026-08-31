@@ -134,3 +134,31 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - Verificação manual ao vivo: backend real subido, `curl /api/v1/security/status` e `/api/v1/security/publishers` retornaram dados reais da plataforma (3 módulos instalados, contagens corretas); `techforge security status`, `techforge diagnostics security` e `techforge trust publishers` executados de verdade contra a API real, saída idêntica entre os aliases.
 
 **Commit**: `0926d7a`
+
+### Slice 5 — Audit events de segurança
+
+**Arquivos**
+- `core/backend/app/module_trust/verification.py` — `verify_module_integrity()` publica `security.package_verified` (integridade VALID) ou `security.integrity_failure` (qualquer outro status)
+- `core/backend/app/api/routes/module_verification.py` — `get_module_trust()` publica `security.signature_valid`/`security.signature_invalid`; cache in-memory `_last_known_trust` detecta transição real de Trust Level e publica `security.module_trust_changed`
+- `core/backend/app/package_manager/archive_safety.py` — `safe_extract()` publica `security.module_blocked` antes de levantar `PackageTooLargeError` (guard único, cobre `install()` e `update()` de uma vez — mesmo princípio do Slice 1)
+- `core/backend/app/package_manager/manager.py` — repassa `module_id` para `safe_extract()` nos dois call-sites
+- `core/backend/tests/test_phase17_security_audit_events.py` (novo, 5 testes de integração)
+
+**O quê**
+6 dos 8 eventos do spec §36 (`SECRET_CREATED`/`SECRET_ROTATED` ficam pro Slice 6): `PACKAGE_VERIFIED`, `INTEGRITY_FAILURE`, `SIGNATURE_VALID`, `SIGNATURE_INVALID`, `MODULE_TRUST_CHANGED`, `MODULE_BLOCKED`. Todos publicados via `event_bus.publish()` (Fase 14, já existente) nos call-sites reais onde a verificação/instalação já acontecia — nenhuma infraestrutura nova.
+
+**Decisão-chave**
+`MODULE_TRUST_CHANGED` precisa de "antes/depois" pra fazer sentido — como o Trust Level é recalculado do zero a cada chamada (sem histórico persistido), um pequeno cache in-memory `_last_known_trust: dict[module_id, str]` guarda o último valor visto nesta sessão do processo só pra detectar a transição. Reseta a cada restart do backend — simplificação consciente, documentada no código (`# ponytail`-style comment), aceitável porque o objetivo é auditoria de mudanças observadas em runtime, não um histórico permanente (isso seria um sistema de auditoria completo, fora de escopo). Nenhum payload carrega valor sensível: só `module_id`, status/motivo (string), e no caso de `module_trust_changed`, os próprios nomes de enum (`from`/`to`) — nunca a assinatura crua, chave pública ou conteúdo do manifest.
+
+**Aceite**
+- Cada um dos 6 eventos tem exatamente um call-site real disparando-o (provado por teste de integração, não disparo manual).
+- Nenhum payload de evento contém segredo/chave/assinatura crua (testado explicitamente).
+
+**Teste**
+- `pytest tests/test_phase17_security_audit_events.py -q` — 5 passed (cobre os 6 eventos — `package_verified`/`integrity_failure` são branches do mesmo teste-par).
+- Suíte completa backend: `pytest tests -q` — 915 passed, 3 skipped.
+- Suíte completa CLI: `pytest tests -q` (em `cli/`) — 130 passed.
+- `ruff check core/backend/app cli sdk` — all checks passed.
+- Verificação manual ao vivo: não repetida nesta slice além dos testes de integração — o comportamento HTTP observável (trust_level, signature_status, bloqueio de zip bomb) já foi verificado contra a plataforma real nos Slices 1–3; a única coisa nova aqui é que essas mesmas transições agora também disparam eventos in-process via `event_bus` — sem um subscriber/sink externo ainda (isso é Slice 8/9, UI), não há como observar isso de fora via `curl`, então a prova real é o teste de integração usando o `event_bus` global de verdade (não um mock) através do `TestClient` real, DB real e criptografia real.
+
+**Commit**: _(pendente)_

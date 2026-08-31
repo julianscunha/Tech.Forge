@@ -15,30 +15,32 @@ import zipfile
 from pathlib import Path
 
 from app.core.settings import settings
+from app.observability.events import event_bus
 
 
 class PackageTooLargeError(Exception):
     """Pacote excede os limites de tamanho descomprimido ou contagem de arquivos."""
 
 
-def safe_extract(zf: zipfile.ZipFile, dest: Path, skip_prefix: str | None = None) -> None:
+def safe_extract(zf: zipfile.ZipFile, dest: Path, skip_prefix: str | None = None,
+                 module_id: str | None = None) -> None:
     members = [
         m for m in zf.infolist()
         if not (skip_prefix and m.filename.startswith(skip_prefix))
     ]
 
     if len(members) > settings.MAX_PACKAGE_FILE_COUNT:
-        raise PackageTooLargeError(
-            f"Package has {len(members)} files, exceeds limit of "
-            f"{settings.MAX_PACKAGE_FILE_COUNT}"
-        )
+        reason = (f"Package has {len(members)} files, exceeds limit of "
+                 f"{settings.MAX_PACKAGE_FILE_COUNT}")
+        event_bus.publish("security.module_blocked", module_id=module_id, reason=reason)
+        raise PackageTooLargeError(reason)
 
     total_size = sum(m.file_size for m in members)
     if total_size > settings.MAX_PACKAGE_UNCOMPRESSED_SIZE:
-        raise PackageTooLargeError(
-            f"Package uncompressed size {total_size} bytes exceeds limit of "
-            f"{settings.MAX_PACKAGE_UNCOMPRESSED_SIZE} bytes"
-        )
+        reason = (f"Package uncompressed size {total_size} bytes exceeds limit of "
+                 f"{settings.MAX_PACKAGE_UNCOMPRESSED_SIZE} bytes")
+        event_bus.publish("security.module_blocked", module_id=module_id, reason=reason)
+        raise PackageTooLargeError(reason)
 
     for member in members:
         zf.extract(member, dest)

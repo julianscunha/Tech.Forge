@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings import settings
 from app.models.notifications import Notification
 from app.module_trust.integrity import IntegrityResult, IntegrityStatus, verify_integrity
+from app.observability.events import event_bus
 from app.services.notifications import NotificationService
 
 
@@ -24,8 +25,12 @@ async def verify_module_integrity(module_id: str, db: AsyncSession) -> Integrity
     package_dir = settings.MODULES_INSTALLED_PATH / module_id
     result = verify_integrity(package_dir)
 
-    if result.status != IntegrityStatus.VALID:
+    if result.status == IntegrityStatus.VALID:
+        event_bus.publish("security.package_verified", module_id=module_id)
+    else:
         await _notify_integrity_issue(db, module_id, result)
+        event_bus.publish("security.integrity_failure", module_id=module_id,
+                          status=result.status.value)
 
     return result
 

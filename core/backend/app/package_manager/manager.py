@@ -227,7 +227,7 @@ class PackageManager:
             with zipfile.ZipFile(mod_path) as zf:
                 # Only extract module content — skip META-INF/. Fase 17
                 # §16/§18 — checa tamanho/contagem ANTES de extrair.
-                safe_extract(zf, extract_tmp, skip_prefix="META-INF/")
+                safe_extract(zf, extract_tmp, skip_prefix="META-INF/", module_id=module_id)
 
             # Atomic move: tmp → installed/<module_id>
             shutil.move(str(extract_tmp), str(target_dir))
@@ -426,7 +426,7 @@ class PackageManager:
             extract_tmp.mkdir(parents=True)
 
             with zipfile.ZipFile(mod_path) as zf:
-                safe_extract(zf, extract_tmp, skip_prefix="META-INF/")
+                safe_extract(zf, extract_tmp, skip_prefix="META-INF/", module_id=module_id)
 
             shutil.rmtree(target_dir)
             shutil.move(str(extract_tmp), str(target_dir))

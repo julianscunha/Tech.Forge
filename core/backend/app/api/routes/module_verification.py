@@ -17,13 +17,25 @@ from app.core.settings import settings
 from app.db.database import get_db
 from app.module_engine.registry import registry
 from app.module_trust.integrity import verify_integrity
-from app.module_trust.signature import canonical_manifest_bytes, default_signature_provider
+from app.module_trust.signature import (
+    SignatureStatus,
+    canonical_manifest_bytes,
+    default_signature_provider,
+)
 from app.module_trust.trust import TrustResolver
 from app.module_trust.verification import verify_module_integrity
+from app.observability.events import event_bus
 from app.schemas.publisher import PublisherRead
 from app.services.publisher import PublisherService
 
 router = APIRouter(prefix="/modules", tags=["module-trust"])
+
+# Fase 17 §36 — cache in-memory do último Trust Level resolvido por
+# módulo, só pra detectar transição real (MODULE_TRUST_CHANGED). Não
+# persiste entre restarts — decisão consciente, o Trust Level em si
+# sempre é recalculado do zero a cada chamada, isto é só pra saber se
+# mudou desde a última verificação nesta sessão do processo.
+_last_known_trust: dict[str, str] = {}
 
 
 class IntegrityVerifyRead(BaseModel):
@@ -106,8 +118,18 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
         data=canonical_manifest_bytes(raw), signature=signature_bytes,
         public_key=publisher.public_key if publisher else None,
     ).value
+    if signature_status == SignatureStatus.VALID.value:
+        event_bus.publish("security.signature_valid", module_id=module_id)
+    elif signature_status == SignatureStatus.INVALID.value:
+        event_bus.publish("security.signature_invalid", module_id=module_id)
 
     trust_level = TrustResolver.resolve(integrity_result.status, publisher, signature_status)
+
+    previous = _last_known_trust.get(module_id)
+    if previous is not None and previous != trust_level.value:
+        event_bus.publish("security.module_trust_changed", module_id=module_id,
+                          **{"from": previous, "to": trust_level.value})
+    _last_known_trust[module_id] = trust_level.value
 
     return TrustRead(
         module_id=module_id, trust_level=trust_level.value,
