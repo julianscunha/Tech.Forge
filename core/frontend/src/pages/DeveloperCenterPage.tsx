@@ -4,7 +4,7 @@ import {
   Package, Zap, ChevronRight, Download, RefreshCw,
   Store, LayoutGrid, ShieldCheck, GitBranch, Boxes,
 } from 'lucide-react'
-import { docsApi, servicesApi, dependenciesApi } from '@/lib/api'
+import { docsApi, servicesApi, dependenciesApi, registryApi } from '@/lib/api'
 import { MarkdownRenderer } from '@/components/developer-center/MarkdownRenderer'
 import { DocSearch } from '@/components/developer-center/DocSearch'
 import { ServiceContractPanel } from '@/components/developer-center/ServiceContractPanel'
@@ -50,6 +50,8 @@ export function DeveloperCenterPage() {
   const [exporting,       setExporting]       = useState(false)
   const [reindexing,      setReindexing]      = useState(false)
   const [exportMsg,       setExportMsg]       = useState<string | null>(null)
+  const [moduleNames,     setModuleNames]     = useState<Record<string, string>>({})
+  const [moduleFilter,    setModuleFilter]    = useState<string | null>(null)
 
   const loadSection = useCallback(async (sectionId: string) => {
     const section = SIDEBAR_SECTIONS.find(s => s.id === sectionId)
@@ -71,12 +73,16 @@ export function DeveloperCenterPage() {
         setServiceStatus({})
       } else if (sectionId === 'modules') {
         // README/overview.md de cada módulo instalado + os exemplos por
-        // módulo (categorias distintas no indexador, mesma seção na UI).
-        const [overviews, examples] = await Promise.all([
+        // módulo (categorias distintas no indexador, mesma seção na UI) +
+        // nomes de exibição (module_id sozinho não é lá muito legível).
+        const [overviews, examples, modules] = await Promise.all([
           docsApi.list('module'),
           docsApi.list('module-example'),
+          registryApi.listModules().catch(() => []),
         ])
         setArticles([...overviews, ...examples])
+        setModuleNames(Object.fromEntries(modules.map(m => [m.module_id, m.name])))
+        setModuleFilter(null)
         setContracts([])
         setServiceStatus({})
       } else if (sectionId === 'service-module') {
@@ -148,6 +154,18 @@ export function DeveloperCenterPage() {
   }
 
   const activeConfig = SIDEBAR_SECTIONS.find(s => s.id === activeSection)
+
+  // Subcategoria por módulo, só na seção "Módulos Instalados" — chips pra
+  // filtrar a lista sem precisar de outra chamada de API (os docs de todos
+  // os módulos já estão carregados de uma vez).
+  const moduleChips = activeSection === 'modules'
+    ? [...new Set(articles.map(a => a.module_id).filter((id): id is string => !!id))]
+        .map(id => ({ id, name: moduleNames[id] ?? id }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    : []
+  const visibleArticles = (activeSection === 'modules' && moduleFilter)
+    ? articles.filter(a => a.module_id === moduleFilter)
+    : articles
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -230,17 +248,46 @@ export function DeveloperCenterPage() {
                 {activeConfig?.label}
               </h2>
             </div>
+            {moduleChips.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-4 py-2.5 border-b border-[hsl(var(--border-subtle))]">
+                <button
+                  onClick={() => setModuleFilter(null)}
+                  className={cn(
+                    'text-[10px] px-2 py-1 rounded-full transition-colors',
+                    moduleFilter === null
+                      ? 'bg-[hsl(var(--accent))] text-white font-medium'
+                      : 'bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
+                  )}
+                >
+                  Todos
+                </button>
+                {moduleChips.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setModuleFilter(m.id)}
+                    className={cn(
+                      'text-[10px] px-2 py-1 rounded-full transition-colors',
+                      moduleFilter === m.id
+                        ? 'bg-[hsl(var(--accent))] text-white font-medium'
+                        : 'bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text))]',
+                    )}
+                  >
+                    {m.name}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="py-1">
               {loading ? (
                 <div className="px-4 py-8 text-xs text-[hsl(var(--text-subtle))] text-center">
                   Carregando…
                 </div>
-              ) : articles.length === 0 ? (
+              ) : visibleArticles.length === 0 ? (
                 <div className="px-4 py-8 text-xs text-[hsl(var(--text-subtle))] text-center">
                   Nenhum documento nesta seção.
                 </div>
               ) : (
-                articles.map(art => (
+                visibleArticles.map(art => (
                   <button
                     key={art.id}
                     onClick={() => openArticle(art.id)}
