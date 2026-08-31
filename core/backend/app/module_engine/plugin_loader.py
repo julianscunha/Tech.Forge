@@ -18,6 +18,7 @@ journal as an error event and skipped, never crashing the platform.
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass, field
 
 from fastapi import FastAPI
@@ -79,6 +80,14 @@ def mount_module_routers(app: FastAPI) -> MountResult:
     and never registers duplicate routes.
     """
     result = MountResult()
+
+    if os.environ.get("TECHFORGE_SAFE_MODE", "").lower() == "true":
+        # Fase 16 §16/§18 — Core mínimo: registry populado normalmente
+        # (leitura/diagnóstico), mas nenhum entry_backend é montado. Um
+        # módulo com falha não pode impedir o boot; em Safe Mode, NENHUM
+        # módulo é a causa, então nenhum é carregado.
+        logger.warning("Safe Mode active — skipping backend router mount for all modules.")
+        return result
 
     for entry in registry.by_status(ModuleStatus.INSTALLED):
         if entry.module_id in _mounted_module_ids:

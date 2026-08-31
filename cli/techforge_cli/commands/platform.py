@@ -98,3 +98,9 @@ def _follow_file(path: Path) -> None:
 def dev_cmd(ctx: click.Context) -> None:
     """Modo desenvolvimento: backend com reload + frontend dev server (§17)."""
     raise SystemExit(_run_launcher("start", "--dev"))
+
+
+@click.command(name="safe-mode")
+def safe_mode_cmd() -> None:
+    """Iniciar em Safe Mode: Core mínimo, nenhum módulo carregado (§16/§18)."""
+    raise SystemExit(_run_launcher("start", "--safe-mode"))

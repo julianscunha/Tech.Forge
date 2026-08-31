@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import text
@@ -41,6 +42,7 @@ async def get_platform_status(db: AsyncSession = Depends(get_db)) -> PlatformSta
         modules_installed=modules_installed,
         modules_enabled=modules_enabled,
         categories_registered=categories,
+        safe_mode=os.environ.get("TECHFORGE_SAFE_MODE", "").lower() == "true",
     )
 
 

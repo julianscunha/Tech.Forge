@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Boxes, LayoutGrid, LayoutDashboard, Server, Database, RefreshCw, AlertCircle, Plug } from 'lucide-react'
+import { Boxes, LayoutGrid, LayoutDashboard, Server, Database, RefreshCw, AlertCircle, Plug, ShieldAlert } from 'lucide-react'
 import { platformApi, servicesApi } from '@/lib/api'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -131,6 +131,12 @@ export function DashboardPage() {
               v{status.platform_version}
             </p>
           </div>
+          {status.safe_mode && (
+            <span className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]">
+              <ShieldAlert size={13} />
+              Safe Mode — nenhum módulo carregado
+            </span>
+          )}
         </div>
       )}
 

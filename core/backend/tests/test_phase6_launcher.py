@@ -78,6 +78,38 @@ class TestSingleInstance:
         assert opened["url"] == L.FRONTEND_URL
 
 
+# ── Safe Mode (Fase 16 §16/§18) ──────────────────────────────────────────────────
+
+class TestSafeMode:
+    def test_start_sets_safe_mode_env_for_backend_process(self, clean_state, monkeypatch):
+        captured: dict = {}
+
+        def fake_spawn(cmd, cwd, log_file, env=None):
+            captured["env"] = env
+            return 12345
+
+        monkeypatch.setattr(L, "_spawn", fake_spawn)
+        monkeypatch.setattr(L, "wait_backend", lambda: False)  # curto-circuita após capturar o env
+
+        L.start(splash=False, safe_mode=True)
+
+        assert captured["env"].get("TECHFORGE_SAFE_MODE") == "true"
+
+    def test_start_without_safe_mode_does_not_set_env(self, clean_state, monkeypatch):
+        captured: dict = {}
+
+        def fake_spawn(cmd, cwd, log_file, env=None):
+            captured["env"] = env
+            return 12345
+
+        monkeypatch.setattr(L, "_spawn", fake_spawn)
+        monkeypatch.setattr(L, "wait_backend", lambda: False)
+
+        L.start(splash=False, safe_mode=False)
+
+        assert "TECHFORGE_SAFE_MODE" not in captured["env"]
+
+
 # ── Port guard (regressão: start() ignorava processos órfãos na porta) ─────────
 
 class TestPortGuard:

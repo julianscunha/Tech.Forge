@@ -13,7 +13,7 @@ from click.testing import CliRunner
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "cli"))
 
-from techforge_cli.commands.platform import dev_cmd, logs_cmd
+from techforge_cli.commands.platform import dev_cmd, logs_cmd, safe_mode_cmd
 
 pytestmark = pytest.mark.integration
 
@@ -62,3 +62,20 @@ def test_dev_delegates_to_launcher(monkeypatch):
     result = CliRunner().invoke(dev_cmd)
     assert result.exit_code == 0
     assert calls and calls[0][-2:] == ["start", "--dev"]
+
+
+def test_safe_mode_delegates_to_launcher(monkeypatch):
+    """techforge safe-mode invoca o launcher com 'start --safe-mode'."""
+    calls: list[list[str]] = []
+
+    def fake_run(*args, **kwargs):
+        calls.append(args[0])
+
+        class R:
+            returncode = 0
+        return R()
+
+    monkeypatch.setattr("techforge_cli.commands.platform.subprocess.run", fake_run)
+    result = CliRunner().invoke(safe_mode_cmd)
+    assert result.exit_code == 0
+    assert calls and calls[0][-2:] == ["start", "--safe-mode"]

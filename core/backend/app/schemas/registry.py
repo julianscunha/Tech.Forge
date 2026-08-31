@@ -89,3 +89,4 @@ class PlatformStatus(BaseModel):
     modules_installed: int
     modules_enabled: int
     categories_registered: int
+    safe_mode: bool = False      # Fase 16 §16/§18

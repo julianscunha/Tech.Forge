@@ -49,3 +49,17 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `d93c5b8`
 
+### Slice 4 — Safe Mode
+
+**Arquivos**: `core/backend/app/module_engine/plugin_loader.py` (modificado), `core/backend/app/schemas/registry.py` (modificado, +`safe_mode`), `core/backend/app/api/routes/platform.py` (modificado), `core/backend/tests/test_phase16_safe_mode.py` (novo), `launcher/techforge_launcher/__init__.py` (modificado, `start(safe_mode=...)`), `launcher/techforge_launcher/__main__.py` (modificado, `--safe-mode`), `cli/techforge_cli/commands/platform.py` (modificado, `safe_mode_cmd`), `cli/techforge_cli/main.py` (modificado), `core/backend/tests/test_phase6_launcher.py` / `cli/tests/test_phase6_logs_dev.py` (modificados), `core/frontend/src/types/index.ts` + `core/frontend/src/pages/DashboardPage.tsx` (badge de Safe Mode).
+
+**O quê**: `TECHFORGE_SAFE_MODE=true` faz `mount_module_routers()` (não `ModuleLoader.scan_installed()` — correção em relação ao plano original, ver decisão-chave) retornar cedo sem montar nenhum `entry_backend`, mas o registry continua populado normalmente (módulos aparecem em `/platform/status`/Dashboard como instalados, só sem rota própria respondendo). `GET /platform/status` ganhou `safe_mode: bool`. `techforge safe-mode` (CLI) → launcher `start --safe-mode` → propaga `TECHFORGE_SAFE_MODE=true` só pro processo do backend spawnado (não para o processo do launcher). Dashboard mostra um badge "Safe Mode — nenhum módulo carregado" quando ativo.
+
+**Decisão-chave**: o plano original apontava `ModuleLoader.scan_installed()` como o lugar a gatear — errado. `scan_installed()` só popula o registry (metadados); quem de fato importa e monta `entry_backend` como rota FastAPI é `plugin_loader.mount_module_routers()`, chamado depois no `lifespan()`. Gatear ali (não no loader) é o que permite exatamente o comportamento pedido pelo spec: módulos continuam visíveis/gerenciáveis (desativar/remover) mas nenhum código de módulo roda.
+
+**Aceite**: com Safe Mode, nenhum módulo monta rota (verificado: `hello_world/ping` → 404), mas aparece no registry (`modules_installed` > 0); sem a flag, tudo volta ao normal num restart simples.
+
+**Teste**: `pytest tests -q` (backend) → 877 passed, 3 skipped (era 872 — 5 novos). `pytest tests -q` (cli) → 114 passed (era 113 — 1 novo). `ruff check core/backend/app cli sdk` limpo (1 import mal ordenado auto-corrigido pelo próprio ruff). `npm run lint`/`npm run build` (frontend) limpos. Verificado ao vivo: `techforge safe-mode` real → `curl /platform/status` → `safe_mode: true`, `modules_installed: 3`; `curl /modules/hello_world/ping` → 404; `techforge stop` + `techforge start` normal → `safe_mode: false`, `ping` → 200 de novo.
+
+**Commit**: _(pendente)_
+

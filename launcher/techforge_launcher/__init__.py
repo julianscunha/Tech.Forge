@@ -355,7 +355,7 @@ def _focus_existing_instance() -> None:
         logger.warning("Could not reopen browser for existing instance: %s", exc)
 
 
-def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
+def start(splash: bool = True, dev_mode: bool = False, safe_mode: bool = False) -> tuple[bool, str]:
     """
     Full startup sequence (§3). Returns (success, user_message).
     Technical details go to logs/launcher.log only (§6).
@@ -363,6 +363,10 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
     dev_mode=True (§17): força backend com reload + vite dev server.
     Default (desktop): backend sem reload servindo dist/ quando existir;
     vite dev server apenas como fallback se não houver build.
+
+    safe_mode=True (§16/§18): Core mínimo — nenhum módulo é carregado no
+    backend, só Dashboard/Diagnostics. Propagado ao processo do backend
+    via env var, não é uma flag do launcher em si.
     """
     _setup_logging()
     t0 = time.time()
@@ -393,6 +397,8 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
         splash_ui.step("Backend")
         desktop = (not dev_mode) and (FRONTEND_DIST / "index.html").is_file()
         env = dict(os.environ, SERVE_STATIC_FRONTEND="true") if desktop else dict(os.environ)
+        if safe_mode:
+            env["TECHFORGE_SAFE_MODE"] = "true"
         backend_pid = _spawn(
             [python_exe, "-m", "uvicorn", "app.main:app",
              "--host", BACKEND_HOST, "--port", str(BACKEND_PORT)],

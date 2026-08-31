@@ -20,6 +20,7 @@ export interface PlatformStatus {
   modules_installed: number
   modules_enabled: number
   categories_registered: number
+  safe_mode: boolean
 }
 
 // ── Category ──────────────────────────────────────────────────────────────────
