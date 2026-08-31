@@ -61,6 +61,7 @@ BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 FRONTEND_URL = f"http://{BACKEND_HOST}:{FRONTEND_PORT}"
 FRONTEND_DIST = (REPO_ROOT / "core" / "frontend" / "dist")
 HEALTH_URL = f"{BACKEND_URL}/api/v1/platform/status"
+READY_URL = f"{BACKEND_URL}/api/v1/platform/ready"
 STATE_FILE = PIDS_PATH / "state.json"
 
 logger = logging.getLogger("techforge.launcher")
@@ -288,10 +289,29 @@ def _http_ok(url: str, timeout: float = 2.0) -> bool:
     return False
 
 
+def _startup_failure_message(diagnostic_source: str, user_message: str) -> str:
+    """Fase 16 §35 — separa mensagem de usuário de detalhe técnico: nunca
+    mostra stack trace/"Connection refused", sempre um diagnostic code +
+    ação recomendada. Detalhe técnico completo vai só pro log (§6)."""
+    try:
+        from app.observability.diagnostic_codes import resolve_diagnostic_code  # type: ignore
+        diagnostic = resolve_diagnostic_code(diagnostic_source)
+        code = diagnostic.code if diagnostic else "TF-STARTUP-000"
+    except Exception:  # pragma: no cover — fallback se backend deps ausentes
+        code = "TF-STARTUP-000"
+    return (
+        f"{user_message}\n"
+        f"Diagnostic Code: {code}\n"
+        f"Execute `techforge diagnostics` para mais detalhes ou consulte {LAUNCHER_LOG}."
+    )
+
+
 def wait_backend(timeout: int = HEALTH_TIMEOUT) -> bool:
+    """Espera /ready, não /health (spec §5): /health só confirma que o
+    processo responde; /ready confirma que o boot completo terminou."""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        if _http_ok(HEALTH_URL):
+        if _http_ok(READY_URL):
             return True
         time.sleep(1.0)
     return False
@@ -367,8 +387,8 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
         _write_state(state)
 
         if not wait_backend():
-            msg = "TechForge não conseguiu iniciar o Backend."
-            logger.error(msg + " (health check timeout after %ss)", HEALTH_TIMEOUT)
+            msg = _startup_failure_message("startup_backend", "Não foi possível iniciar o Backend.")
+            logger.error("Backend readiness timeout after %ss.", HEALTH_TIMEOUT)
             _stop_children(state)
             _clear_state()
             splash_ui.fail(msg)
@@ -391,8 +411,8 @@ def start(splash: bool = True, dev_mode: bool = False) -> tuple[bool, str]:
             _write_state(state)
 
             if not wait_frontend():
-                msg = "TechForge não conseguiu iniciar a interface."
-                logger.error(msg + " (frontend not responding after %ss)", FRONTEND_TIMEOUT)
+                msg = _startup_failure_message("startup_frontend", "Não foi possível iniciar a interface.")
+                logger.error("Frontend readiness timeout after %ss.", FRONTEND_TIMEOUT)
                 _stop_children(state)
                 _clear_state()
                 splash_ui.fail(msg)

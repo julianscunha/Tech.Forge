@@ -19,3 +19,17 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `d9fa3a6`
 
+### Slice 2 — `/ready` + erro de startup amigável
+
+**Arquivos**: `core/backend/app/api/routes/platform.py` (modificado), `core/backend/app/observability/diagnostic_codes.py` (modificado, +`TF-STARTUP-001`/`TF-STARTUP-002`), `core/backend/tests/test_phase16_ready.py` (novo), `launcher/techforge_launcher/__init__.py` (modificado), `core/backend/tests/test_phase6_launcher.py` (modificado).
+
+**O quê**: `GET /api/v1/platform/ready` — distinto de `/health` (só confirma que o processo responde): fica 503 até `RuntimeState.READY` (boot completo: DB + Module Loader + Service Registry), 200 depois. `wait_backend()` do launcher passou a fazer polling de `/ready` em vez de `/platform/status`. Mensagens de falha de startup (backend/frontend) agora usam `_startup_failure_message()`: separa mensagem de usuário de detalhe técnico, sempre inclui um Diagnostic Code (reaproveita o catálogo da Fase 14, `TF-STARTUP-001`/`002`, fallback `TF-STARTUP-000` se o import do backend falhar) e nunca mostra stack trace — detalhe técnico completo vai só pro `launcher.log`.
+
+**Decisão-chave**: achado real durante o TDD — o teste inicial de `/ready` dependia da ordem de execução da suíte (`runtime` é singleton global; `fire_shutdown` de um teste anterior deixava `state=STOPPED`, e `fire_startup` só promove `BOOTSTRAPPING→READY`, nunca `STOPPED→READY`). Corrigido fixando o estado via `monkeypatch` em vez de assumir a ordem — evita um teste flaky, não mexe no `TechForgeRuntime` (fora de escopo desta fase).
+
+**Aceite**: `/ready` 503 fora do estado READY, 200 dentro; launcher para de tentar erroneamente contra `/platform/status`; mensagem de erro inclui código e nunca traceback.
+
+**Teste**: `pytest tests -q` → 870 passed, 3 skipped (era 866 — 4 testes novos). `ruff check core/backend/app cli sdk` limpo. Verificado ao vivo: `techforge start` real → `curl /api/v1/platform/ready` → `{"ready":true,"state":"ready"}` HTTP 200.
+
+**Commit**: _(pendente)_
+

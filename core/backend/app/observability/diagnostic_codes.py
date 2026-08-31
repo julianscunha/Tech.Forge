@@ -22,6 +22,11 @@ _CATALOG: dict[str, DiagnosticCode] = {
     "execution": DiagnosticCode("TF-EXECUTION-001", "Module execution failed"),
     "dependency": DiagnosticCode("TF-DEPENDENCY-001", "Invalid module dependency declared"),
     "runtime": DiagnosticCode("TF-RUNTIME-001", "Runtime component stopped responding"),
+    # Fase 16 §15/§35 — Launcher startup failures (não passam pelo Error
+    # Registry: o backend nem chegou a responder, então usados diretamente
+    # pelo launcher/__init__.py, não por ErrorRegistryService.
+    "startup_backend": DiagnosticCode("TF-STARTUP-001", "Backend did not become ready in time"),
+    "startup_frontend": DiagnosticCode("TF-STARTUP-002", "Frontend did not become ready in time"),
 }
 
 

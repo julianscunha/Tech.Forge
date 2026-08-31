@@ -125,11 +125,25 @@ class TestProcessHelpers:
 
 class TestHealthProbes:
     def test_unreachable_backend_fails_fast(self, monkeypatch):
-        monkeypatch.setattr(L, "HEALTH_URL", "http://127.0.0.1:1/nope")
+        monkeypatch.setattr(L, "READY_URL", "http://127.0.0.1:1/nope")
         assert L.wait_backend(timeout=2) is False
 
     def test_http_ok_false_on_connection_error(self):
         assert L._http_ok("http://127.0.0.1:1/", timeout=0.5) is False
+
+
+# ── Startup failure messages (Fase 16 §35) ──────────────────────────────────────
+
+class TestStartupFailureMessage:
+    def test_includes_diagnostic_code_and_no_stack_trace(self):
+        msg = L._startup_failure_message("startup_backend", "Não foi possível iniciar o Backend.")
+        assert "TF-STARTUP-001" in msg
+        assert "Traceback" not in msg
+        assert "Não foi possível iniciar o Backend." in msg
+
+    def test_unknown_source_falls_back_to_generic_code(self):
+        msg = L._startup_failure_message("something_made_up", "Falhou.")
+        assert "TF-STARTUP-000" in msg
 
 
 # ── Status (§15) ───────────────────────────────────────────────────────────────

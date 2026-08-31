@@ -1,11 +1,12 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
 from app.db.database import get_db
+from app.runtime import RuntimeState, runtime
 from app.schemas.registry import PlatformHealthCheck, PlatformStatus
 from app.services.registry import CategoryService, ModuleService
 
@@ -62,3 +63,18 @@ async def get_platform_health_check(db: AsyncSession = Depends(get_db)) -> Platf
         version=settings.PLATFORM_VERSION,
         database=db_status,
     )
+
+
+@router.get("/ready", summary="Fase 16 §15/§42 — readiness probe for the Launcher")
+async def get_platform_ready(response: Response) -> dict:
+    """
+    Distinto de /health (que só confirma "o processo responde"): /ready só
+    fica 200 depois que o boot completo (DB + Module Loader + Service
+    Registry) terminou — RuntimeState.READY. O Launcher usa isto pra saber
+    quando é seguro abrir a interface (spec §5: "Não abrir a interface
+    antes do backend estar pronto").
+    """
+    ready = runtime.state is RuntimeState.READY
+    if not ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return {"ready": ready, "state": runtime.state.value}
