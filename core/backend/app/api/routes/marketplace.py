@@ -383,7 +383,24 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
         install_job_registry.set_phase(job_id, InstallJobPhase.VALIDATING)
         install_job_registry.set_phase(job_id, InstallJobPhase.INSTALLING)
 
-        result = await package_manager.install(mod_path)
+        # Botão "Atualizar" do Catálogo (fonte remota) manda pro mesmo job
+        # de instalação — sem este branch, package_manager.install() recusa
+        # com "already installed. Use update to upgrade." e o job falha
+        # mesmo indo tudo bem, porque nunca havia jeito de pedir update
+        # numa fonte remota (só a aba "Atualizações", que é local). Usa o
+        # registry (fonte única) em vez de checar o diretório no disco —
+        # uma pasta órfã/inválida não conta como "instalado de verdade".
+        from app.module_engine.enums import ModuleStatus
+        from app.module_engine.registry import registry
+        existing_entry = registry.get(module_id)
+        already_installed = (
+            existing_entry is not None
+            and existing_entry.status not in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE)
+        )
+        if already_installed:
+            result = await package_manager.update(module_id, mod_path)
+        else:
+            result = await package_manager.install(mod_path)
         if not result.success:
             install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
             async with AsyncSessionLocal() as db:

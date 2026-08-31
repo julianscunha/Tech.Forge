@@ -241,6 +241,61 @@ class TestRemoteInstallEndpoints:
         fake_provider.fetch_mod_path.assert_awaited_once_with("test_module")
 
     @pytest.mark.asyncio
+    async def test_background_task_calls_update_when_already_installed(self, clean_install_jobs, tmp_path, monkeypatch):
+        """Regressão: botão 'Atualizar' do Catálogo (fonte remota) manda pro
+        mesmo job de instalação — sem branch pra update, package_manager
+        .install() sempre recusava com 'already installed. Use update to
+        upgrade.', mesmo indo tudo bem.
+
+        Registry isolado (não o real): uma pasta órfã/inválida em
+        modules/installed/ não pode contar como "já instalado" — só
+        status genuinamente INSTALLED/DISABLED conta."""
+        from datetime import datetime
+        from app.api.routes import marketplace as marketplace_module
+        from app.module_engine.enums import ModuleStatus
+        from app.module_engine.registry import ModuleEntry
+        from app.package_manager.manager import UpdateResult
+        from app.package_manager.enums import UpdateStatus
+
+        class _FakeModuleRegistry:
+            def __init__(self, entries):
+                self._entries = {e.module_id: e for e in entries}
+
+            def get(self, module_id):
+                return self._entries.get(module_id)
+
+        entry = ModuleEntry(
+            module_id="hello_world", name="Hello World", version="1.0.0",
+            category="Examples", vendor="TechForge", author="TechForge",
+            description="d", status=ModuleStatus.INSTALLED, install_date=datetime.now(),
+        )
+        monkeypatch.setattr("app.module_engine.registry.registry", _FakeModuleRegistry([entry]))
+
+        job = clean_install_jobs.create("hello_world")
+        job_id = job.job_id
+
+        fake_mod_path = tmp_path / "hello_world-1.0.1.mod"
+        fake_mod_path.write_bytes(b"fake zip content")
+
+        fake_provider = AsyncMock()
+        fake_provider.fetch_mod_path.return_value = fake_mod_path
+
+        success_result = UpdateResult(
+            status=UpdateStatus.SUCCESS, module_id="hello_world",
+            from_version="1.0.0", to_version="1.0.1", message="Updated.",
+        )
+
+        with patch.object(marketplace_module, "_resolve_remote_provider", AsyncMock(return_value=fake_provider)), \
+             patch.object(marketplace_module.package_manager, "update", AsyncMock(return_value=success_result)) as mock_update, \
+             patch.object(marketplace_module.package_manager, "install", AsyncMock()) as mock_install:
+            await marketplace_module._install_remote_background("hello_world", job_id, None)
+
+        mock_update.assert_awaited_once_with("hello_world", fake_mod_path)
+        mock_install.assert_not_called()
+        final_job = clean_install_jobs.get(job_id)
+        assert final_job.phase == InstallJobPhase.DONE
+
+    @pytest.mark.asyncio
     async def test_background_task_network_failure_reaches_failed(self, clean_install_jobs):
         """Background task: fetch_mod_path() returns None (network failure) → FAILED."""
         from app.api.routes import marketplace as marketplace_module
