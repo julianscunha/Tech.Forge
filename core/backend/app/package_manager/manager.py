@@ -543,6 +543,16 @@ class PackageManager:
             from app.services.registry_sync import sync_from_request
             await sync_from_request()
 
+            # Reindexa a documentação ANTES do Service Registry — ele lê o
+            # contrato via doc_indexer.get_contract() (cache in-memory), que
+            # só existe apos indexar. Sem isso, um Service Module reinstalado
+            # sem restart do app fica preso em FAILED pra sempre (contrato
+            # nunca reaparece no cache, mesmo com docs/contracts/api.yaml
+            # valido em disco) — index_module() existe desde a Fase 5 mas
+            # nunca foi chamado no caminho de hot-reload.
+            from app.doc_engine import doc_indexer
+            doc_indexer.rebuild()
+
         from app.service_registry import sync as sync_service_registry
         await sync_service_registry()
 

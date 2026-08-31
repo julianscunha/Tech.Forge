@@ -441,20 +441,8 @@ class TestRealModulesCompliance:
         assert report.is_complete, report.missing
         assert report.score == 100.0
 
-    def test_veeam_m365_is_complete(self):
-        mod_path = ROOT / "modules" / "installed" / "veeam_m365"
-        report = DocCompletenessChecker.check(mod_path, "service")
-        assert report.is_complete, report.missing
-        assert report.score == 100.0
-
     def test_hello_world_has_all_three_example_tiers(self):
         examples = ROOT / "modules" / "installed" / "hello_world" / "docs" / "examples"
-        assert (examples / "basic.md").exists()
-        assert (examples / "advanced.md").exists()
-        assert (examples / "integration.md").exists()
-
-    def test_veeam_m365_has_all_three_example_tiers(self):
-        examples = ROOT / "modules" / "installed" / "veeam_m365" / "docs" / "examples"
         assert (examples / "basic.md").exists()
         assert (examples / "advanced.md").exists()
         assert (examples / "integration.md").exists()
@@ -463,14 +451,6 @@ class TestRealModulesCompliance:
         contract_path = (ROOT / "modules" / "installed" / "hello_world"
                          / "docs" / "contracts" / "api.yaml")
         contract = APIYamlParser.parse(contract_path, "hello_world")
-        checks = validate_contract_completeness(contract)
-        failures = [c for c in checks if not c.passed]
-        assert not failures, [c.detail for c in failures]
-
-    def test_veeam_m365_contract_is_complete(self):
-        contract_path = (ROOT / "modules" / "installed" / "veeam_m365"
-                         / "docs" / "contracts" / "api.yaml")
-        contract = APIYamlParser.parse(contract_path, "veeam_m365")
         checks = validate_contract_completeness(contract)
         failures = [c for c in checks if not c.passed]
         assert not failures, [c.detail for c in failures]
@@ -488,20 +468,6 @@ class TestRealModulesCompliance:
         # As documented in docs/examples/basic.md
         assert result == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
 
-    def test_veeam_m365_calculate_storage_matches_documented_example(self):
-        """The basic.md example output must match what the real function returns."""
-        import asyncio, importlib.util
-
-        backend_path = ROOT / "modules" / "installed" / "veeam_m365" / "backend" / "main.py"
-        spec = importlib.util.spec_from_file_location("veeam_main", backend_path)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-
-        result = asyncio.run(mod.module.calculate_storage(users=500, mailbox_quota_gb=50))
-        # As documented in docs/examples/basic.md
-        assert result["total_gb"] == 25000.0
-        assert result["recommended_repo_gb"] == 27500.0
-        assert result["growth_factor"] == 1.1
 
 
 # ── CLI validate-module — §16 checks present in report ────────────────────────

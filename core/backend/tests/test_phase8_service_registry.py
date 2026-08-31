@@ -287,12 +287,6 @@ class TestInvoke:
         result = invoke("hello_world", "ping")
         assert result == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
 
-    def test_invoke_veeam_calculate_storage_matches_documented_example(self, client):
-        from app.service_registry.invoker import invoke
-        result = invoke("veeam_m365", "calculate_storage", users=500, mailbox_quota_gb=50)
-        assert result["total_gb"] == 25000.0
-        assert result["recommended_repo_gb"] == 27500.0
-
     def test_invoke_unknown_service_raises_service_not_found(self, client):
         from app.service_registry.invoker import invoke
         from app.service_registry.errors import ServiceNotFoundError
@@ -305,17 +299,43 @@ class TestInvoke:
         with pytest.raises(CapabilityNotFoundError):
             invoke("hello_world", "does_not_exist")
 
-    def test_invoke_missing_required_argument_raises_invalid_arguments(self, client):
-        from app.service_registry.invoker import invoke
-        from app.service_registry.errors import InvalidArgumentsError
-        with pytest.raises(InvalidArgumentsError):
-            invoke("veeam_m365", "calculate_storage", mailbox_quota_gb=50)  # missing users
+    def _fake_registry_with_parameterized_export(self, monkeypatch):
+        """Nenhum módulo de referência real tem export com parâmetros
+        obrigatórios (hello_world.ping/info não recebem nada) — registry
+        isolado com um export sintético, sem depender de módulo em disco."""
+        from app.service_registry.registry import ServiceRegistry
+        from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
+        import app.service_registry.invoker as invoker_mod
 
-    def test_invoke_unknown_argument_raises_invalid_arguments(self, client):
+        contract = ServiceContract(
+            service_id="calc", module_id="calc_mod", description="d", version="1.0.0",
+            exports=[ServiceExport(
+                name="do_thing", description="d",
+                parameters=[{"name": "x", "type": "int", "required": True}],
+            )],
+        )
+        descriptor = ServiceDescriptor(
+            service_id="calc", module_id="calc_mod", module_version="1.0.0",
+            service_version="1.0.0", contract=contract, status=ServiceStatus.ACTIVE,
+        )
+        fake_registry = ServiceRegistry()
+        fake_registry._services["calc"] = descriptor
+        monkeypatch.setattr(invoker_mod, "service_registry", fake_registry)
+        monkeypatch.setattr(invoker_mod, "_load_export_callable", lambda *a, **k: (lambda **kw: kw))
+
+    def test_invoke_missing_required_argument_raises_invalid_arguments(self, monkeypatch):
         from app.service_registry.invoker import invoke
         from app.service_registry.errors import InvalidArgumentsError
+        self._fake_registry_with_parameterized_export(monkeypatch)
         with pytest.raises(InvalidArgumentsError):
-            invoke("veeam_m365", "calculate_storage", users=1, mailbox_quota_gb=1, bogus=1)
+            invoke("calc", "do_thing")  # missing required "x"
+
+    def test_invoke_unknown_argument_raises_invalid_arguments(self, monkeypatch):
+        from app.service_registry.invoker import invoke
+        from app.service_registry.errors import InvalidArgumentsError
+        self._fake_registry_with_parameterized_export(monkeypatch)
+        with pytest.raises(InvalidArgumentsError):
+            invoke("calc", "do_thing", x=1, bogus=1)
 
     def test_invoke_disabled_service_raises_service_disabled(self, client):
         from app.service_registry.invoker import invoke
@@ -404,13 +424,29 @@ class TestServicesAPI:
         assert resp.status_code == 200
         assert resp.json() == {"module": "hello_world", "status": "ok", "version": "1.0.0"}
 
-    def test_invoke_endpoint_passes_kwargs(self, client):
-        resp = client.post(
-            "/api/v1/services/veeam_m365/invoke/calculate_storage",
-            json={"users": 500, "mailbox_quota_gb": 50},
+    def test_invoke_endpoint_passes_kwargs(self, client, monkeypatch):
+        import app.service_registry.invoker as invoker_mod
+        from app.service_registry.registry import ServiceRegistry
+        from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
+
+        contract = ServiceContract(
+            service_id="calc", module_id="calc_mod", description="d", version="1.0.0",
+            exports=[ServiceExport(
+                name="do_thing", description="d",
+                parameters=[{"name": "x", "type": "int", "required": True}],
+            )],
         )
+        fake_registry = ServiceRegistry()
+        fake_registry._services["calc"] = ServiceDescriptor(
+            service_id="calc", module_id="calc_mod", module_version="1.0.0",
+            service_version="1.0.0", contract=contract, status=ServiceStatus.ACTIVE,
+        )
+        monkeypatch.setattr(invoker_mod, "service_registry", fake_registry)
+        monkeypatch.setattr(invoker_mod, "_load_export_callable", lambda *a, **k: (lambda **kw: kw))
+
+        resp = client.post("/api/v1/services/calc/invoke/do_thing", json={"x": 7})
         assert resp.status_code == 200
-        assert resp.json()["total_gb"] == 25000.0
+        assert resp.json() == {"x": 7}
 
     def test_invoke_endpoint_unknown_service_returns_404(self, client):
         resp = client.post("/api/v1/services/ghost_service/invoke/ping", json={})
@@ -422,11 +458,27 @@ class TestServicesAPI:
         assert resp.status_code == 404
         assert resp.json()["detail"]["code"] == "CAPABILITY_NOT_FOUND"
 
-    def test_invoke_endpoint_missing_argument_returns_422(self, client):
-        resp = client.post(
-            "/api/v1/services/veeam_m365/invoke/calculate_storage",
-            json={"mailbox_quota_gb": 50},
+    def test_invoke_endpoint_missing_argument_returns_422(self, client, monkeypatch):
+        import app.service_registry.invoker as invoker_mod
+        from app.service_registry.registry import ServiceRegistry
+        from app.service_registry.descriptor import ServiceDescriptor, ServiceStatus
+
+        contract = ServiceContract(
+            service_id="calc", module_id="calc_mod", description="d", version="1.0.0",
+            exports=[ServiceExport(
+                name="do_thing", description="d",
+                parameters=[{"name": "x", "type": "int", "required": True}],
+            )],
         )
+        fake_registry = ServiceRegistry()
+        fake_registry._services["calc"] = ServiceDescriptor(
+            service_id="calc", module_id="calc_mod", module_version="1.0.0",
+            service_version="1.0.0", contract=contract, status=ServiceStatus.ACTIVE,
+        )
+        monkeypatch.setattr(invoker_mod, "service_registry", fake_registry)
+        monkeypatch.setattr(invoker_mod, "_load_export_callable", lambda *a, **k: (lambda **kw: kw))
+
+        resp = client.post("/api/v1/services/calc/invoke/do_thing", json={})
         assert resp.status_code == 422
         assert resp.json()["detail"]["code"] == "INVALID_ARGUMENTS"
 
@@ -551,6 +603,33 @@ class TestFullLifecycleIntegration:
         assert service_registry.find_by_module("hello_world").status.value == "ACTIVE"
         assert invoke("hello_world", "ping")["status"] == "ok"
 
+    def test_hot_reload_reindexes_docs_before_service_sync(self, client):
+        """Regressão real: reinstalar um Service Module sem reiniciar o app
+        deixava o Service Registry preso em FAILED pra sempre. Causa:
+        _hot_reload() chamava sync_service_registry() (que lê o contrato via
+        doc_indexer.get_contract(), cache in-memory) sem nunca reindexar a
+        documentação antes — o cache do contrato só existia se já tivesse
+        sido populado no boot; qualquer reinstalação subsequente achava
+        cache vazio e marcava FAILED mesmo com docs/contracts/api.yaml
+        válido em disco."""
+        from app.doc_engine import doc_indexer
+        from app.package_manager import package_manager
+        from app.service_registry.registry import service_registry
+
+        client.post("/api/v1/marketplace/activate/hello_world")  # clean baseline
+
+        # Simula o estado de "acabou de reinstalar, doc index ainda não
+        # sabe do contrato" — remove só o cache, sem tocar no disco.
+        doc_indexer._contracts.pop("hello_world", None)
+
+        import asyncio
+        asyncio.run(package_manager._hot_reload())
+
+        descriptor = service_registry.find_by_module("hello_world")
+        assert descriptor is not None
+        assert descriptor.status.value == "ACTIVE"
+        assert descriptor.contract is not None
+
     def test_capability_conflict_reported_not_silently_resolved(self):
         """Dois serviços disputando a mesma capability — Registry reporta, não escolhe."""
         e1 = _module_entry("svc_x")
@@ -632,7 +711,7 @@ class TestServicesAPISearch:
         resp = client.get("/api/v1/services")
         assert resp.status_code == 200
         ids = [s["service_id"] for s in resp.json()]
-        assert "hello_world" in ids and "veeam_m365" in ids
+        assert "hello_world" in ids
 
     def test_list_services_query_no_match_returns_empty(self, client):
         resp = client.get("/api/v1/services?q=nonexistent_term_xyz")

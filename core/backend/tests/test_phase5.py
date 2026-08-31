@@ -537,12 +537,6 @@ class TestRealModuleDocs:
         assert len(hw_docs) > 0
         assert any("hello_world" in e.id for e in hw_docs)
 
-    def test_veeam_m365_docs_indexed(self):
-        from app.doc_engine import doc_indexer as di, doc_index as idx
-        di.rebuild()
-        vm_docs = idx.by_module("veeam_m365")
-        assert len(vm_docs) > 0
-
     def test_hello_world_contract_parsed(self):
         from app.doc_engine import doc_indexer as di
         di.rebuild()
@@ -550,13 +544,6 @@ class TestRealModuleDocs:
         assert contract is not None
         assert contract.service_id  == "hello_world"
         assert len(contract.exports) >= 1
-
-    def test_veeam_m365_contract_parsed(self):
-        from app.doc_engine import doc_indexer as di
-        di.rebuild()
-        contract = di.get_contract("veeam_m365")
-        assert contract is not None
-        assert any(e.name == "calculate_storage" for e in contract.exports)
 
     def test_search_finds_veeam(self):
         from app.doc_engine import doc_indexer as di, doc_search

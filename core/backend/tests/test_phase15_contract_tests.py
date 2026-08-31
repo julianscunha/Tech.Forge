@@ -42,13 +42,13 @@ def _iter_installed_contracts():
             yield contract
 
 
-_REFERENCE_MODULE_IDS = {"hello_world", "veeam_m365"}
+_REFERENCE_MODULE_IDS = {"hello_world"}
 
 
 def test_every_documented_example_executes_without_raising(client):
-    """Escopo restrito aos módulos de referência (hello_world/veeam_m365) —
-    a suíte roda contra o `modules/installed/` real do ambiente de dev, que
-    pode ter outros módulos instalados (uso legítimo da plataforma); o teste
+    """Escopo restrito aos módulos de referência (hello_world) — a suíte
+    roda contra o `modules/installed/` real do ambiente de dev, que pode
+    ter outros módulos instalados (uso legítimo da plataforma); o teste
     não deve quebrar por causa deles."""
     checked = 0
     for contract in _iter_installed_contracts():
@@ -62,20 +62,7 @@ def test_every_documented_example_executes_without_raising(client):
                     f"{contract.service_id}.{export.name}({kwargs}) retornou None — "
                     "exemplo documentado não corresponde ao comportamento real"
                 )
-    # hello_world.ping e veeam.ping usam exemplos HTTP (não parseáveis como
-    # chamada Python) — só veeam.calculate_storage tem os 2 exemplos executáveis.
-    assert checked == 2, f"esperava 2 exemplos executáveis nos módulos de referência, achou {checked}"
-
-
-def test_veeam_documented_example_matches_documented_value(client):
-    """Sanity check adicional: o exemplo #1 do calculate_storage bate com o
-    valor já conhecido (test_phase8_service_registry.py), confirmando que o
-    extrator genérico produz os mesmos kwargs que o teste hand-written."""
-    contract = next(c for c in _iter_installed_contracts() if c.service_id == "veeam_m365")
-    export = next(e for e in contract.exports if e.name == "calculate_storage")
-    calls = extract_example_calls(export)
-    assert calls[0] == {"users": 500, "mailbox_quota_gb": 50, "retention_years": 3}
-
-    result = invoke("veeam_m365", "calculate_storage", **calls[0])
-    assert result["total_gb"] > 0
-    assert result["recommended_repo_gb"] > result["total_gb"]
+    # hello_world.ping e hello_world.info usam exemplos HTTP (não parseáveis
+    # como chamada Python) — nenhum exemplo executável no único módulo de
+    # referência restante.
+    assert checked == 0, f"esperava 0 exemplos executáveis no módulo de referência, achou {checked}"

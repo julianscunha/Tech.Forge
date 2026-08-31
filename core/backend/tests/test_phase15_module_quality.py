@@ -37,8 +37,8 @@ def test_hello_world_is_ready(client):
     assert report.ready is True, f"checks falhando: {failed}"
 
 
-def test_veeam_contract_check_executes_documented_examples(client):
-    report = compute_module_quality("veeam_m365")
+def test_hello_world_contract_check_executes_documented_examples(client):
+    report = compute_module_quality("hello_world")
     contract_check = next(c for c in report.checks if c.name == "contract")
     assert contract_check.passed is True
     assert "exemplo" in contract_check.detail

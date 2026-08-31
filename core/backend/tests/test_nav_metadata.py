@@ -289,72 +289,46 @@ class TestRealModuleManifests:
         assert m.order is not None
         assert m.id    == "hello_world"
 
-    def test_veeam_m365_manifest_valid(self):
-        path = ROOT / "modules" / "installed" / "veeam_m365"
-        m = ManifestParser.parse(path)
-        assert m.id    == "veeam_m365"
-        assert m.icon  == "shield-check"
-        assert m.color == "blue"
-        assert m.order == 10
-
-    def test_veeam_m365_in_correct_category(self):
-        path = ROOT / "modules" / "installed" / "veeam_m365"
-        m = ManifestParser.parse(path)
-        assert m.category == "Backup"
-        assert m.vendor   == "Veeam"
-
     def test_both_modules_appear_in_tree(self):
-        from app.module_engine.loader import ModuleLoader
-
-        async def _run():
-            reg = ModuleRegistry()
-            loader = ModuleLoader(
-                installed_path=ROOT / "modules" / "installed",
-                target_registry=reg,
-            )
-            await loader.scan_installed()
-            return NavigationBuilder.build(reg)
-
-        tree = asyncio.run(_run())
+        """hello_world é o único módulo de referência real versionado — um
+        segundo módulo sintético (make_entry) cobre o cenário de múltiplos
+        módulos sem depender de outro módulo real existir em disco."""
+        reg = ModuleRegistry()
+        reg.register(make_entry("hello_world", category="Examples", vendor="TechForge", order=99))
+        reg.register(make_entry("synthetic_backup_mod", category="Backup", vendor="Veeam", order=10))
+        tree = NavigationBuilder.build(reg)
         all_ids = [
             m.module_id
             for cat in tree.categories
             for v in cat.vendors
             for m in v.modules
         ]
-        assert "hello_world"  in all_ids
-        assert "veeam_m365"   in all_ids
+        assert "hello_world" in all_ids
+        assert "synthetic_backup_mod" in all_ids
 
-    def test_veeam_before_hello_world_by_order(self):
-        """veeam_m365 (order=10) should sort before hello_world (order=99)
-        but they are in different categories — test each is in correct category."""
-        from app.module_engine.loader import ModuleLoader
+    def test_modules_in_different_categories_keep_their_own_order(self):
+        """order=10 (Backup) e order=99 (hello_world/Examples) — categorias
+        diferentes, cada uma preserva seu próprio order sem interferência."""
+        reg = ModuleRegistry()
+        reg.register(make_entry("hello_world", category="Examples", vendor="TechForge", order=99))
+        reg.register(make_entry("synthetic_backup_mod", category="Backup", vendor="Veeam", order=10))
+        tree = NavigationBuilder.build(reg)
 
-        async def _run():
-            reg = ModuleRegistry()
-            loader = ModuleLoader(
-                installed_path=ROOT / "modules" / "installed",
-                target_registry=reg,
-            )
-            await loader.scan_installed()
-            return NavigationBuilder.build(reg)
-
-        tree = asyncio.run(_run())
-        backup_mods = next(
+        backup_mod = next(
             (m for cat in tree.categories for v in cat.vendors
-             for m in v.modules if m.module_id == "veeam_m365"),
+             for m in v.modules if m.module_id == "synthetic_backup_mod"),
             None,
         )
-        assert backup_mods is not None
-        assert backup_mods.order == 10
+        assert backup_mod is not None
+        assert backup_mod.order == 10
 
-        example_mods = next(
+        example_mod = next(
             (m for cat in tree.categories for v in cat.vendors
              for m in v.modules if m.module_id == "hello_world"),
             None,
         )
-        assert example_mods is not None
-        assert example_mods.order == 99
+        assert example_mod is not None
+        assert example_mod.order == 99
 
 
 # ── CLI Validator — §7.1 checks ───────────────────────────────────────────────
