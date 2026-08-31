@@ -25,7 +25,7 @@ negócio — tudo de domínio vive em módulos instalados separadamente.
 # Backend — sempre a partir de core/backend/ (DB path e imports dependem do CWD)
 cd core/backend
 python -m venv .venv
-.venv/Scripts/pip install -e .
+.venv/Scripts/pip install -r requirements-dev.txt
 .venv/Scripts/python.exe run.py    # uvicorn em 127.0.0.1:8000
 
 # Frontend — a partir de core/frontend/
