@@ -317,17 +317,9 @@ async def _notify_installation(
     db, module_id: str, level: str, title: str, message: str
 ) -> None:
     """Helper: create installation notification with dedupe (same title + message = skip)."""
-    from sqlalchemy import func, select
-
-    from app.models.notifications import Notification
     from app.services.notifications import NotificationService
 
-    existing = await db.execute(
-        select(func.count(Notification.id)).where(
-            Notification.title == title, Notification.message == message
-        )
-    )
-    if existing.scalar() == 0:
+    if not await NotificationService.exists_with_title(db, title, message=message):
         await NotificationService.create(
             db, level=level, title=title, message=message, module_id=module_id
         )

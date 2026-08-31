@@ -17,7 +17,6 @@ from app.core.settings import settings as _settings
 from app.db.database import get_db
 from app.doc_engine import DocCompletenessChecker, doc_index, doc_indexer, doc_search
 from app.doc_engine.models import DocCategory
-from app.models.notifications import Notification
 
 router = APIRouter(prefix="/docs", tags=["developer-center"])
 
@@ -295,18 +294,12 @@ async def run_compliance_check(module_id: str) -> dict:
 
     notified = False
     if not report.is_complete:
-        from sqlalchemy import func, select
-
         from app.db.database import AsyncSessionLocal
         from app.services.notifications import NotificationService
 
         title = "Documentation compliance"
         async with AsyncSessionLocal() as db:
-            existing = await db.execute(
-                select(func.count(Notification.id)).where(
-                    Notification.title == title,
-                    Notification.module_id == module_id))
-            if existing.scalar() == 0:
+            if not await NotificationService.exists_with_title(db, title, module_id=module_id):
                 await NotificationService.create(
                     db,
                     level="warning",

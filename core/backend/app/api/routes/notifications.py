@@ -56,12 +56,4 @@ async def mark_read(
     ok = await NotificationService.mark_read(db, notification_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Notification not found")
-    # re-fetch to return the updated entity
-    from sqlalchemy import select
-
-    from app.models.notifications import Notification
-
-    result = await db.execute(
-        select(Notification).where(Notification.id == notification_id)
-    )
-    return NotificationRead.model_validate(result.scalar_one())
+    return NotificationRead.model_validate(await NotificationService.get(db, notification_id))

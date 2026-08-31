@@ -63,3 +63,26 @@ class NotificationService:
         )
         await db.commit()
         return result.rowcount
+
+    @staticmethod
+    async def get(db: AsyncSession, notification_id: int) -> Notification:
+        result = await db.execute(
+            select(Notification).where(Notification.id == notification_id)
+        )
+        return result.scalar_one()
+
+    @staticmethod
+    async def exists_with_title(
+        db: AsyncSession,
+        title: str,
+        *,
+        module_id: Optional[str] = None,
+        message: Optional[str] = None,
+    ) -> bool:
+        stmt = select(func.count(Notification.id)).where(Notification.title == title)
+        if module_id is not None:
+            stmt = stmt.where(Notification.module_id == module_id)
+        if message is not None:
+            stmt = stmt.where(Notification.message == message)
+        result = await db.execute(stmt)
+        return result.scalar() > 0
