@@ -31,5 +31,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` → 870 passed, 3 skipped (era 866 — 4 testes novos). `ruff check core/backend/app cli sdk` limpo. Verificado ao vivo: `techforge start` real → `curl /api/v1/platform/ready` → `{"ready":true,"state":"ready"}` HTTP 200.
 
-**Commit**: _(pendente)_
+**Commit**: `a55bd4d`
 
