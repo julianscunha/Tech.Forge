@@ -1,6 +1,6 @@
 # Relatório — Fase 16: Desktop Distribution & User Experience
 
-Status: EM ANDAMENTO.
+Status: FECHADA (escopo reduzido, decisão registrada no plano) — 2026-08-31.
 Plano: `tasks/phase16-plan.md`.
 
 ## Slices
@@ -123,4 +123,47 @@ Plano: `tasks/phase16-plan.md`.
 **Teste**: `pytest tests -q` → 886 passed, 3 skipped (sem testes novos — slice de documentação). Verificado ao vivo: `techforge start` real → `curl /docs/list?category=architecture` → `core/desktop-distribution` e `core/launcher` presentes; `curl /docs/list?category=guide` → os 3 guias novos presentes; `curl /docs/export/ai-context` → conteúdo novo presente (12 ocorrências dos termos-chave).
 
 **Commit**: `ae3c8a1`
+
+### Slice 9 — Fechamento
+
+**Arquivos**: `tasks/phase-audit.md` (modificado — Fase 16 promovida de "não iniciada" pra linha própria fechada, 6 itens novos na tabela de Known Issues, contadores de teste atualizados 850→886 backend / 113→118 CLI), `tasks/phase-16-report.md` (este arquivo).
+
+**Auditoria contra os 30 critérios de aceitação (spec §48):**
+
+| # | Critério | Status |
+|---|---|---|
+| 1 | Usuário final não precisar abrir PowerShell | 🟡 mecanismo pronto (`.exe` empacotado), mas sem instalador/atalho que dispense terminal por completo |
+| 2 | Launcher oficial existir | ✅ (Fase 6, ampliado nesta fase) |
+| 3 | Backend iniciar automaticamente | ✅ |
+| 4 | Frontend de produção iniciar/servir | ✅ (Fase 6) |
+| 5 | Health e Ready verificados | ✅ Slice 2 |
+| 6 | Segunda instância não duplicar serviços | ✅ Slice 3 |
+| 7 | Startup failures compreensíveis | ✅ Slice 2 |
+| 8 | Diagnostics integrados | ✅ Fase 14 + Slice 2 |
+| 9 | Safe Mode existir/funcionar | ✅ Slice 4 |
+| 10 | Módulo com falha não impede o Core | ✅ (Fase 4/9, preexistente) |
+| 11 | Shutdown gracioso | ✅ (preexistente) |
+| 12 | Application e User Data separados | ✅ Slice 1 |
+| 13 | Instalação sem exigir Python/Node manualmente | 🟡 tecnicamente possível hoje (backend empacotado), sem instalador formal |
+| 14 | Primeiro startup funcionar | ✅ Slice 7 (testado com clean `%LOCALAPPDATA%`) |
+| 15 | Offline-first preservado | ✅ |
+| 16 | Módulos abrem dentro do TechForge | ✅ (preexistente) |
+| 17 | Navegação minimizável | ✅ (preexistente) |
+| 18 | Dashboard simples | ✅ (só ganhou o badge de Safe Mode) |
+| 19 | Updates arquiteturalmente previstos | ✅ (separação de paths cobre reinstalar preservando dados) |
+| 20 | User Data preservado em update | ✅ |
+| 21 | Uninstall não apaga dados silenciosamente | ⚪ sem uninstall formal, mas nada apaga nada automaticamente hoje |
+| 22 | Developer Mode separado | ✅ Slice 6 |
+| 23 | Development workflow continua funcionando | ✅ (dev tree 100% preservada, verificado a cada slice) |
+| 24 | Documentação de usuário e TI existir | ✅ Slice 8 |
+| 25 | AI Context inclui distribuição | ✅ Slice 8 |
+| 26 | Packaging validation passar | 🟡 validado manualmente (clean `%LOCALAPPDATA%`), não clean machine 100% real |
+| 27 | Upgrade validation passar | ❌ sem fluxo de upgrade formal pra testar |
+| 28 | Failure recovery tests passarem | 🟡 startup failure/port conflict/module failure testados; corrupted config/interrupted update não |
+| 29 | Todos os testes passarem | ✅ 886 backend + 118 CLI + lint/build frontend limpos |
+| 30 | Core permanecer leve | ✅ zero overhead em dev tree; empacotado é onedir (~150-300MB, esperado e documentado) |
+
+**Resumo**: 21 de 30 critérios plenamente atendidos, 6 parciais (🟡, dependem de um instalador que ficou fora do escopo reduzido), 2 adiados por decisão consciente (⚪), 1 não testado (❌, upgrade — sem fluxo de update formal). Igual ao padrão das Fases 12/13/15: fechada com corte de escopo explícito, não "tudo implementado".
+
+**Verificação final**: suíte completa (886 backend + 118 CLI + `ruff` limpo + `npm run lint`/`npm run build` limpos), 8 slices commitados individualmente, executável empacotado testado de ponta a ponta com `%LOCALAPPDATA%` limpo.
 
