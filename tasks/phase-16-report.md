@@ -17,5 +17,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` → 866 passed, 3 skipped (era 861 — 5 testes novos). `ruff check core/backend/app cli sdk` limpo.
 
-**Commit**: _(pendente)_
+**Commit**: `d9fa3a6`
 
