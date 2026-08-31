@@ -130,6 +130,23 @@ class DocIndexer:
             except Exception as exc:
                 logger.debug("Skipped %s: %s", md, exc)
 
+        # Aviso explícito: uma subpasta com nome fora de CORE_DOC_DIRS seria
+        # ignorada silenciosamente pelo loop abaixo (nunca indexada, sem
+        # erro). Torna esse risco visível no log em vez de invisível.
+        for entry in sorted(self._docs_root.iterdir()):
+            if (
+                entry.is_dir()
+                and not entry.name.startswith(".")
+                and entry.name not in CORE_DOC_DIRS
+            ):
+                logger.warning(
+                    "DocIndexer: pasta '%s' em %s não corresponde a nenhuma "
+                    "categoria conhecida (%s) — seu conteúdo NÃO será "
+                    "indexado nem aparecerá no Developer Center. Adicione o "
+                    "nome a CORE_DOC_DIRS se for uma categoria nova.",
+                    entry.name, self._docs_root, ", ".join(sorted(CORE_DOC_DIRS)),
+                )
+
         # Subdirectory docs
         for subdir_name, category in CORE_DOC_DIRS.items():
             subdir = self._docs_root / subdir_name

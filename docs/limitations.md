@@ -106,10 +106,12 @@ estado atual da plataforma.
   design (a plataforma é single-process).
 - A cobertura de teste do health-check de armazenamento só cobre o
   caminho saudável — nenhum teste simula disco cheio ou indisponível.
-- A suíte de testes do backend tem duas falhas conhecidas dependentes da
-  ordem de execução (passam isoladamente, falham ocasionalmente quando
-  rodadas junto com o resto da suíte) — indício de vazamento de estado
-  entre arquivos de teste, não um defeito de produto.
+- A suíte de testes do backend tem falhas conhecidas dependentes da ordem
+  de execução (passam isoladamente, falham ocasionalmente quando rodadas
+  junto com o resto da suíte) — causa raiz parcialmente identificada: a
+  configuração central de log limpa os handlers do logger raiz do
+  processo sem restaurar depois, o que pode afetar testes que dependem de
+  captura de log rodados na sequência. Não é um defeito de produto.
 - Uma parte da validação de compliance de documentação está duplicada
   entre o CLI e o motor de documentação do Core.
 - A interface do frontend nunca foi verificada visualmente em navegador

@@ -370,6 +370,32 @@ class TestDocIndexer:
         assert frontend_entry.category == DocCategory.SDK_FRONTEND
         assert len(idx.by_category(DocCategory.SDK_FRONTEND)) == 1
 
+    def test_rebuild_warns_on_unrecognized_subdir(self, tmp_path, monkeypatch):
+        """Uma subpasta com nome fora de CORE_DOC_DIRS não é indexada — mas
+        isso precisa ser visível no log, não silencioso (achado da auditoria
+        do Developer Center). O objeto `logger` do módulo é substituído
+        diretamente (não via caplog/handler): `configure_logging()` faz
+        `root.handlers.clear()` e o nível efetivo de qualquer logger real
+        depende de qual teste rodou por último — depender da hierarquia
+        global de logging aqui seria frágil a ordem de execução."""
+        docs_root = tmp_path / "developer-center"
+        unknown_dir = docs_root / "tutorials"
+        unknown_dir.mkdir(parents=True)
+        make_md(unknown_dir, "doc.md", "# Nunca indexado")
+
+        warnings: list[tuple] = []
+        monkeypatch.setattr(
+            "app.doc_engine.indexer.logger.warning",
+            lambda msg, *args: warnings.append((msg, args)),
+        )
+
+        idx = DocIndex()
+        indexer = DocIndexer(idx, docs_root=docs_root, installed_path=tmp_path / "installed")
+        indexer.rebuild()
+
+        assert not any(e.path.name == "doc.md" for e in idx.all())
+        assert any("tutorials" in args for _msg, args in warnings)
+
     def test_rebuild_indexes_module_docs(self, tmp_path):
         installed = tmp_path / "installed"
         installed.mkdir()
