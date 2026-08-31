@@ -93,3 +93,20 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `f7eeb85`
 
+### Slice 7 — Backend packaging (PyInstaller onedir)
+
+**Arquivos**: `core/backend/techforge_server.py` (novo, entry point congelável), `scripts/build-backend.ps1` (novo), `core/backend/app/core/paths.py` (modificado, 2 bugs reais corrigidos), `core/backend/app/core/settings.py` (modificado, `ensure_user_data_dirs`), `core/backend/tests/test_phase16_packaging.py` (novo), `core/backend/tests/test_phase16_paths.py` (modificado, +2 testes), `.gitignore` (+ artefatos de build).
+
+**O quê**: `scripts/build-backend.ps1` empacota o backend com PyInstaller `--onedir` (não `--onefile` — mais lento pra iniciar e mais sujeito a bloqueio de antivírus corporativo), instalando PyInstaller ad-hoc no `.venv` existente (sem virar dependência de runtime/dev). `techforge_server.py` é o entry point que o PyInstaller congela (equivalente a `python -m uvicorn app.main:app`, mas importável).
+
+**Decisão-chave — 3 bugs reais só descobertos rodando o `.exe` de verdade (não algo que TDD isolado pegaria sozinho):**
+1. `uvicorn.run("app.main:app", ...)` (import-by-string) falha dentro do executável congelado ("Could not import module app.main") — corrigido pra importar e passar o objeto `app` diretamente.
+2. `install_dir()` (Slice 1) calculava a raiz via `Path(__file__).resolve().parent×5` — dentro do bundle congelado isso não aponta pra lugar nenhum coerente. Corrigido: quando `sys.frozen`, `install_dir()` = diretório do `sys.executable`. Consequência direta: isso fez `user_data_dir()` resolver corretamente pro diretório de dados do SO pela primeira vez de fato em produção (antes só testado com mocks).
+3. Nada nunca criava os diretórios de `user_data_dir()` (`config/`, `logs/`, `modules/*`) — em dev tree isso sempre existiu por acidente (checado no repo); em produção, o SQLite não cria diretório sozinho ao abrir o arquivo do banco, e o Alembic (`app/db/migrations.py`) resolve seu `script_location` relativo ao próprio `__file__`, exigindo bundlar `alembic/` e `alembic.ini` como dados (`--add-data`) já que são lidos por caminho de arquivo em runtime, não importados como código. Corrigido com `ensure_user_data_dirs()` (spec §14 "Create Data Directories") + `--add-data` no script de build.
+
+**Aceite**: script roda localmente e produz um `.exe` funcional sem `.venv` ativo.
+
+**Teste**: `pytest tests -q` → 886 passed, 3 skipped (era 883 — 3 novos: 1 do entry point, 2 de paths). `ruff check core/backend/app cli sdk` limpo. **Verificado ao vivo, de ponta a ponta, com o artefato real**: limpei `%LOCALAPPDATA%\TechForge` (simulando clean machine), rodei `techforge-backend.exe` diretamente (sem `.venv` ativo) → `curl /platform/ready` → `{"ready":true,"state":"ready"}` HTTP 200; `/system/version` e `/platform/status` responderam; confirmei os diretórios `config/`, `logs/`, `modules/` criados de fato em `%LOCALAPPDATA%\TechForge\TechForge`; migrações Alembic rodaram do zero (baseline → 0006) só de logs do processo real.
+
+**Commit**: _(pendente)_
+

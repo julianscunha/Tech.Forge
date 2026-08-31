@@ -2,10 +2,11 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
-from app.core.paths import install_dir, user_data_dir
+from app.core.paths import ensure_user_data_dirs, install_dir, user_data_dir
 
 BASE_DIR = install_dir()
 USER_DATA_DIR = user_data_dir()
+ensure_user_data_dirs(USER_DATA_DIR)
 
 
 class Settings(BaseSettings):

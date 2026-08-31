@@ -15,6 +15,11 @@ dist/
 graphify-out/
 *.tsbuildinfo
 
+# Fase 16 §10 — backend empacotado (PyInstaller, scripts/build-backend.ps1)
+core/backend/dist-backend/
+core/backend/build-backend/
+core/backend/*.spec
+
 # Env
 .env
 !.env.example
