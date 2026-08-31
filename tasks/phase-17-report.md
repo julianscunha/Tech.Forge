@@ -211,4 +211,4 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - Verificação manual ao vivo: backend real subido, `curl /api/v1/modules/hello_world/sbom` retornou o SBOM real do módulo `hello_world` de fato instalado na plataforma.
 
-**Commit**: _(pendente)_
+**Commit**: `e6a2485`
