@@ -95,18 +95,19 @@ O launcher escolhe o modo automaticamente: desktop se `dist/index.html` existir;
 - Extensibilidade por hooks marcados: comentários "PLUGIN LOADER HOOK" / "Phase N" indicam pontos de extensão futuros.
 - Config centralizada em `app/core/settings.py` (HOST, PORT, FRONTEND_PORT, DATABASE_URL, CORS_ORIGINS) — nunca hardcodar URLs/portas/caminhos.
 - SQLite via SQLAlchemy async (aiosqlite); código específico de SQLite fica isolado em `app/db/` (migração futura p/ PostgreSQL).
-- Docs canônicos em português; cada fase (`docs/phases/`) define escopo, "o que não implementar" e critérios de aceitação + relatório final.
-- Não antecipar features de fases futuras (marketplace server, auth, etc.) antes da fase correspondente.
+- Docs canônicos em português.
+- Não antecipar funcionalidades condicionadas a decisões de produto ainda em aberto (suporte multiusuário/servidor central, ecossistema público de módulos — ver `docs/roadmap.md`).
 
 ## Pitfalls
 
 - O caminho do DB é relativo ao CWD: rodar uvicorn/pytest sempre de `core/backend/`, senão o banco falha ("unable to open database file").
-- Não confiar na numeração de `docs/phases/*` como progresso — a ordem de implementação divergiu; verificar hooks vazios e testes reais antes de afirmar o que falta (ver `tasks/phase-audit.md`).
+- Não assumir que um componente está incompleto só porque parece isolado — verificar hooks vazios e testes reais antes de afirmar o que falta (ver `docs/limitations.md` pras limitações já conhecidas e documentadas).
 - Frontend lint falha com qualquer warning (`--max-warnings 0`).
 
 ## Documentação
 
 - [`docs/INDEX.md`](docs/INDEX.md) — índice categorizado de toda a documentação
 - [`docs/architecture.md`](docs/architecture.md) — arquitetura do Core
-- [`docs/phases/`](docs/phases/) — specs das fases (escopo + critérios de aceitação)
-- [`tasks/phase-audit.md`](tasks/phase-audit.md) — status real de implementação por fase
+- [`docs/architecture/`](docs/architecture/) — inventário de componentes, contratos públicos, mapa de dependências
+- [`docs/limitations.md`](docs/limitations.md) — limitações conhecidas e decisões conscientes de escopo
+- [`docs/roadmap.md`](docs/roadmap.md) — o que vem a seguir
