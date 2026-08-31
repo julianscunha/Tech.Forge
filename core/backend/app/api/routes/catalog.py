@@ -144,12 +144,16 @@ async def list_catalog_modules(
     sort: str = "name",  # "name" or "recent"
     page: int = 1,
     page_size: int = 24,
+    force_refresh: bool = False,
     db: AsyncSession = Depends(get_db),
 ) -> CatalogModuleListResponse:
     """
     List catalog modules with server-side filtering and pagination.
 
     All filters are applied as AND (not OR). Pagination is on the final filtered result.
+    `force_refresh=true` bypasses the aggregator's cache (TTL 900s) — usado
+    pelo botão "Atualizar" da UI, senão um módulo recém-publicado no
+    catálogo oficial só aparece até 15 minutos depois.
     """
     if page < 1:
         page = 1
@@ -158,7 +162,9 @@ async def list_catalog_modules(
 
     # Get all available packages from aggregator
     aggregator = CatalogAggregator()
-    packages, conflicts = await aggregator.list_all_available(db, settings.PLATFORM_VERSION)
+    packages, conflicts = await aggregator.list_all_available(
+        db, settings.PLATFORM_VERSION, force_refresh=force_refresh
+    )
 
     # Get user's favorites
     favorites = await CatalogFavoriteService.list_ids(db)

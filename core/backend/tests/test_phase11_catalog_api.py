@@ -135,6 +135,21 @@ class TestCatalogModulesEndpoint:
         assert data["items"][0]["module_id"] == "module_0"
         assert data["items"][9]["module_id"] == "module_9"
 
+    def test_get_catalog_modules_force_refresh_bypasses_cache(self, client_with_db, mock_catalog_packages, test_db):
+        """?force_refresh=true propaga pro aggregator — usado pelo botão
+        'Atualizar' da UI pra não ficar preso ao cache de 15min."""
+        captured = {}
+
+        async def mock_list_all(db, platform_version, force_refresh=False):
+            captured["force_refresh"] = force_refresh
+            return mock_catalog_packages, {}
+
+        with patch.object(CatalogAggregator, 'list_all_available', side_effect=mock_list_all):
+            response = client_with_db.get("/api/v1/catalog/modules?force_refresh=true")
+
+        assert response.status_code == 200
+        assert captured["force_refresh"] is True
+
     def test_get_catalog_modules_page_2(self, client_with_db, mock_catalog_packages, test_db):
         """GET /catalog/modules?page=2&page_size=10 returns items 11-20."""
 

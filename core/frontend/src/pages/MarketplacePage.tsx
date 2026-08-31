@@ -71,7 +71,7 @@ export function MarketplacePage() {
     }
   }, [])
 
-  const fetchCatalog = useCallback(async () => {
+  const fetchCatalog = useCallback(async (forceRefresh = false) => {
     setCatalogLoadState('loading')
     setCatalogError(null)
     try {
@@ -80,6 +80,7 @@ export function MarketplacePage() {
         category: selectedCategory || undefined,
         page: catalogPage,
         page_size: catalogPageSize,
+        force_refresh: forceRefresh || undefined,
       }
       const res = await catalogApi.list(params)
       setCatalogModules(res.items)
@@ -229,10 +230,11 @@ export function MarketplacePage() {
               />
             </label>
 
-            {/* Refresh */}
+            {/* Refresh — aba Catálogo tem sua própria fonte de dados (multi-source,
+                com cache de 15min), não a listagem local de installed/available/updates. */}
             <button
-              onClick={fetchAll}
-              disabled={isLoading}
+              onClick={() => (tab === 'catalog' ? fetchCatalog(true) : fetchAll())}
+              disabled={tab === 'catalog' ? catalogLoadState === 'loading' : isLoading}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium',
                 'bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border))]',
@@ -241,7 +243,7 @@ export function MarketplacePage() {
                 'disabled:opacity-50 disabled:cursor-not-allowed',
               )}
             >
-              <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
+              <RefreshCw size={12} className={(tab === 'catalog' ? catalogLoadState === 'loading' : isLoading) ? 'animate-spin' : ''} />
               Atualizar
             </button>
           </div>

@@ -127,6 +127,20 @@ class TestCompletenessApplicationModules:
         assert report.is_complete
         assert report.score == 100.0
 
+    def test_compiled_js_frontend_entry_counts_as_implemented(self, tmp_path):
+        """entry_frontend real (o que o Core de fato serve) é .js/.mjs
+        compilado — .tsx é só a fonte antes de compilar. O checker não pode
+        marcar como incompleto um módulo que já entrega o formato certo."""
+        mod = make_module(tmp_path, "js_mod", module_type="application")
+        (mod / "frontend" / "index.tsx").unlink()
+        (mod / "frontend" / "index.js").write_text(
+            "export const moduleConfig = {}\nexport default { render() {} }",
+            encoding="utf-8",
+        )
+        report = DocCompletenessChecker.check(mod, "application")
+        frontend_check = next(c for c in report.checks if c.name == "Implementation: frontend")
+        assert frontend_check.passed is True
+
     def test_missing_overview_fails(self, tmp_path):
         mod = make_module(tmp_path, "app_mod", with_overview=False)
         report = DocCompletenessChecker.check(mod, "application")

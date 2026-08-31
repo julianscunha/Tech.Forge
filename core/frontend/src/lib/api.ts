@@ -117,6 +117,7 @@ export interface CatalogListParams {
   sort?: 'name' | 'recent'
   page?: number
   page_size?: number
+  force_refresh?: boolean
 }
 
 function toQueryString(params: object): string {

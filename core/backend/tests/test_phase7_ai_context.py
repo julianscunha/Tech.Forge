@@ -58,13 +58,44 @@ def test_context_includes_dependency_graph_mermaid(monkeypatch, ai_context_depen
     assert "flowchart TD" in md
 
 
-def test_context_omits_dependency_section_when_no_edges(ai_context):
-    """Sem dependências declaradas nos módulos reais, a seção não aparece.
+def test_context_omits_dependency_section_when_no_edges(monkeypatch):
+    """Sem dependências declaradas, a seção não aparece.
+
+    Registry isolado (não o real) — módulos de exemplo instalados de
+    verdade podem legitimamente declarar dependências (ex: um Application
+    consumindo um Service via contrato público), então este teste não
+    pode depender do ambiente real ter zero arestas.
 
     Checa o cabeçalho exato de nível 2 (não a heading nivel 3 do doc
     dependency-governance.md, que contem o mesmo texto como substring).
     """
-    assert "\n## Dependency Governance\n" not in ai_context
+    from datetime import datetime
+    from app.doc_engine.indexer import DocIndexer
+    from app.doc_engine import doc_index, AIContextExporter
+    from app.module_engine.registry import ModuleEntry, ModuleStatus
+
+    class _FakeModuleRegistry:
+        def __init__(self, entries):
+            self._entries = {e.module_id: e for e in entries}
+
+        def all(self):
+            return list(self._entries.values())
+
+        def get(self, module_id):
+            return self._entries.get(module_id)
+
+    entry = ModuleEntry(
+        module_id="standalone", name="standalone", version="1.0.0",
+        category="C", vendor="V", author="A", description="D",
+        status=ModuleStatus.INSTALLED, install_date=datetime.now(),
+        manifest_raw={"dependencies": []},
+    )
+    monkeypatch.setattr("app.module_engine.registry.registry", _FakeModuleRegistry([entry]))
+
+    idx = DocIndexer(doc_index)
+    idx.rebuild()
+    md = AIContextExporter.export(idx)
+    assert "\n## Dependency Governance\n" not in md
 
 
 # ── Fase 9 §28 — Module Runtime Context no AI Context ─────────────────────────

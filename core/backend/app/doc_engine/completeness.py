@@ -203,14 +203,20 @@ class DocCompletenessChecker:
 
         # ── 1. Implementation ─────────────────────────────────────────────────
         backend_ok  = (module_path / "backend" / "main.py").exists()
-        frontend_ok = (module_path / "frontend" / "index.tsx").exists()
+        # .tsx é a fonte antes de compilar; .js/.mjs é o que o Core de fato
+        # serve como asset de módulo (module_assets.py só permite JS/ESM) —
+        # aceitar qualquer um evita marcar como incompleto um módulo que já
+        # entrega o formato certo pro contrato de frontend.
+        frontend_entries = ("index.tsx", "index.js", "index.mjs")
+        frontend_ok = any((module_path / "frontend" / name).exists() for name in frontend_entries)
         report.checks.append(DoDCheck(
             "Implementation: backend", backend_ok, True,
             "backend/main.py present" if backend_ok else "backend/main.py missing",
         ))
         report.checks.append(DoDCheck(
             "Implementation: frontend", frontend_ok, True,
-            "frontend/index.tsx present" if frontend_ok else "frontend/index.tsx missing",
+            "frontend entry point present" if frontend_ok
+            else "frontend/index.{tsx,js,mjs} missing",
         ))
 
         # ── 2. Documentation ──────────────────────────────────────────────────
