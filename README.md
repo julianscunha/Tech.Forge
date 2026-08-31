@@ -454,6 +454,10 @@ cd core/backend && .venv/Scripts/python.exe -m pytest tests -q
 cd core/frontend && npm run lint && npm run build
 ```
 
+Guia completo (setup local, Core vs. módulo, padrão de commit) em
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Encontrou uma vulnerabilidade? Veja
+[`SECURITY.md`](SECURITY.md) em vez de abrir uma issue pública.
+
 ## 📖 Documentação
 
 | Doc | Conteúdo |
