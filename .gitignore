@@ -32,6 +32,9 @@ logs/pids/
 # Runtime state (gerado, não versionar)
 modules/installed/*/data/settings.json
 
+# Fase 16 §33 — manifesto de integridade do Core (gerado por build/instalação local)
+/core-integrity.json
+
 # Módulos instalados via Marketplace/CLI — dado local do usuário, não do
 # produto. hello_world/veeam_m365 são módulos de referência versionados
 # (usados por testes e CI), todo o resto fica de fora do repositório.

@@ -63,3 +63,19 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `2c79c5b`
 
+### Slice 5 — `techforge repair-check`
+
+**Arquivos**: `core/backend/app/module_trust/integrity.py` (modificado, extraído `diff_manifests()`), `core/backend/app/module_trust/core_repair.py` (novo), `core/backend/tests/test_phase16_repair_check.py` (novo), `cli/techforge_cli/commands/repair.py` (novo), `cli/tests/test_phase16_repair_check.py` (novo), `cli/techforge_cli/main.py` (modificado), `.gitignore` (+ `/core-integrity.json`).
+
+**O quê**: reaproveita o integrity manifest da Fase 10 (hash SHA-256 por arquivo) aplicado ao próprio código do Core, não a módulos. `techforge repair-check --generate` grava `core-integrity.json` na raiz da instalação a partir do estado atual de `core/backend/app`, `cli/techforge_cli`, `sdk/python/techforge_sdk`, `launcher/techforge_launcher` (não a árvore inteira — excluiria `.venv`, `node_modules`, `.git`, `modules/installed`, que não são código distribuído). `techforge repair-check` (sem flag) compara o manifesto contra o disco agora e reporta OK, ou lista arquivo por arquivo o que está faltando/modificado/inesperado. Só verifica — nunca tenta restaurar nada (spec §33).
+
+**Decisão-chave**: extraí `diff_manifests(expected, current)` de dentro de `verify_integrity()` (Fase 10) em vez de duplicar a lógica de prioridade de status (MISSING > MODIFIED > UNEXPECTED > VALID) — `core_repair.py` reusa a mesma função para o caso "Core inteiro" (múltiplos diretórios compostos num único mapa de arquivos), sem reescrever a comparação. Manifesto do Core é gerado a frio (`--generate`, tipicamente no packaging/Slice 7), nunca implicitamente em runtime — gerar automaticamente permitiria a um código já adulterado "aprovar a si mesmo".
+
+**Aceite**: sem manifesto → aviso amigável + exit code 2; manifesto válido → OK + exit 0; arquivo alterado → reporta `MODIFIED` + exit 1; arquivo removido → reporta `MISSING_FILE`.
+
+**Teste**: `pytest tests -q` (backend) → 881 passed, 3 skipped (era 877 — 4 novos). `pytest tests -q` (cli) → 118 passed (era 114 — 4 novos). `ruff check core/backend/app cli sdk` limpo. Verificado ao vivo no repo real: gerei o manifesto real, rodei `repair-check` (OK), adulterei `app/main.py` de propósito → detectou `MODIFIED` com o caminho exato, restaurei via `git checkout` → voltou a OK. Manifesto de teste removido do disco depois (é artefato local, agora no `.gitignore`).
+
+**Nota**: reproduzido de novo o bug conhecido (`tasks/phase-audit.md`, Fase 15) de encoding cp1252 do `rich` no console PowerShell/Windows ao imprimir `⚠`/`✗` — não é regressão desta fase, usei o mesmo workaround (`PYTHONIOENCODING=utf-8`) já documentado.
+
+**Commit**: _(pendente)_
+

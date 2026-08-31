@@ -42,6 +42,7 @@ from techforge_cli.commands.platform import (
     stop_cmd,
 )
 from techforge_cli.commands.release import release_check_cmd
+from techforge_cli.commands.repair import repair_check_cmd
 from techforge_cli.commands.runtime import runtime_cmd
 from techforge_cli.commands.services import services_cmd
 from techforge_cli.commands.storage import storage_cmd
@@ -98,6 +99,7 @@ cli.add_command(status_cmd)    # Phase 6
 cli.add_command(logs_cmd)      # Fase 6 §16 — techforge logs
 cli.add_command(dev_cmd)       # Fase 6 §17 — techforge dev
 cli.add_command(safe_mode_cmd)  # Fase 16 §16/§18 — techforge safe-mode
+cli.add_command(repair_check_cmd)  # Fase 16 §33 — techforge repair-check
 cli.add_command(catalog_cmd)   # Fase 11 Slice 6 — catalog (list/search/show/sources/build-index)
 cli.add_command(storage_cmd)   # Fase 12 Slice 1 — storage status
 cli.add_command(migrations_cmd)  # Fase 12 Slice 2 — migrations status/run

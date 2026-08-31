@@ -87,28 +87,14 @@ class IntegrityResult:
     detail:            str = ""
 
 
-def verify_integrity(package_dir: Path) -> IntegrityResult:
+def diff_manifests(expected_files: dict[str, str], current_files: dict[str, str]) -> IntegrityResult:
+    """Compara dois mapas {caminho: sha256} e agrega num único IntegrityResult.
+
+    Prioridade do status quando há múltiplos problemas:
+    MISSING_FILE > MODIFIED > UNEXPECTED_FILE > VALID. Compartilhado por
+    `verify_integrity` (por módulo) e `app/module_trust/core_repair.py`
+    (Fase 16 §33 — mesmo mecanismo aplicado ao Core, não só a módulos).
     """
-    Lê integrity.json de package_dir e compara contra os arquivos reais
-    em disco agora. Prioridade do status agregado quando há múltiplos
-    problemas: INVALID_MANIFEST > MISSING_FILE > MODIFIED > UNEXPECTED_FILE > VALID.
-    """
-    manifest_path = package_dir / INTEGRITY_FILENAME
-    if not manifest_path.is_file():
-        return IntegrityResult(IntegrityStatus.INVALID_MANIFEST,
-                               detail=f"{INTEGRITY_FILENAME} not found")
-
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        expected_files = manifest["files"]
-        if not isinstance(expected_files, dict):
-            raise ValueError("files must be a dict")
-    except (json.JSONDecodeError, KeyError, ValueError, TypeError) as exc:
-        return IntegrityResult(IntegrityStatus.INVALID_MANIFEST,
-                               detail=f"malformed integrity.json: {exc}")
-
-    current_files = _scan_package_files(package_dir)
-
     missing    = sorted(set(expected_files) - set(current_files))
     unexpected = sorted(set(current_files) - set(expected_files))
     modified   = sorted(
@@ -127,3 +113,23 @@ def verify_integrity(package_dir: Path) -> IntegrityResult:
 
     return IntegrityResult(status, modified_files=modified,
                            missing_files=missing, unexpected_files=unexpected)
+
+
+def verify_integrity(package_dir: Path) -> IntegrityResult:
+    """Lê integrity.json de package_dir e compara contra os arquivos reais em disco agora."""
+    manifest_path = package_dir / INTEGRITY_FILENAME
+    if not manifest_path.is_file():
+        return IntegrityResult(IntegrityStatus.INVALID_MANIFEST,
+                               detail=f"{INTEGRITY_FILENAME} not found")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        expected_files = manifest["files"]
+        if not isinstance(expected_files, dict):
+            raise ValueError("files must be a dict")
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError) as exc:
+        return IntegrityResult(IntegrityStatus.INVALID_MANIFEST,
+                               detail=f"malformed integrity.json: {exc}")
+
+    current_files = _scan_package_files(package_dir)
+    return diff_manifests(expected_files, current_files)
