@@ -100,4 +100,4 @@ Dois dos três consumidores síncronos/semi-síncronos de `SignatureProvider`/`T
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - **Verificação manual ao vivo**: par de chaves real gerado, módulo real assinado e empacotado, publisher real registrado com `trust_status=TRUSTED`, módulo instalado via API real. `curl http://127.0.0.1:8000/api/v1/docs/export/ai-context` retornou `**Trust Level:** TRUSTED` e `**Publisher:** live_slice3_publisher` para o módulo — antes desta mudança, essa seção nunca passava de `UNVERIFIED`, mesmo com um publisher real cadastrado.
 
-**Commit**: _(pendente)_
+**Commit**: `c77bebe`
