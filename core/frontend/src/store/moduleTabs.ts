@@ -16,16 +16,15 @@ interface ModuleTabsState {
    * ou null se não sobrou nenhuma aba aberta. */
   closeTab: (id: string) => string | null
   setActive: (id: string) => void
-  /** Alterna a barra de abas. Retorna 'blocked' se havia mais de uma aba
-   * aberta e a barra estava tentando fechar — nesse caso nada muda, quem
-   * chamou decide como avisar o usuário. */
-  toggleStrip: () => 'opened' | 'closed' | 'blocked'
+  /** Alterna a barra de abas — 100% manual, só quem clica no breadcrumb
+   * abre ou fecha (nunca abre nem trava fechada sozinha). */
+  toggleStrip: () => 'opened' | 'closed'
 }
 
 // Módulos abertos ficam montados o tempo todo (ModuleWorkspace) — trocar de
-// aba nunca desmonta/remonta a UI do módulo, só esconde via CSS. A barra só
-// pode ficar fechada com 0 ou 1 aba aberta (invariante reforçada tanto aqui
-// quanto no toggle manual).
+// aba nunca desmonta/remonta a UI do módulo, só esconde via CSS. Abrir ou
+// fechar a barra é decisão exclusiva do usuário (botão no breadcrumb),
+// nunca automática.
 export const useModuleTabsStore = create<ModuleTabsState>((set, get) => ({
   tabs: [],
   activeId: null,
@@ -34,7 +33,7 @@ export const useModuleTabsStore = create<ModuleTabsState>((set, get) => ({
   openTab: (id, name) => set((s) => {
     const exists = s.tabs.some((t) => t.id === id)
     const tabs = exists ? s.tabs.map((t) => (t.id === id ? { ...t, name } : t)) : [...s.tabs, { id, name }]
-    return { tabs, activeId: id, stripOpen: s.stripOpen || tabs.length > 1 }
+    return { tabs, activeId: id }
   }),
 
   closeTab: (id) => {
@@ -55,9 +54,7 @@ export const useModuleTabsStore = create<ModuleTabsState>((set, get) => ({
   setActive: (id) => set({ activeId: id }),
 
   toggleStrip: () => {
-    const s = get()
-    if (s.stripOpen && s.tabs.length > 1) return 'blocked'
-    const stripOpen = !s.stripOpen
+    const stripOpen = !get().stripOpen
     set({ stripOpen })
     return stripOpen ? 'opened' : 'closed'
   },

@@ -5,8 +5,9 @@ import { useModuleTabsStore } from '@/store/moduleTabs'
 import { cn } from '@/lib/utils'
 
 /**
- * Barra de abas de módulo — retraída por padrão, aberta pelo botão de
- * breadcrumb (ver Breadcrumb.tsx). Só existe pra dar visibilidade/controle
+ * Barra de abas de módulo — retraída por padrão, só abre/fecha quando o
+ * usuário clica no botão de breadcrumb (ver Breadcrumb.tsx). Puramente
+ * manual, sem abertura automática. Existe pra dar visibilidade/controle
  * sobre o que `ModuleWorkspace` já mantém montado; fechar uma aba aqui
  * desmonta o módulo de verdade (perde o estado dele).
  */

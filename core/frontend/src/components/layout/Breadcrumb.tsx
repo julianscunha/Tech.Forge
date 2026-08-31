@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { isModuleRoute } from '@/lib/moduleRoute'
@@ -13,16 +12,10 @@ const PATH_LABELS: Record<string, string> = {
   'developer-center': 'Developer Center',
 }
 
-const HINT_DURATION_MS = 2200
-
 export function Breadcrumb() {
   const { pathname } = useLocation()
   const segments = pathname.split('/').filter(Boolean)
   const { tabs, activeId, stripOpen, toggleStrip } = useModuleTabsStore()
-  const [showBlockedHint, setShowBlockedHint] = useState(false)
-  const hintTimer = useRef<ReturnType<typeof setTimeout>>()
-
-  useEffect(() => () => clearTimeout(hintTimer.current), [])
 
   const onModuleRoute = isModuleRoute(pathname)
   const activeTabName = tabs.find((t) => t.id === activeId)?.name
@@ -35,14 +28,6 @@ export function Breadcrumb() {
     })),
   ]
 
-  function handleToggle() {
-    if (toggleStrip() === 'blocked') {
-      setShowBlockedHint(true)
-      clearTimeout(hintTimer.current)
-      hintTimer.current = setTimeout(() => setShowBlockedHint(false), HINT_DURATION_MS)
-    }
-  }
-
   return (
     <nav aria-label="breadcrumb" className="flex items-center gap-1 min-w-0 overflow-hidden whitespace-nowrap relative">
       {crumbs.map((crumb, i) => {
@@ -54,7 +39,7 @@ export function Breadcrumb() {
             {i > 0 && <ChevronRight size={11} className="text-[hsl(var(--text-subtle))] flex-shrink-0" />}
             {showTabToggle ? (
               <button
-                onClick={handleToggle}
+                onClick={toggleStrip}
                 aria-expanded={stripOpen}
                 title="Mostrar/ocultar módulos abertos"
                 className={cn(
@@ -82,18 +67,6 @@ export function Breadcrumb() {
           </span>
         )
       })}
-
-      {showBlockedHint && (
-        <div
-          role="tooltip"
-          className={cn(
-            'absolute top-full left-0 mt-1.5 z-30 whitespace-nowrap',
-            'bg-[hsl(var(--text))] text-[hsl(var(--bg))] text-[11px] px-2.5 py-1.5 rounded-md',
-          )}
-        >
-          Feche as outras abas pra recolher
-        </div>
-      )}
     </nav>
   )
 }
