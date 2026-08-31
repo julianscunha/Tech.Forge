@@ -27,6 +27,7 @@ if str(_CORE) not in sys.path:
 
 from app.module_engine.manifest import ManifestError, ManifestParser  # noqa: E402
 from app.module_engine.validator import ModuleValidator  # noqa: E402
+from techforge_cli.config import CORE_BASE_URL  # noqa: E402
 
 
 def _scan(modules_dir: Path):
@@ -136,7 +137,7 @@ def validate_cmd(module_path, platform_version):
 def _core_post(path: str) -> dict:
     import urllib.request
     req = urllib.request.Request(
-        f"http://127.0.0.1:8000/api/v1{path}", data=b"", method="POST",
+        f"{CORE_BASE_URL}{path}", data=b"", method="POST",
         headers={"Content-Type": "application/json"},
     )
     try:
@@ -184,7 +185,7 @@ def remove_cmd(module_id, yes):
         )
     import urllib.request
     req = urllib.request.Request(
-        f"http://127.0.0.1:8000/api/v1/marketplace/remove/{module_id}",
+        f"{CORE_BASE_URL}/marketplace/remove/{module_id}",
         method="DELETE",
     )
     try:
@@ -204,7 +205,7 @@ def _core_get(path: str):
     import urllib.error
     import urllib.request
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:8000/api/v1{path}", timeout=15) as resp:
+        with urllib.request.urlopen(f"{CORE_BASE_URL}{path}", timeout=15) as resp:
             return json.loads(resp.read())
     except urllib.error.URLError as exc:
         print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
@@ -289,7 +290,7 @@ def _core_put_json(path: str, payload: dict) -> dict:
     import urllib.request
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        f"http://127.0.0.1:8000/api/v1{path}", data=body, method="PUT",
+        f"{CORE_BASE_URL}{path}", data=body, method="PUT",
         headers={"Content-Type": "application/json"},
     )
     try:
@@ -308,7 +309,7 @@ def _core_post_json(path: str, payload: dict) -> dict:
     import urllib.request
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        f"http://127.0.0.1:8000/api/v1{path}", data=body, method="POST",
+        f"{CORE_BASE_URL}{path}", data=body, method="POST",
         headers={"Content-Type": "application/json"},
     )
     try:

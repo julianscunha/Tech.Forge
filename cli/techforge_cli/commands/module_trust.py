@@ -28,7 +28,7 @@ _CORE_BACKEND = Path(__file__).resolve().parents[3] / "core" / "backend"
 if str(_CORE_BACKEND) not in sys.path:
     sys.path.insert(0, str(_CORE_BACKEND))
 
-_CORE = "http://127.0.0.1:8000/api/v1"
+from techforge_cli.config import CORE_BASE_URL as _CORE
 
 
 def _get(path: str):

@@ -18,7 +18,7 @@ import click
 
 from techforge_cli.console import console, print_error, print_info
 
-_CORE = "http://127.0.0.1:8000/api/v1"
+from techforge_cli.config import CORE_BASE_URL as _CORE
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 

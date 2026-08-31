@@ -14,7 +14,7 @@ from rich.table import Table
 
 from techforge_cli.console import console, print_error, print_header, print_info, print_success
 
-_BASE = "http://127.0.0.1:8000/api/v1"
+from techforge_cli.config import CORE_BASE_URL as _BASE
 
 
 def _core_get(path: str):

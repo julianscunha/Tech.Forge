@@ -30,7 +30,7 @@ from techforge_cli.packager.builder import PackageBuilder
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
 
-_CORE = "http://127.0.0.1:8000/api/v1"
+from techforge_cli.config import CORE_BASE_URL as _CORE
 
 
 def _get(path: str):
