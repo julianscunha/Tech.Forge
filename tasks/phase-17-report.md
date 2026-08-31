@@ -31,4 +31,4 @@ Path traversal (`..`, paths absolutos, drive letters) não precisou de tratament
 - `ruff check core/backend/app cli sdk` — all checks passed.
 - Verificação manual ao vivo: backend real subido (`run.py`), `.mod` real de ~292KB no disco declarando ~300MB descomprimido enviado via `POST /api/v1/marketplace/import` → rejeitado com `"Extraction failed: Package uncompressed size 300000134 bytes exceeds limit of 200000000 bytes"`, diretório do módulo nunca criado. Um `.mod` normal enviado ao mesmo endpoint instalou com sucesso.
 
-**Commit**: _(pendente)_
+**Commit**: `182ecc0`
