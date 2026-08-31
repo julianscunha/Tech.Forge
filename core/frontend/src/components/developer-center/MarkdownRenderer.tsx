@@ -2,8 +2,11 @@ import { useEffect, useRef } from 'react'
 import { marked } from 'marked'
 import { cn } from '@/lib/utils'
 
-// Configure marked for safe rendering
-marked.setOptions({ breaks: true, gfm: true })
+// breaks:false (padrão) — docs são escritos com quebra de linha manual em
+// ~80 colunas dentro do mesmo parágrafo; breaks:true transformaria cada
+// quebra de fonte num <br>, travando a largura visual do texto independente
+// do container.
+marked.setOptions({ breaks: false, gfm: true })
 
 interface Props {
   content: string

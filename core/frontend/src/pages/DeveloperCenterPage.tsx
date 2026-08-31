@@ -369,7 +369,7 @@ export function DeveloperCenterPage() {
               )}
             </div>
           ) : selectedArticle ? (
-            <div className="max-w-3xl mx-auto px-8 py-8">
+            <div className="max-w-5xl mx-auto px-8 py-8">
               {/* Back button */}
               <button
                 onClick={() => setSelectedArticle(null)}
