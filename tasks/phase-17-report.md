@@ -185,4 +185,4 @@ Nenhuma lógica de trust/publisher nova — só agregação/reexposição sobre 
 - **Checkpoint 2 (spec)**: suíte completa backend — `pytest tests -q` — 923 passed, 3 skipped. Suíte completa CLI — 130 passed.
 - `ruff check core/backend/app cli sdk` — all checks passed.
 
-**Commit**: _(pendente)_
+**Commit**: `5804c19`
