@@ -28,6 +28,9 @@ domain: [governanca-setup]
 | [manifest.example.yaml](manifest.example.yaml) | Exemplo comentado de manifest |
 | [guides/writing-docs](developer-center/guides/writing-docs.md) | Como escrever docs de módulos (padrão frontmatter) |
 | [guides/development-guide](developer-center/guides/development-guide.md) | Guia de desenvolvimento de módulos |
+| [guides/user-guide](developer-center/guides/user-guide.md) | Guia do usuário final — instalar, iniciar, usar, diagnosticar |
+| [guides/it-deployment-guide](developer-center/guides/it-deployment-guide.md) | Guia de TI: requisitos, paths, logs, backup, troubleshooting |
+| [guides/desktop-packaging](developer-center/guides/desktop-packaging.md) | Como gerar e depurar o build empacotado do backend (PyInstaller) |
 | [sdk/backend](developer-center/sdk/backend.md) | SDK backend (contrato, router, notificações) |
 | [sdk/frontend](developer-center/sdk/frontend.md) | SDK frontend (micro-frontend render) |
 | [service-modules/overview](developer-center/service-modules/overview.md) | Service Modules e contratos públicos |
@@ -50,7 +53,8 @@ domain: [governanca-setup]
 | [core/module-engine](developer-center/core/module-engine.md) | Module Engine: loader, validação, plugin router (detalhado) |
 | [core/package-manager](developer-center/core/package-manager.md) | Package Manager (visão canônica) |
 | [core/package-manager-internals](developer-center/core/package-manager-internals.md) | Package Manager: instalação .mod, cache, update (detalhado) |
-| [core/launcher](developer-center/core/launcher.md) | Launcher: modos Desktop/Dev, single-instance, shutdown |
+| [core/launcher](developer-center/core/launcher.md) | Launcher: modos Desktop/Dev, single-instance, Safe Mode, /ready, erros de startup |
+| [core/desktop-distribution](developer-center/core/desktop-distribution.md) | Desktop Distribution: install dir vs user data dir, empacotamento PyInstaller, repair-check |
 | [core/runtime](developer-center/core/runtime.md) | Runtime status, uptime, DEGRADED |
 
 ## 4. Governança

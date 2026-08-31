@@ -110,3 +110,17 @@ Plano: `tasks/phase16-plan.md`.
 
 **Commit**: `8edf965`
 
+### Slice 8 — Documentação + Developer Center + AI Context
+
+**Arquivos**: `docs/developer-center/core/launcher.md` (atualizado — estava desatualizado desde antes da Fase 16: citava `/platform/status` como health check, "empacotamento fica pra fase posterior"), `docs/developer-center/core/desktop-distribution.md` (novo), `docs/developer-center/guides/user-guide.md` (novo), `docs/developer-center/guides/it-deployment-guide.md` (novo), `docs/developer-center/guides/desktop-packaging.md` (novo), `docs/INDEX.md` (modificado, 5 entradas novas).
+
+**O quê**: `core/launcher.md` corrigido e ampliado (§ `/ready`, Safe Mode, focus-existing, erros de startup amigáveis). `core/desktop-distribution.md` novo — arquitetura de install-dir/user-data-dir, os 3 bugs reais do Slice 7, empacotamento, repair-check, e a lista explícita do que ficou fora de escopo. Três guias novos cobrindo §40 (User Guide, IT/Deployment Guide, Developer Guide — este último focado especificamente no que é novo, empacotamento, já que setup/dev workflow gerais já tinham guias próprios). Todos escritos honestamente sobre o que **não** existe ainda (sem instalador GUI, sem uninstall formal) em vez de descrever uma aspiração.
+
+**Decisão-chave**: nenhuma ação de código pro "AI Context deve incluir distribuição" (§41) — o `AIContextExporter` (Fase 5/7) já consolida automaticamente tudo que o Doc Engine indexa por categoria; bastou escrever os docs nas pastas certas (`core/` → Architecture, `guides/` → Guide) pra aparecerem lá. Verificado ao vivo via `GET /docs/export/ai-context`.
+
+**Aceite**: os 4 documentos (3 novos + 1 atualizado) aparecem em `GET /docs/list` nas categorias certas; conteúdo aparece no AI Context export.
+
+**Teste**: `pytest tests -q` → 886 passed, 3 skipped (sem testes novos — slice de documentação). Verificado ao vivo: `techforge start` real → `curl /docs/list?category=architecture` → `core/desktop-distribution` e `core/launcher` presentes; `curl /docs/list?category=guide` → os 3 guias novos presentes; `curl /docs/export/ai-context` → conteúdo novo presente (12 ocorrências dos termos-chave).
+
+**Commit**: _(pendente)_
+
