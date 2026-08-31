@@ -61,5 +61,5 @@ Plano: `tasks/phase16-plan.md`.
 
 **Teste**: `pytest tests -q` (backend) → 877 passed, 3 skipped (era 872 — 5 novos). `pytest tests -q` (cli) → 114 passed (era 113 — 1 novo). `ruff check core/backend/app cli sdk` limpo (1 import mal ordenado auto-corrigido pelo próprio ruff). `npm run lint`/`npm run build` (frontend) limpos. Verificado ao vivo: `techforge safe-mode` real → `curl /platform/status` → `safe_mode: true`, `modules_installed: 3`; `curl /modules/hello_world/ping` → 404; `techforge stop` + `techforge start` normal → `safe_mode: false`, `ping` → 200 de novo.
 
-**Commit**: _(pendente)_
+**Commit**: `2c79c5b`
 
