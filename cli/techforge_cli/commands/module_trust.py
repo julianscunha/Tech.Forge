@@ -20,6 +20,7 @@ import click
 import yaml
 from rich.table import Table
 
+from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import console, print_error, print_info, print_success, print_warning
 
 # `app` vive em core/backend/, irmão de cli/ no monorepo Tech.Forge — mesmo
@@ -27,8 +28,6 @@ from techforge_cli.console import console, print_error, print_info, print_succes
 _CORE_BACKEND = Path(__file__).resolve().parents[3] / "core" / "backend"
 if str(_CORE_BACKEND) not in sys.path:
     sys.path.insert(0, str(_CORE_BACKEND))
-
-from techforge_cli.config import CORE_BASE_URL as _CORE
 
 
 def _get(path: str):

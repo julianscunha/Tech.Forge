@@ -16,9 +16,9 @@ from pathlib import Path
 
 import click
 
+from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import console, print_error, print_info
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 

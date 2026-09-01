@@ -12,9 +12,8 @@ from pathlib import Path
 import click
 from rich.table import Table
 
-from techforge_cli.console import console, print_error, print_header, print_info, print_success
-
 from techforge_cli.config import CORE_BASE_URL as _BASE
+from techforge_cli.console import console, print_error, print_header, print_info, print_success
 
 
 def _core_get(path: str):

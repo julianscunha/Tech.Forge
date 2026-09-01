@@ -10,9 +10,8 @@ import json
 import click
 from rich.table import Table
 
-from techforge_cli.console import console, print_error, print_info
-
 from techforge_cli.config import CORE_BASE_URL as _CORE
+from techforge_cli.console import console, print_error, print_info
 
 
 def _get(path: str):

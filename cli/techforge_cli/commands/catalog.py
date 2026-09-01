@@ -15,6 +15,7 @@ from pathlib import Path
 import click
 from rich.table import Table
 
+from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import (
     console,
     print_error,
@@ -29,8 +30,6 @@ from techforge_cli.packager.builder import PackageBuilder
 # Add core backend to path for imports
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
-
-from techforge_cli.config import CORE_BASE_URL as _CORE
 
 
 def _get(path: str):
