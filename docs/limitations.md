@@ -108,12 +108,14 @@ estado atual da plataforma.
   caminho saudável — nenhum teste simula disco cheio ou indisponível.
 - A suíte de testes do backend ainda tem uma falha conhecida dependente
   da ordem de execução (passa isoladamente, falha ocasionalmente quando
-  rodada junto com o resto da suíte) — a configuração central de log
-  limpa os handlers do logger raiz do processo sem restaurar depois, o
-  que pode afetar testes que dependem de captura de log rodados na
-  sequência. Não é um defeito de produto. (Uma segunda causa, uma
-  corrida real que vazava notificação de segurança pro banco de teste
-  compartilhado, já foi corrigida.)
+  rodada junto com o resto da suíte) — o banco de dados usa uma conexão
+  compartilhada por todo o processo de teste, mas cada teste que sobe a
+  aplicação roda num loop assíncrono próprio; ocasionalmente uma conexão
+  criada num loop já encerrado é reaproveitada por um teste posterior e
+  a operação falha ao tentar notificar o loop antigo. Não afeta
+  produção (lá a aplicação sobe uma única vez, um único loop). (Uma
+  segunda causa, uma corrida real que vazava notificação de segurança
+  pro banco de teste compartilhado, já foi corrigida.)
 - Uma parte da validação de compliance de documentação está duplicada
   entre o CLI e o motor de documentação do Core.
 - A interface do frontend nunca foi verificada visualmente em navegador
