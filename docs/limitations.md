@@ -50,6 +50,16 @@ estado atual da plataforma.
 
 ## Limitações conhecidas, candidatas a melhoria futura
 
+- **`sdk.database` não é persistência de produção.** A API pública ainda é
+  um mock em memória: `fetch_all()`/`execute()` não sobrevivem a restart e
+  não devem ser usadas para dados duráveis de módulos. O módulo deve manter
+  sua própria persistência até haver um contrato oficial de banco isolado por
+  módulo. A decisão precisa cobrir API, migrações, backup e isolamento antes
+  de qualquer implementação.
+- **O material de referência para frontends de módulo ainda é vanilla JS.** O
+  Core serve assets estáticos, mas não há um módulo de referência com
+  React/TypeScript e bundle ESM (por exemplo, Vite library mode). É uma lacuna
+  de documentação e exemplo, não uma limitação do runtime.
 - **Hot-unload de módulo não existe.** Desativar um módulo não descarrega
   o código já montado em runtime — é preciso reiniciar a plataforma para
   o efeito ser completo.
