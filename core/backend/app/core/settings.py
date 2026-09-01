@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     FRONTEND_PORT: int = 5173
     HEALTH_CHECK_TIMEOUT: int = 60      # seconds waiting for backend READY
     FRONTEND_READY_TIMEOUT: int = 60    # seconds waiting for frontend READY
+    MODULE_HEALTH_CHECK_TIMEOUT: float = 5.0  # seconds per module health hook
 
     # Database
     DATABASE_URL: str = f"sqlite+aiosqlite:///{USER_DATA_DIR}/config/techforge.db"

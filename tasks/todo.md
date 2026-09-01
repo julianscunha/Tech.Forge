@@ -61,9 +61,9 @@
 **Descrição:** Fazer o endpoint de health chamar o hook existente para módulos ativos e responder com estado de runtime e erro diagnóstico, sem confundir estado administrativo com saúde real.
 
 **Aceitação:**
-- [ ] Hook saudável retorna módulo saudável.
-- [ ] Hook que falha ou expira retorna não saudável, sem derrubar a resposta global.
-- [ ] Módulos não instalados não têm hook executado.
+- [x] Hook saudável retorna módulo saudável.
+- [x] Hook que falha ou expira retorna não saudável, sem derrubar a resposta global.
+- [x] Módulos não instalados não têm hook executado.
 
 **Verificação:** testes de rota e runtime em `core/backend/tests`; suíte backend a partir de `core/backend/`.
 
