@@ -51,10 +51,15 @@ EXCLUDE_PATTERNS = {
     "*.egg-info", ".venv", "venv",
 }
 
+# Public templates are part of a module's install contract. Keep this
+# allowlist deliberately narrow: runtime environment files must never be
+# embedded in distributable archives.
+ALLOWED_DOTFILES = {".env-model"}
+
 def _should_exclude(path: Path) -> bool:
     name = path.name
     return (
-        name.startswith(".")
+        (name.startswith(".") and name not in ALLOWED_DOTFILES)
         or any(name == pat or name.endswith(pat.lstrip("*"))
                for pat in EXCLUDE_PATTERNS)
     )

@@ -149,6 +149,17 @@ class TestInstall:
         assert (tmp_path / "installed" / "test_pkg" / "manifest.yaml").exists()
         assert (tmp_path / "installed" / "test_pkg" / "backend" / "main.py").exists()
 
+    def test_install_preserves_env_model_from_package(self, tmp_path):
+        pm = make_package_manager(tmp_path)
+        mod = make_mod_file(tmp_path, MANIFEST_BASE.copy())
+        with zipfile.ZipFile(mod, "a") as zf:
+            zf.writestr(".env-model", "API_URL=\n")
+
+        result = asyncio.run(pm.install(mod))
+
+        assert result.success, result.message
+        assert (tmp_path / "installed" / "test_pkg" / ".env-model").read_text(encoding="utf-8") == "API_URL=\n"
+
     def test_install_nonexistent_file_fails(self, tmp_path):
         pm  = make_package_manager(tmp_path)
         result = asyncio.run(pm.install(tmp_path / "ghost.mod"))

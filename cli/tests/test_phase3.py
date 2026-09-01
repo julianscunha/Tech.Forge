@@ -163,6 +163,20 @@ class TestModuleCLIValidator:
         report = ModuleCLIValidator.validate(mod)
         assert report.error_count == 0
 
+    def test_accepts_bundle_style_default_export(self, tmp_path):
+        mod = make_valid_module(tmp_path)
+        (mod / "frontend" / "index.tsx").write_text(
+            "const Page = () => null;\n"
+            "const moduleConfig = {};\n"
+            "export { Page as default, moduleConfig };\n",
+            encoding="utf-8",
+        )
+
+        report = ModuleCLIValidator.validate(mod)
+
+        default_export = next(c for c in report.checks if c.name == "Frontend: default component")
+        assert default_export.passed
+
 
 # ── TemplateGenerator tests ───────────────────────────────────────────────────
 
@@ -271,6 +285,19 @@ class TestPackageBuilder:
             names = zf.namelist()
         assert "META-INF/TECHFORGE" in names
         assert "META-INF/BUILD"     in names
+
+    def test_archive_includes_env_model_but_not_env(self, tmp_path):
+        import zipfile
+        mod = make_valid_module(tmp_path / "src")
+        (mod / ".env-model").write_text("API_URL=\n", encoding="utf-8")
+        (mod / ".env").write_text("API_URL=secret\n", encoding="utf-8")
+
+        result = PackageBuilder.build(mod, tmp_path / "dist")
+
+        with zipfile.ZipFile(result.output_path) as zf:
+            names = zf.namelist()
+        assert ".env-model" in names
+        assert ".env" not in names
 
     def test_file_count_positive(self, tmp_path):
         mod = make_valid_module(tmp_path / "src")

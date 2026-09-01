@@ -64,6 +64,10 @@ VALID_COLORS = {
 }
 
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+DEFAULT_EXPORT_RE = re.compile(
+    r"\bexport\s+default\b|\bexport\s*\{[^}]*\bas\s+default\b",
+    re.DOTALL,
+)
 
 
 class ModuleCLIValidator:
@@ -213,7 +217,7 @@ class ModuleCLIValidator:
         if frontend_file.exists():
             src = frontend_file.read_text(encoding="utf-8")
             has_config  = "moduleConfig" in src
-            has_default = "export default" in src
+            has_default = bool(DEFAULT_EXPORT_RE.search(src))
             report.add("Frontend: moduleConfig exported", has_config,
                        "moduleConfig found" if has_config
                        else "moduleConfig not exported — Core cannot register the module")
