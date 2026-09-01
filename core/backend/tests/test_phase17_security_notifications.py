@@ -19,7 +19,8 @@ from sqlalchemy.pool import StaticPool
 from app.db import database as db_module
 from app.db.database import Base
 from app.observability.events import Event
-from app.observability.notifications_bridge import _handle_critical_event
+from app.observability import notifications_bridge
+from app.observability.notifications_bridge import _handle_critical_event, drain_pending_notifications
 from app.services.notifications import NotificationService
 
 pytestmark = pytest.mark.integration
@@ -97,13 +98,54 @@ async def test_security_event_notifies_even_when_published_from_running_loop(mon
     try:
         _handle_critical_event(Event(type="security.module_blocked",
                                      payload={"module_id": "mod_a", "reason": "oversized"}))
-        # _handle_critical_event agenda a criação via create_task quando
-        # já há um loop rodando — precisa ceder o controle pra ela rodar.
-        await asyncio.sleep(0.05)
+        # `_handle_critical_event` agenda a criação via create_task quando já
+        # há um loop rodando — esperar a task de verdade (drain), não um sleep
+        # arbitrário. Um sleep fixo é uma corrida: se a task demorar mais que
+        # o valor escolhido (CI sob carga, disco lento), o teste segue antes
+        # dela terminar e a task acaba escrevendo depois, já fora do `monkeypatch`
+        # (achado real: um sleep de 50ms aqui já vazou uma notificação
+        # "Segurança — mod_a: Instalação bloqueada..." pra dentro do banco de
+        # produção usado por outros arquivos de teste, poluindo
+        # test_phase2_notifications.py de forma intermitente).
+        await drain_pending_notifications()
 
         async with session_factory() as session:
             results = await NotificationService.list(session)
         assert len(results) == 1
         assert results[0].module_id == "mod_a"
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_drain_waits_for_slow_notification_task(monkeypatch):
+    """Prova que drain_pending_notifications() espera a task terminar de
+    verdade, mesmo se ela demorar mais que qualquer sleep fixo razoável —
+    ao contrário do `asyncio.sleep(0.05)` que este teste substituiu."""
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:",
+                                 connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    monkeypatch.setattr(db_module, "AsyncSessionLocal", session_factory)
+
+    real_create = notifications_bridge._create_notification
+
+    async def _slow_create(event):
+        await asyncio.sleep(0.2)  # bem mais que qualquer sleep fixo que já foi usado aqui
+        await real_create(event)
+
+    monkeypatch.setattr(notifications_bridge, "_create_notification", _slow_create)
+
+    try:
+        _handle_critical_event(Event(type="security.module_blocked",
+                                     payload={"module_id": "mod_slow", "reason": "oversized"}))
+        await drain_pending_notifications()
+
+        async with session_factory() as session:
+            results = await NotificationService.list(session)
+        assert len(results) == 1
+        assert results[0].module_id == "mod_slow"
     finally:
         await engine.dispose()
