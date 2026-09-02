@@ -9,6 +9,7 @@ setup(
     python_requires=">=3.11",
     install_requires=[
         "pyyaml>=6.0",
+        "aiosqlite>=0.20.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.11",

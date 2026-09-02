@@ -1,11 +1,8 @@
 """
 SDK Database Service
 ====================
-Provides isolated database access for module backends.
-
-Phase 3: in-memory mock that validates query structure and returns
-         typed results. Modules can develop and test without a live DB.
-Phase 4: replaced by a real AsyncSession scoped to the module's schema.
+Isolated SQLite persistence for module backends — one file per module
+under modules/installed/<module_id>/data/<module_id>.db. See ADR-007.
 
 Usage:
     from techforge_sdk import sdk
@@ -14,100 +11,108 @@ Usage:
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+from pathlib import Path
 from typing import Any, Optional
+
+import aiosqlite
 
 logger = logging.getLogger("techforge.sdk.database")
 
 
 class DatabaseSDK:
     """
-    Isolated database access for a single module.
-    Each module receives its own instance scoped to its module_id.
+    Isolated SQLite database for a single module.
+    Each module receives its own instance, backed by its own .db file.
     """
 
-    def __init__(self, module_id: str = "unknown") -> None:
+    def __init__(self, module_id: str = "unknown", data_dir: Optional[Path] = None) -> None:
         self._module_id = module_id
-        self._mock_store: dict[str, list[dict]] = {}
-        logger.debug("DatabaseSDK initialised for module '%s'", module_id)
+        if data_dir is None:
+            data_dir = Path("modules") / "installed" / module_id / "data"
+        data_dir = Path(data_dir)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        self._db_path = data_dir / f"{module_id}.db"
+        self._conn: Optional[aiosqlite.Connection] = None
+        self._lock = asyncio.Lock()
+        # True while a caller-managed transaction (begin_transaction) is open —
+        # execute()/execute_many() skip the per-call commit until commit()/rollback().
+        self._in_transaction = False
+        logger.debug("DatabaseSDK for module '%s' -> %s", module_id, self._db_path)
+
+    # ── Connection ────────────────────────────────────────────────────────────
+
+    async def _connection(self) -> aiosqlite.Connection:
+        if self._conn is None:
+            self._conn = await aiosqlite.connect(self._db_path)
+            self._conn.row_factory = aiosqlite.Row
+        return self._conn
 
     # ── Query interface ───────────────────────────────────────────────────────
 
     async def fetch_all(
         self, query: str, params: Optional[list] = None
     ) -> list[dict[str, Any]]:
-        """
-        Execute a SELECT query and return all matching rows.
-
-        Phase 3 mock: returns rows stored via execute() for the same table.
-        Phase 4: executes against the real SQLite/PostgreSQL session.
-
-        Args:
-            query:  Raw SQL string. Use ? for positional parameters.
-            params: Positional parameter values.
-
-        Returns:
-            List of row dicts. Empty list if no rows found.
-        """
-        logger.debug("[%s] fetch_all: %s | params=%s", self._module_id, query[:60], params)
-        table = self._extract_table(query)
-        return self._mock_store.get(table, [])
+        """Execute a SELECT query and return all matching rows as dicts."""
+        async with self._lock:
+            conn = await self._connection()
+            cursor = await conn.execute(query, params or [])
+            rows = await cursor.fetchall()
+            await cursor.close()
+            return [dict(row) for row in rows]
 
     async def fetch_one(
         self, query: str, params: Optional[list] = None
     ) -> Optional[dict[str, Any]]:
-        """
-        Execute a SELECT query and return the first matching row, or None.
-        """
+        """Execute a SELECT query and return the first matching row, or None."""
         rows = await self.fetch_all(query, params)
         return rows[0] if rows else None
 
-    async def execute(
-        self, query: str, params: Optional[list] = None
-    ) -> None:
-        """
-        Execute an INSERT, UPDATE, or DELETE statement.
+    async def execute(self, query: str, params: Optional[list] = None) -> None:
+        """Execute an INSERT, UPDATE, DELETE or DDL statement."""
+        async with self._lock:
+            conn = await self._connection()
+            await conn.execute(query, params or [])
+            if not self._in_transaction:
+                await conn.commit()
 
-        Phase 3 mock: stores rows in the in-memory mock store for
-        subsequent fetch_all() calls within the same process.
-        """
-        logger.debug("[%s] execute: %s | params=%s", self._module_id, query[:60], params)
-        if query.strip().upper().startswith("INSERT") and params:
-            table = self._extract_table(query)
-            if table not in self._mock_store:
-                self._mock_store[table] = []
-            self._mock_store[table].append({"_params": params})
-
-    async def execute_many(
-        self, query: str, params_list: list[list[Any]]
-    ) -> None:
+    async def execute_many(self, query: str, params_list: list[list[Any]]) -> None:
         """Batch execute a statement for multiple parameter sets."""
-        for params in params_list:
-            await self.execute(query, params)
+        async with self._lock:
+            conn = await self._connection()
+            await conn.executemany(query, params_list)
+            if not self._in_transaction:
+                await conn.commit()
 
     # ── Transaction helpers ───────────────────────────────────────────────────
 
     async def begin_transaction(self) -> None:
-        """Phase 4: wraps subsequent calls in an atomic transaction."""
-        logger.debug("[%s] begin_transaction (mock no-op)", self._module_id)
+        """
+        Subsequent execute()/execute_many() calls won't auto-commit until commit()/rollback().
+
+        # ponytail: doesn't hold the lock across the whole transaction, so two
+        # concurrent logical transactions on the SAME DatabaseSDK instance can
+        # interleave writes. Fine for the single-caller-per-module usage this
+        # SDK targets today; if a module needs real concurrent transaction
+        # isolation, hold the lock for the transaction's duration instead.
+        """
+        self._in_transaction = True
 
     async def commit(self) -> None:
-        """Phase 4: commits the current transaction."""
-        logger.debug("[%s] commit (mock no-op)", self._module_id)
+        async with self._lock:
+            conn = await self._connection()
+            await conn.commit()
+        self._in_transaction = False
 
     async def rollback(self) -> None:
-        """Phase 4: rolls back the current transaction."""
-        logger.debug("[%s] rollback (mock no-op)", self._module_id)
+        async with self._lock:
+            conn = await self._connection()
+            await conn.rollback()
+        self._in_transaction = False
 
-    # ── Internal ──────────────────────────────────────────────────────────────
-
-    @staticmethod
-    def _extract_table(query: str) -> str:
-        """Best-effort table name extraction for mock routing."""
-        tokens = query.upper().split()
-        for kw in ("FROM", "INTO", "UPDATE", "TABLE"):
-            if kw in tokens:
-                idx = tokens.index(kw)
-                if idx + 1 < len(tokens):
-                    return tokens[idx + 1].strip("(),;").lower()
-        return "_default"
+    async def close(self) -> None:
+        """Close the underlying connection. Safe to call even if never opened."""
+        if self._conn is not None:
+            await self._conn.close()
+            self._conn = None

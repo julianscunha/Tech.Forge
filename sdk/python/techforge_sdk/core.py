@@ -35,7 +35,7 @@ class TechForgeSDK:
     ) -> None:
         self._module_id = module_id
 
-        self.database      = DatabaseSDK(module_id)
+        self.database      = DatabaseSDK(module_id, data_dir)
         self.storage       = StorageSDK(module_id, data_dir)
         self.logger        = LoggerSDK(module_id)
         self.settings      = SettingsSDK(module_id, data_dir)
