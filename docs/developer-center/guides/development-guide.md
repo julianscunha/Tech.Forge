@@ -81,6 +81,12 @@ export default function MyToolPage() {
 }
 ```
 
+Para chamar o backend do módulo, use `fetch` com caminho relativo — o Core já resolve `/api/v1/modules/{module_id}/...` tanto no Vite dev (proxy) quanto servindo o build final, sem CORS nem configuração extra:
+
+```ts
+fetch(`/api/v1/modules/my_tool/status`)
+```
+
 ## Passo 4 — Validar
 
 ```bash
@@ -126,6 +132,10 @@ cp dist/my_tool-1.0.0.mod modules/repository/
 cp -r my_tool/ modules/installed/
 # Reiniciar o backend
 ```
+
+Depois de instalado, para testar `enable()`/`disable()` de verdade sem reiniciar o backend a cada mudança, use `POST /api/v1/marketplace/activate/{module_id}` e `/deactivate/{module_id}` — ver [Ciclo de Vida dos Módulos](../core/module-lifecycle.md).
+
+> **Nota (dev):** `uvicorn --reload` às vezes deixa um processo worker vivo mesmo depois de encerrar o processo do reloader. Se a próxima execução não refletir suas mudanças, confira `netstat`/`tasklist` pelo PID real antes de reiniciar de novo.
 
 ## Passo 7 — Verificar
 

@@ -73,7 +73,7 @@ module = MyModule()
 
 ## health_check()
 
-O método `health_check()` é chamado periodicamente pelo Core. Retorne `HealthResult.ok()` ou `HealthResult.fail()`:
+O método `health_check()` é chamado sob demanda pelo Core, a cada requisição a `GET /api/v1/health` (não em background/periodicamente). Retorne `HealthResult.ok()` ou `HealthResult.fail()`:
 
 ```python
 # Sucesso
@@ -82,3 +82,14 @@ return HealthResult.ok("Service running.", connections=3)
 # Falha
 return HealthResult.fail("Database unreachable.", code=503)
 ```
+
+## Testar o lifecycle em dev sem empacotar um `.mod`
+
+`ModuleLoader.scan_installed()` (rodado no boot) só monta o router do módulo — não chama `install()`/`enable()`/`health_check()`. O caminho oficial para exercitar os hooks reais durante o desenvolvimento é:
+
+```bash
+POST /api/v1/marketplace/activate/{module_id}     # chama enable()
+POST /api/v1/marketplace/deactivate/{module_id}   # chama disable()
+```
+
+Isso evita empacotar um `.mod` só para validar que `enable()`/`disable()` fazem o que deveriam.

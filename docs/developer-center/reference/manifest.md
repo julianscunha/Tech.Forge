@@ -33,10 +33,13 @@ color: blue
 entry_backend: backend/main.py
 entry_frontend: frontend/index.tsx
 
+module_type: application
+channel: stable
+
 homepage: https://example.com
 documentation: https://docs.example.com
 
-# Segurança (ainda não implementada)
+# Preenchidos automaticamente pelo Core ao empacotar/publicar
 signature:
 checksum:
 ```
@@ -65,10 +68,17 @@ checksum:
 | `platform_min_version` | string | Versão mínima da plataforma. Default: `0.0.0`. |
 | `platform_max_version` | string | Versão máxima da plataforma. Default: `999.999.999`. |
 | `module_type` | string | `application` (padrão) ou `service`. Módulos `service` exigem contrato completo e os 3 tiers de exemplo — ver [Documentation First Principle](/developer-center/governance/documentation-first-principle). |
+| `channel` | string | Canal de pre-release: `stable` (padrão), `beta` ou `development`. |
 | `homepage` | URL | Site do módulo. |
 | `documentation` | URL | Documentação externa. |
-| `signature` | string | Assinatura digital (ainda não implementada). |
-| `checksum` | string | Checksum SHA-256 (ainda não implementado). |
+| `documentation.version` | string | Versão semver da documentação do módulo (bloco `documentation: {version, applies_to}` em vez de URL simples). |
+| `documentation.applies_to` | mapping | Faixa de compatibilidade da documentação, ex. `techforge: ">=1.0.0,<2.0.0"`. |
+| `dependencies` | list | Dependências de outros módulos instalados — ver Dependency Governance. |
+| `configuration.fields` | list | Campos de configuração expostos na UI do módulo (`id`, `type`: `string`\|`integer`\|`float`\|`boolean`, `default`). |
+| `source_type` | string | Origem do módulo: `local` (padrão), `catalog` ou `development`. Preenchido pelo Core, normalmente não editado à mão. |
+| `source_location` | string | Localização de origem quando `source_type` não é `local`. Preenchido pelo Core. |
+| `signature` | string | Assinatura digital, preenchida automaticamente ao empacotar/publicar via Marketplace. |
+| `checksum` | string | Checksum SHA-256, preenchido automaticamente ao empacotar/publicar via Marketplace. |
 
 ## Ícones disponíveis
 

@@ -1,12 +1,13 @@
 # TechForge Module Manifest
 # Copie este arquivo para o diretório raiz do seu módulo como manifest.yaml
+# Referência completa (tabela de campos, ícones, validação): docs/developer-center/reference/manifest.md
 
 id: my_module_id           # único, snake_case
 name: My Module Name
 version: 1.0.0
 
-platform_min_version: 1.0.0
-platform_max_version: 2.0.0
+platform_min_version: 1.0.0   # default: 0.0.0
+platform_max_version: 2.0.0   # default: 999.999.999
 
 category: Backup           # deve corresponder a um slug de categoria registrada
 
@@ -15,11 +16,45 @@ author: Developer Name
 description: Breve descrição do módulo
 
 entry_backend: backend/main.py     # relativo à raiz do módulo
-entry_frontend: frontend/index.tsx # relativo à raiz do módulo
+entry_frontend: frontend/index.tsx # relativo à raiz do módulo — ESM compilado (ex.: Vite lib mode), não .tsx cru
+
+# Navegação e apresentação (icon e order são obrigatórios)
+icon: shield-check          # nome do ícone lucide-react em kebab-case
+order: 10                   # posição na sidebar dentro do grupo category/vendor — menor primeiro
+color: blue                 # opcional — blue, green, red, yellow, orange, purple, pink, cyan, teal, indigo, gray
+
+# "application" (padrão) ou "service" — módulos service exigem contrato completo, ver
+# docs/developer-center/governance/documentation-first-principle.md
+module_type: application
+
+# Canal de pre-release — stable (padrão) | beta | development
+channel: stable
 
 homepage: https://example.com
-documentation: https://docs.example.com
 
-# Preenchidos automaticamente ao publicar no Marketplace (Phase 5)
+# `documentation` aceita UMA das duas formas — nunca as duas ao mesmo tempo:
+documentation: https://docs.example.com   # forma simples: URL externa
+# documentation:                          # forma com versionamento (opcional)
+#   version: 1.0.0
+#   applies_to:
+#     techforge: ">=1.0.0,<2.0.0"
+
+# Dependências de outros módulos (opcional) — ver Dependency Governance
+# dependencies:
+#   - module_id: other_module
+#     version: ">=1.0.0"
+
+# Campos de configuração expostos na UI do módulo (opcional)
+# configuration:
+#   fields:
+#     - id: api_key
+#       type: string
+#       default: null
+
+# Preenchidos automaticamente pelo Core ao empacotar/publicar — não editar manualmente
 signature:
 checksum:
+
+# Origem do módulo — preenchido pelo Core (local | catalog | development), normalmente não editado à mão
+# source_type: local
+# source_location:
