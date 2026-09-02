@@ -147,6 +147,11 @@ async def lifespan(app: FastAPI):
     # no meio do shutdown).
     await drain_pending_notifications()
 
+    # TD-010 — mesmo motivo, pra instalações remotas em background
+    # (asyncio.create_task em install_remote_module).
+    from app.api.routes.marketplace import drain_pending_installs
+    await drain_pending_installs()
+
 
 def _mount_static_frontend(app: FastAPI) -> bool:
     """

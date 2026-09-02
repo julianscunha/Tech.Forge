@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -11,10 +12,22 @@ class Base(DeclarativeBase):
     pass
 
 
+# TD-010: sob pytest, cada `with TestClient(app)` roda num event loop novo,
+# mas o pool padrão do SQLAlchemy reaproveita conexões aiosqlite entre
+# checkouts — uma conexão nascida no loop de um teste anterior (já fechado)
+# quebra com "Event loop is closed"/"database is locked" num teste posterior.
+# NullPool garante conexão nova a cada checkout, eliminando o reaproveitamento
+# cross-loop. Produção não é afetada (loop único, processo único).
+_pool_kwargs = {}
+if "pytest" in sys.modules:
+    from sqlalchemy.pool import NullPool
+    _pool_kwargs["poolclass"] = NullPool
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     connect_args={"check_same_thread": False},
+    **_pool_kwargs,
 )
 
 AsyncSessionLocal = async_sessionmaker(

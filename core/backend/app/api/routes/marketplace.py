@@ -29,6 +29,20 @@ from app.package_manager.models import PackageInfo
 logger = logging.getLogger("techforge.marketplace.api")
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
+# TD-010 — mesma técnica de app/observability/notifications_bridge.py:
+# guarda as tasks de instalação remota (asyncio.create_task, fire-and-forget)
+# pra drain_pending_installs() poder esperá-las no shutdown. Sem isso, uma
+# task ainda escrevendo no banco sobrevive ao fechamento do event loop do
+# TestClient (em teste) — vaza "database is locked"/"Event loop is closed"
+# pro próximo teste que sobe o app.
+_pending_install_tasks: set[asyncio.Task] = set()
+
+
+async def drain_pending_installs() -> None:
+    """Espera todas as instalações remotas em background terminarem."""
+    if _pending_install_tasks:
+        await asyncio.gather(*_pending_install_tasks, return_exceptions=True)
+
 
 # ── Response models ───────────────────────────────────────────────────────────
 
@@ -300,7 +314,9 @@ async def install_remote_module(module_id: str, request: RemoteInstallRequest):
     job = install_job_registry.create(module_id)
 
     # Start background task without blocking the response
-    asyncio.create_task(_install_remote_background(module_id, job.job_id, request.source_id))
+    task = asyncio.create_task(_install_remote_background(module_id, job.job_id, request.source_id))
+    _pending_install_tasks.add(task)
+    task.add_done_callback(_pending_install_tasks.discard)
 
     return {"job_id": job.job_id}
 
