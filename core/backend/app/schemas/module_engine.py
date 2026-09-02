@@ -27,6 +27,9 @@ class ModuleEntryRead(BaseModel):
     entry_frontend: Optional[str]
     is_active:   bool
 
+    # "application" | "service" (Fase 8 §5) — diferenciação visual no frontend
+    module_type: str = "application"
+
     # UI display fields
     icon:  Optional[str] = None
     color: Optional[str] = None

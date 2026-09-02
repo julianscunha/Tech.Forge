@@ -61,6 +61,7 @@ async def list_registry_modules(
             entry_backend=e.entry_backend,
             entry_frontend=e.entry_frontend,
             is_active=e.is_active,
+            module_type=e.module_type,
             icon=e.icon,
             color=e.color,
             order=e.order,
@@ -95,6 +96,7 @@ async def get_registry_module(
         entry_backend=entry.entry_backend,
         entry_frontend=entry.entry_frontend,
         is_active=entry.is_active,
+        module_type=entry.module_type,
         manifest_raw=entry.manifest_raw if developer_mode else None,
     )
 

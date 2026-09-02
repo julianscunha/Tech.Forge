@@ -1,6 +1,7 @@
 import { AlertCircle, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
+import { ModuleTypeBadge } from './ModuleTypeBadge'
 import { CompletenessBadge } from './CompletenessBadge'
 import { TrustBadge } from '@/components/marketplace/TrustBadge'
 import type { ModuleEntry, CompletenessReport, ModuleTrust } from '@/types'
@@ -73,6 +74,8 @@ export function ModuleCard({ module, developerMode, completeness, trust, onClick
           bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))]">
           {module.category}
         </span>
+
+        <ModuleTypeBadge moduleType={module.module_type} />
 
         {hasIssues && (
           <span className="flex items-center gap-1 text-[10px] text-[hsl(var(--danger))]">

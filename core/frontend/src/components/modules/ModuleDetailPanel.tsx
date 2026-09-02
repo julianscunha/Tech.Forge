@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, AlertCircle, AlertTriangle, ShieldAlert, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModuleStatusBadge } from './ModuleStatusBadge'
+import { ModuleTypeBadge } from './ModuleTypeBadge'
 import { ModuleConfigSection } from './ModuleConfigSection'
 import { TrustBadge } from '@/components/marketplace/TrustBadge'
 import { describeTrust } from '@/lib/trust'
@@ -77,9 +78,15 @@ export function ModuleDetailPanel({ module, developerMode, onClose }: Props) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {/* Status */}
-          <div>
-            <Label>Status</Label>
-            <ModuleStatusBadge status={module.status} />
+          <div className="flex items-center gap-2">
+            <div>
+              <Label>Status</Label>
+              <ModuleStatusBadge status={module.status} />
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <ModuleTypeBadge moduleType={module.module_type} />
+            </div>
           </div>
 
           {/* Identity */}

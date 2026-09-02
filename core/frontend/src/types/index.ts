@@ -112,6 +112,7 @@ export interface ModuleEntry {
   entry_backend: string | null
   entry_frontend: string | null
   is_active: boolean
+  module_type: string
   manifest_raw?: Record<string, unknown> | null
 }
 
