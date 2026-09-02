@@ -11,7 +11,6 @@ from app.package_manager.models import PackageInfo
 from app.package_manager.operation_log import OperationLogEntry, operation_log
 from app.package_manager.repository import (
     LocalRepositoryProvider,
-    RemoteRepositoryProvider,
     RepositoryProvider,
 )
 
@@ -20,7 +19,7 @@ __all__ = [
     "PackageInfo",
     "InstallStatus", "RemoveStatus", "UpdateStatus",
     "TrustLevel", "CompatibilityLevel",
-    "RepositoryProvider", "LocalRepositoryProvider", "RemoteRepositoryProvider",
+    "RepositoryProvider", "LocalRepositoryProvider",
     "operation_log", "OperationLogEntry",
     "check_compatibility",
 ]

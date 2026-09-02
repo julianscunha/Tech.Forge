@@ -5,12 +5,11 @@ Abstraction layer between the Package Manager and the physical storage of
 .mod packages.
 
 The Marketplace must never depend directly on the file system — it always
-goes through a RepositoryProvider. This allows Phase 5 to add a
-RemoteRepositoryProvider without changing the Package Manager.
+goes through a RepositoryProvider.
 
 Current implementations:
   LocalRepositoryProvider  — scans modules/repository/ for .mod files
-  RemoteRepositoryProvider — stub; will call a REST API in Phase 5
+  CustomCatalogProvider    — remote catalog install (GitHub-backed)
 """
 from __future__ import annotations
 
@@ -548,34 +547,3 @@ class CustomCatalogProvider(RepositoryProvider):
                     await self._download_dir_contents(
                         client, subdir_response.json(), target_dir / entry["name"]
                     )
-
-
-# ── Remote stub ───────────────────────────────────────────────────────────────
-
-class RemoteRepositoryProvider(RepositoryProvider):
-    """
-    Phase 5 stub — will call the TechForge Marketplace REST API.
-
-    Stores downloaded .mod files in modules/cache/ so subsequent
-    installs don't require a network round-trip.
-    """
-
-    def __init__(self, base_url: str) -> None:
-        self._base_url = base_url
-        self._cache = settings.MODULES_REPOSITORY_PATH.parent / "cache"
-        self._cache.mkdir(parents=True, exist_ok=True)
-
-    async def list_available(self, platform_version: str) -> list[PackageInfo]:
-        raise NotImplementedError(
-            "RemoteRepositoryProvider will be implemented in Phase 5."
-        )
-
-    async def get_package(self, module_id: str, platform_version: str) -> Optional[PackageInfo]:
-        raise NotImplementedError(
-            "RemoteRepositoryProvider will be implemented in Phase 5."
-        )
-
-    async def fetch_mod_path(self, module_id: str) -> Optional[Path]:
-        raise NotImplementedError(
-            "RemoteRepositoryProvider will be implemented in Phase 5."
-        )

@@ -142,5 +142,4 @@ O SDK entrega via `NotificationsSDK.push()` com fallback silencioso para fila lo
 ## Pontos de extensão pendentes
 
 - activate/deactivate quente em runtime (hot-unload)
-- RemoteRepositoryProvider (NotImplementedError)
 - dynamic import de entry_frontend já feito; restam refinamentos de empacotamento

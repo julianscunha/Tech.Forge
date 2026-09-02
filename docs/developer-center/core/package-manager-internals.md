@@ -160,7 +160,7 @@ class RepositoryProvider(ABC):
 | Implementação | Estado | Descrição |
 |---|---|---|
 | `LocalRepositoryProvider` | ✅ Implementado | Lê .mod de `modules/repository/` |
-| `RemoteRepositoryProvider` | 🔲 Não implementado | Chama API REST do servidor Marketplace |
+| `CustomCatalogProvider` | ✅ Implementado | Instalação remota via catálogo GitHub — ver `CatalogAggregator` |
 
 ---
 
