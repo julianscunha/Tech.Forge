@@ -373,6 +373,25 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
     try:
         install_job_registry.set_phase(job_id, InstallJobPhase.ACQUIRING)
 
+        # Botão "Atualizar" do Catálogo (fonte remota) manda pro mesmo job
+        # de instalação — sem isso, package_manager.install() recusa com
+        # "already installed. Use update to upgrade." e o job falha mesmo
+        # indo tudo bem, porque nunca havia jeito de pedir update numa
+        # fonte remota (só a aba "Atualizações", que é local). Decidido já
+        # no início pra rotular corretamente toda notificação/erro daqui
+        # em diante ("atualizado" vs "instalado"). Usa o registry (fonte
+        # única) em vez de checar o diretório no disco — uma pasta
+        # órfã/inválida não conta como "instalado de verdade".
+        from app.module_engine.enums import ModuleStatus
+        from app.module_engine.registry import registry
+        existing_entry = registry.get(module_id)
+        already_installed = (
+            existing_entry is not None
+            and existing_entry.status not in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE)
+        )
+        action = "atualizado" if already_installed else "instalado"
+        action_noun = "atualização" if already_installed else "instalação"
+
         async with AsyncSessionLocal() as db:
             provider = await _resolve_remote_provider(db, module_id, source_id)
 
@@ -383,7 +402,7 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
             )
             async with AsyncSessionLocal() as db:
                 await _notify_installation(
-                    db, module_id, "error", "Falha na instalação",
+                    db, module_id, "error", f"Falha na {action_noun}",
                     f"{module_id}: Módulo não encontrado em nenhuma fonte configurada."
                 )
             return
@@ -396,7 +415,7 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
             )
             async with AsyncSessionLocal() as db:
                 await _notify_installation(
-                    db, module_id, "error", "Falha na instalação",
+                    db, module_id, "error", f"Falha na {action_noun}",
                     f"{module_id}: Falha ao baixar módulo: sem conexão com a fonte."
                 )
             return
@@ -404,20 +423,6 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
         install_job_registry.set_phase(job_id, InstallJobPhase.VALIDATING)
         install_job_registry.set_phase(job_id, InstallJobPhase.INSTALLING)
 
-        # Botão "Atualizar" do Catálogo (fonte remota) manda pro mesmo job
-        # de instalação — sem este branch, package_manager.install() recusa
-        # com "already installed. Use update to upgrade." e o job falha
-        # mesmo indo tudo bem, porque nunca havia jeito de pedir update
-        # numa fonte remota (só a aba "Atualizações", que é local). Usa o
-        # registry (fonte única) em vez de checar o diretório no disco —
-        # uma pasta órfã/inválida não conta como "instalado de verdade".
-        from app.module_engine.enums import ModuleStatus
-        from app.module_engine.registry import registry
-        existing_entry = registry.get(module_id)
-        already_installed = (
-            existing_entry is not None
-            and existing_entry.status not in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE)
-        )
         async with AsyncSessionLocal() as db:
             if already_installed:
                 result = await package_manager.update(module_id, mod_path, db=db)
@@ -427,23 +432,23 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
             if not result.success:
                 install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
                 await _notify_installation(
-                    db, module_id, "error", "Falha na instalação",
+                    db, module_id, "error", f"Falha na {action_noun}",
                     f"{module_id}: {result.message}"
                 )
                 return
 
             if result.trust_warning:
                 await _notify_installation(
-                    db, module_id, "warning", "Módulo instalado sem verificação",
-                    f"{module_id}: instalado com Trust Level {result.trust_level} "
+                    db, module_id, "warning", f"Módulo {action} sem verificação",
+                    f"{module_id}: {action} com Trust Level {result.trust_level} "
                     "— integridade/assinatura ainda não verificadas.",
                 )
 
         install_job_registry.set_phase(job_id, InstallJobPhase.DONE)
         async with AsyncSessionLocal() as db:
             await _notify_installation(
-                db, module_id, "success", "Módulo instalado",
-                f"Módulo {module_id} foi instalado com sucesso."
+                db, module_id, "success", f"Módulo {action}",
+                f"Módulo {module_id} foi {action} com sucesso."
             )
 
     except Exception as exc:
@@ -456,7 +461,7 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
         )
         async with AsyncSessionLocal() as db:
             await _notify_installation(
-                db, module_id, "error", "Falha na instalação",
+                db, module_id, "error", f"Falha na {locals().get('action_noun', 'instalação')}",
                 f"{module_id}: {str(exc)}"
             )
 
