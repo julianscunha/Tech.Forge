@@ -23,6 +23,22 @@ async def get_version() -> VersionInfo:
     return VersionInfo(platform_version=settings.PLATFORM_VERSION)
 
 
+class UpdateCheckRead(BaseModel):
+    current_version:   str
+    latest_version:    Optional[str] = None
+    update_available:  bool
+    release_url:       Optional[str] = None
+
+
+@router.get("/update-check", response_model=UpdateCheckRead,
+            summary="Check github.com/{PLATFORM_REPO_SLUG} for a newer Core release")
+async def get_update_check() -> UpdateCheckRead:
+    from app.services.update_check import check_for_update
+
+    result = await check_for_update()
+    return UpdateCheckRead(**result.model_dump())
+
+
 class StorageStatus(BaseModel):
     database: bool
     writable: bool

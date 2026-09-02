@@ -49,6 +49,7 @@ from techforge_cli.commands.runtime import runtime_cmd
 from techforge_cli.commands.security import security_cmd
 from techforge_cli.commands.services import services_cmd
 from techforge_cli.commands.storage import storage_cmd
+from techforge_cli.commands.update import update_cmd
 from techforge_cli.commands.validate_module import validate_module_cmd
 from techforge_cli.commands.version import version_cmd
 from techforge_cli.console import print_banner
@@ -111,6 +112,7 @@ cli.add_command(storage_cmd)   # Fase 12 Slice 1 — storage status
 cli.add_command(migrations_cmd)  # Fase 12 Slice 2 — migrations status/run
 cli.add_command(config_cmd)      # Fase 12 Slice 10 — config export
 cli.add_command(version_cmd)     # Fase 15 Slice 7 — version
+cli.add_command(update_cmd)      # Fase 18 — update (self-update via git pull)
 cli.add_command(release_check_cmd)  # Fase 15 Slice 9 — release-check
 cli.add_command(diagnostics_cmd)    # Fase 14 — diagnostics health/errors/export
 
