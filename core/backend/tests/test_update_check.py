@@ -39,7 +39,11 @@ class TestCheckForUpdate:
         from app.services.update_check import check_for_update
 
         response = MagicMock()
-        response.json.return_value = {"tag_name": "v99.0.0", "html_url": "https://example.com/releases/v99.0.0"}
+        response.json.return_value = {
+            "tag_name": "v99.0.0",
+            "html_url": "https://example.com/releases/v99.0.0",
+            "body": "- Fixed things\n- Added stuff",
+        }
         response.raise_for_status = MagicMock()
 
         with patch.object(settings, "PLATFORM_VERSION", "1.0.0"), \
@@ -49,6 +53,7 @@ class TestCheckForUpdate:
         assert result.update_available is True
         assert result.latest_version == "99.0.0"
         assert result.release_url == "https://example.com/releases/v99.0.0"
+        assert result.release_notes == "- Fixed things\n- Added stuff"
 
     @pytest.mark.asyncio
     async def test_no_update_when_local_is_current(self):

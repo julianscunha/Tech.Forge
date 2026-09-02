@@ -24,6 +24,7 @@ class UpdateCheckResult(BaseModel):
     latest_version: Optional[str] = None
     update_available: bool = False
     release_url: Optional[str] = None
+    release_notes: Optional[str] = None
 
 
 async def check_for_update() -> UpdateCheckResult:
@@ -49,4 +50,5 @@ async def check_for_update() -> UpdateCheckResult:
         latest_version=latest or None,
         update_available=update_available,
         release_url=data.get("html_url"),
+        release_notes=data.get("body") or None,
     )

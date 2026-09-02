@@ -12,9 +12,10 @@ import sys
 from pathlib import Path
 
 import click
+from rich.markdown import Markdown
 
 from techforge_cli.commands.platform import _run_launcher
-from techforge_cli.console import console, print_error, print_info
+from techforge_cli.console import console, print_error, print_info, print_section
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PY = sys.executable
@@ -84,5 +85,10 @@ def update_cmd(yes: bool) -> None:
                      "'cd core/frontend && npm run build' antes de iniciar a plataforma.")
         raise SystemExit(1)
 
-    print_info(f"Atualizado para {result.latest_version}. Iniciando a plataforma...")
+    print_info(f"Atualizado para {result.latest_version}.")
+    if result.release_notes:
+        print_section(f"Release notes — v{result.latest_version}")
+        console.print(Markdown(result.release_notes))
+
+    print_info("Iniciando a plataforma...")
     raise SystemExit(_run_launcher("start"))

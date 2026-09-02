@@ -69,7 +69,8 @@ def test_update_runs_full_flow_when_newer_version_exists(runner, monkeypatch, tm
     monkeypatch.setattr(update_mod, "_git", lambda *a: _clean_status())
 
     async def fake_check_for_update():
-        return SimpleNamespace(update_available=True, latest_version="99.0.0")
+        return SimpleNamespace(update_available=True, latest_version="99.0.0",
+                                release_notes="- Fixed things\n- Added stuff")
     monkeypatch.setattr("app.services.update_check.check_for_update", fake_check_for_update)
 
     launcher_calls = []
@@ -86,3 +87,5 @@ def test_update_runs_full_flow_when_newer_version_exists(runner, monkeypatch, tm
     assert result.exit_code == 0
     assert ("stop",) in launcher_calls
     assert ("start",) in launcher_calls
+    assert "Release notes" in result.output
+    assert "Fixed things" in result.output
