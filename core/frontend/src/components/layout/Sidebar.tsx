@@ -28,7 +28,8 @@ import {
 import { useAppStore } from '@/store/app'
 import { useNavStore } from '@/store/nav'
 import { cn } from '@/lib/utils'
-import type { NavModuleNode } from '@/types'
+import { systemApi } from '@/lib/api'
+import type { NavModuleNode, UpdateCheck } from '@/types'
 
 // ── Icon registry — all lucide names a module may declare ─────────────────────
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -258,9 +259,18 @@ function SectionLabel({ label, collapsed }: { label: string; collapsed: boolean 
 export function Sidebar() {
   const collapsed = useAppStore(s => s.sidebarCollapsed)
   const { tree, refresh } = useNavStore()
+  const [version, setVersion] = useState<string | null>(null)
+  const [update, setUpdate] = useState<UpdateCheck | null>(null)
 
   // Fetch navigation tree on mount — `refresh` (zustand action) é estável entre renders
   useEffect(() => { refresh() }, [refresh])
+
+  // Versão + checagem de update: uma vez por sessão de app, sem polling —
+  // falha de rede (offline) é silenciosa, o footer só mostra a versão.
+  useEffect(() => {
+    systemApi.getVersion().then(v => setVersion(v.platform_version)).catch(() => {})
+    systemApi.checkUpdate().then(setUpdate).catch(() => {})
+  }, [])
 
   const CORE_ITEMS: StaticItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -349,8 +359,21 @@ export function Sidebar() {
 
       {/* Footer */}
       {!collapsed && (
-        <div className="px-3 py-2 border-t border-[hsl(var(--border-subtle))]">
-          <p className="text-[10px] font-mono text-[hsl(var(--text-subtle))]">v1.0.0</p>
+        <div className="px-3 py-2 border-t border-[hsl(var(--border-subtle))] flex items-center gap-2">
+          <p className="text-[10px] font-mono text-[hsl(var(--text-subtle))]">
+            v{version ?? '…'}
+          </p>
+          {update?.update_available && (
+            <a
+              href={update.release_url ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Nova versão disponível: v${update.latest_version}`}
+              className="text-[10px] font-medium text-[hsl(var(--accent))] hover:underline"
+            >
+              Update disponível
+            </a>
+          )}
         </div>
       )}
     </aside>

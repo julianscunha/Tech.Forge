@@ -12,6 +12,13 @@ export interface Notification {
   created_at: string
 }
 
+export interface UpdateCheck {
+  current_version: string
+  latest_version: string | null
+  update_available: boolean
+  release_url: string | null
+}
+
 export interface PlatformStatus {
   platform_name: string
   platform_version: string

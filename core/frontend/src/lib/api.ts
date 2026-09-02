@@ -1,6 +1,7 @@
 // All imports must be at the top of the file
 import type {
   PlatformStatus,
+  UpdateCheck,
   Category,
   Module,
   ModuleEntry,
@@ -274,6 +275,8 @@ export const moduleConfigApi = {
 export const systemApi = {
   storageStatus:    () => request<StorageStatus>('/system/storage/status'),
   migrationsStatus: () => request<MigrationsStatus>('/system/migrations/status'),
+  getVersion:       () => request<{ platform_version: string }>('/system/version'),
+  checkUpdate:      () => request<UpdateCheck>('/system/update-check'),
 }
 
 export const platformConfigApi = {
