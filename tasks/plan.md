@@ -11,6 +11,18 @@ service actions, and a before/after report. Built bottom-up: cross-platform
 data first, then Windows-specific data, then the app backend that consumes
 it, then the app frontend, then packaging/PR.
 
+## Two-repo note (discovered during Task 1)
+
+`modules/installed/*` in this repo is gitignored on purpose (`/modules/` in
+`.gitignore`) — it's the local, unpacked runtime copy the Core loads for
+`techforge dev`, not source control. The real module source lives in the
+sibling repo `D:\Github\Tech.Forge.Modules` (`submissions/<id>/` during a
+PR, packaged into `.mod` by CI after merge — see its `CONTRIBUTING.md`).
+Plan: keep developing/testing in this repo's `modules/installed/*` for fast
+iteration; only at Task 14 copy the finished source into
+`Tech.Forge.Modules/submissions/<id>/`, run `techforge validate-module`,
+and open the PR from there.
+
 ## Architecture Decisions
 
 - Service module exports stay read-only except one narrow write:
