@@ -11,7 +11,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/tests-950%20passing-brightgreen)](#-testes)
+[![Tests](https://img.shields.io/badge/tests-959%20passing-brightgreen)](#-testes)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
@@ -153,7 +153,7 @@ TechForge/
 ├── sdk/python/                # SDK para desenvolvedores de módulos
 ├── docs/                      # INDEX.md · architecture/ · adr/ · developer-center/ · limitations.md · roadmap.md
 ├── config/                    # .env
-└── tests/ → core/backend/tests/  # 953 testes pytest (unit/integration/contract/e2e/smoke)
+└── tests/ → core/backend/tests/  # 959 testes pytest (unit/integration/contract/e2e/smoke)
 ```
 
 ---
@@ -229,9 +229,9 @@ específicas de SQLite ficam isoladas na camada de dados.
 
 ## 🧪 Testes
 
-953 testes no backend (`core/backend/tests/`), organizados por nível via
+959 testes no backend (`core/backend/tests/`), organizados por nível via
 `pytest` markers (`unit`/`integration`/`contract`/`e2e`/`smoke`/`regression`,
-`--strict-markers`); 130 no CLI (`cli/tests/`). CI roda tudo automaticamente
+`--strict-markers`); 133 no CLI (`cli/tests/`). CI roda tudo automaticamente
 em cada push/PR ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 > Duas falhas conhecidas dependem de ordem de execução da suíte completa
@@ -273,21 +273,26 @@ Sai com código != 0 (`Release: BLOCKED`) se qualquer checagem falhar.
 
 ## 🧩 Criando seu primeiro módulo
 
-Todo módulo é um pacote `.mod` (ZIP) com um `manifest.yaml` declarativo:
+Todo módulo é um pacote `.mod` (ZIP) com um `manifest.yaml` declarativo —
+ver a [referência completa dos campos](docs/developer-center/reference/manifest.md):
 
 ```yaml
 id: hello_world
 name: Hello World
 version: 1.0.0
+platform_min_version: "1.0.0"
+
 module_type: service          # application | service
 category: examples
 vendor: TechForge
-entry_backend: api.routes:router      # router FastAPI montado pelo Plugin Loader
-entry_frontend: main.js               # carregado no Module Host dentro do App Shell
-documentation:
-  overview: docs/overview.md
-compatibility:
-  platform_min_version: "1.0.0"
+author: TechForge Team
+description: Módulo de referência.
+
+icon: blocks                          # obrigatório — nome lucide-react kebab-case
+order: 10                             # obrigatório — posição na sidebar
+
+entry_backend: backend/main.py        # router FastAPI montado pelo Plugin Loader
+entry_frontend: frontend/index.js     # ESM compilado — carregado no Module Host
 ```
 
 ```bash
