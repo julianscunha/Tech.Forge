@@ -8,6 +8,32 @@ Este changelog cobre o **Core** apenas. Cada módulo mantém seu próprio `CHANG
 
 ### Added
 - **Observability, Telemetry & Diagnostics** — logs estruturados (JSON-lines) com rotação/retenção configurável; redação automática de dados sensíveis por padrão de chave; métricas operacionais (execuções, falhas, dependências); Error Registry e Execution History persistidos com códigos de diagnóstico estáveis; correlação de falha entre erro, módulo, execução e dependências; página `/diagnostics` e Dashboard incrementado (uso de recursos, módulo mais pesado, eventos críticos recentes, cards reorganizáveis); export de relatório de diagnóstico e Support Bundle sanitizado (JSON/TXT/ZIP); `techforge diagnostics`/`techforge modules diagnostics`/`techforge logs --follow`.
+- **Desktop Runtime Resilience** — paths oficiais por SO (diretório de instalação vs. diretório de dados do usuário); `GET /ready` com erro de startup amigável no launcher; nova instância foca a janela existente em vez de só avisar; Safe Mode global (Core mínimo, nenhum módulo carregado); `techforge repair-check`; Developer Mode real (paths + reload de módulos); empacotamento do backend via PyInstaller onedir.
+- **Security, Integrity & Module Trust (Hardening)** — resource limits contra zip bomb na extração de pacotes; assinatura Ed25519 real; Publisher Registry real; `GET/POST /api/v1/security/*` + CLI de segurança; audit events de segurança via EventBus; secret lifecycle explícito com redação de authorization; SBOM mínimo (`GET /modules/{id}/sbom`); Security UI no Developer Center; aviso de Trust Level agora chega de fato ao usuário no install/update (antes era resolvido mas nunca notificado).
+- **`sdk.database`** — persistência real via SQLite (um arquivo isolado por módulo), substituindo o mock in-memory anterior (ver ADR-007).
+- **`techforge update`** — self-update do Core via `git pull` (deps + migrations + build do frontend), com checagem de versão contra a release mais recente do GitHub; mostra as release notes e avisa explicitamente que a plataforma será parada/reiniciada antes de pedir confirmação. Rodapé da Sidebar mostra a versão real da instalação e um badge discreto "Update disponível" quando há versão nova (`GET /system/update-check`).
+- Endpoint de invocação entre módulos (`services.invoke`) + `techforge_sdk.services.invoke()`.
+- Abas de múltiplos módulos abertas simultaneamente (module tab strip).
+- Filtro por módulo na seção "Módulos Instalados" do Developer Center.
+- Seletor de fuso horário em Configurações (exibição, sem alterar dados armazenados).
+
+### Changed
+- Header e Breadcrumb mesclados numa única linha; botão de ajuda no header vira ícone-only.
+- Dashboard aproveita melhor a largura da tela em monitores grandes; filtros e layout do Marketplace > Catálogo reorganizados.
+- Documentação pública reorganizada: `docs/phases/` e `tasks/` removidos (conteúdo migrado para `docs/limitations.md` e `docs/roadmap.md`); referências internas de fase/slice removidas dos documentos voltados ao público.
+
+### Fixed
+- Rotas de módulo não respondiam em modo Desktop (bug crítico).
+- Botão "Atualizar" do Catálogo (fonte remota) sempre falhava, ou não refletia um módulo recém-publicado.
+- Notificação de instalação via Catálogo remoto dizia "instalado" mesmo quando era uma atualização de módulo já instalado.
+- Contador de módulos do Dashboard divergia da realidade; status mostrava Launcher/Frontend `STOPPED` com a plataforma saudável.
+- Notificação desaparecia da lista assim que marcada como lida (deveria só perder o destaque de não-lida).
+- Launcher não detectava processos órfãos já ocupando a porta do backend.
+- Reinstalar um Service Module sem reiniciar a plataforma deixava o contrato em `FAILED` permanentemente.
+- `sdk.database` (`DatabaseSDK`) travava para sempre quando usado a partir de event loops `asyncio` diferentes no mesmo processo.
+- Corrida real que podia vazar uma notificação de segurança de teste para o banco de dados de produção.
+- Seção "SDK Frontend" do Developer Center sempre vazia; README/overview de módulo só era encontrável pela busca, sem link de volta.
+- CLI: `UnicodeEncodeError` no console padrão do Windows (cp1252, glifos Unicode do `rich`).
 
 ## [1.0.0] - 2026-08-30
 
