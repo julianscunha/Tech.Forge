@@ -4,9 +4,13 @@ from __future__ import annotations
 import asyncio
 from types import SimpleNamespace
 
+import pytest
+
 from app.api.routes import health
 from app.module_engine.enums import ModuleStatus
 from app.module_runtime.state import RuntimeState, module_runtime_registry
+
+pytestmark = pytest.mark.unit
 
 
 def _entry(status: ModuleStatus = ModuleStatus.INSTALLED):
