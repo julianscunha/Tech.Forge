@@ -443,14 +443,19 @@ class TestSDKServices:
         with pytest.raises(PermissionError):
             s.read("../../etc/passwd")
 
-    def test_database_mock_insert_fetch(self):
+    def test_database_insert_fetch_across_separate_event_loops(self, tmp_path):
+        """Regression: a caller doing asyncio.run() per call (a different
+        event loop each time, not one loop for the whole process) used to
+        hang forever on the second call — the lock/connection from the
+        first, now-closed loop, isn't reusable from another."""
         import asyncio
 
         from techforge_sdk.database import DatabaseSDK
-        db = DatabaseSDK("test")
+        db = DatabaseSDK("test", tmp_path)
+        asyncio.run(db.execute("CREATE TABLE jobs (name TEXT)"))
         asyncio.run(db.execute("INSERT INTO jobs (name) VALUES (?)", ["nightly"]))
         rows = asyncio.run(db.fetch_all("SELECT * FROM jobs"))
-        assert len(rows) == 1
+        assert rows == [{"name": "nightly"}]
 
     def test_notifications_push(self):
         from techforge_sdk.notifications import NotificationsSDK

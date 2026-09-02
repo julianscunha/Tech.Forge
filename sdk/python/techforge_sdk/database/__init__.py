@@ -35,13 +35,27 @@ class DatabaseSDK:
         data_dir.mkdir(parents=True, exist_ok=True)
         self._db_path = data_dir / f"{module_id}.db"
         self._conn: Optional[aiosqlite.Connection] = None
-        self._lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
         # True while a caller-managed transaction (begin_transaction) is open —
         # execute()/execute_many() skip the per-call commit until commit()/rollback().
         self._in_transaction = False
         logger.debug("DatabaseSDK for module '%s' -> %s", module_id, self._db_path)
 
     # ── Connection ────────────────────────────────────────────────────────────
+
+    async def _get_lock(self) -> asyncio.Lock:
+        # A lock/connection created on one event loop hangs forever if reused
+        # from a different, later one (e.g. a caller doing asyncio.run() per
+        # call instead of one loop for the whole process — the loop the old
+        # lock/connection belong to is already closed). Rebind fresh instead
+        # of reusing stale state whenever the running loop has changed.
+        loop = asyncio.get_running_loop()
+        if self._loop is not loop:
+            self._loop = loop
+            self._lock = asyncio.Lock()
+            self._conn = None
+        return self._lock
 
     async def _connection(self) -> aiosqlite.Connection:
         if self._conn is None:
@@ -55,7 +69,7 @@ class DatabaseSDK:
         self, query: str, params: Optional[list] = None
     ) -> list[dict[str, Any]]:
         """Execute a SELECT query and return all matching rows as dicts."""
-        async with self._lock:
+        async with await self._get_lock():
             conn = await self._connection()
             cursor = await conn.execute(query, params or [])
             rows = await cursor.fetchall()
@@ -71,7 +85,7 @@ class DatabaseSDK:
 
     async def execute(self, query: str, params: Optional[list] = None) -> None:
         """Execute an INSERT, UPDATE, DELETE or DDL statement."""
-        async with self._lock:
+        async with await self._get_lock():
             conn = await self._connection()
             await conn.execute(query, params or [])
             if not self._in_transaction:
@@ -79,7 +93,7 @@ class DatabaseSDK:
 
     async def execute_many(self, query: str, params_list: list[list[Any]]) -> None:
         """Batch execute a statement for multiple parameter sets."""
-        async with self._lock:
+        async with await self._get_lock():
             conn = await self._connection()
             await conn.executemany(query, params_list)
             if not self._in_transaction:
@@ -100,13 +114,13 @@ class DatabaseSDK:
         self._in_transaction = True
 
     async def commit(self) -> None:
-        async with self._lock:
+        async with await self._get_lock():
             conn = await self._connection()
             await conn.commit()
         self._in_transaction = False
 
     async def rollback(self) -> None:
-        async with self._lock:
+        async with await self._get_lock():
             conn = await self._connection()
             await conn.rollback()
         self._in_transaction = False
