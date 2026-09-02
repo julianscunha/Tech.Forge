@@ -52,6 +52,10 @@ def update_cmd(yes: bool) -> None:
         return
 
     console.print(f"Nova versão disponível: {settings.PLATFORM_VERSION} → {result.latest_version}")
+    if result.release_notes:
+        print_section(f"Release notes — v{result.latest_version}")
+        console.print(Markdown(result.release_notes))
+
     if not yes and not click.confirm("Atualizar agora?", default=True):
         raise SystemExit(0)
 
@@ -85,10 +89,5 @@ def update_cmd(yes: bool) -> None:
                      "'cd core/frontend && npm run build' antes de iniciar a plataforma.")
         raise SystemExit(1)
 
-    print_info(f"Atualizado para {result.latest_version}.")
-    if result.release_notes:
-        print_section(f"Release notes — v{result.latest_version}")
-        console.print(Markdown(result.release_notes))
-
-    print_info("Iniciando a plataforma...")
+    print_info(f"Atualizado para {result.latest_version}. Iniciando a plataforma...")
     raise SystemExit(_run_launcher("start"))
