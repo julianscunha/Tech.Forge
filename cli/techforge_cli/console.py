@@ -6,8 +6,27 @@ Every command imports from here so styling is consistent.
 """
 from __future__ import annotations
 
+import sys
+
 from rich.console import Console
 from rich.theme import Theme
+
+def force_utf8_streams() -> None:
+    """
+    TD-019 — no console padrão do Windows (cp1252), imprimir os glifos
+    Unicode abaixo (❯ ✓ ✗ ⚠) derrubava o comando com UnicodeEncodeError
+    antes de mostrar qualquer coisa útil. Força UTF-8 no stdout/stderr do
+    processo — mais simples que duplicar cada glifo em ASCII.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except (AttributeError, ValueError):
+                pass
+
+
+force_utf8_streams()
 
 THEME = Theme({
     "title":    "bold white",
