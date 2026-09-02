@@ -11,6 +11,7 @@ import sys
 from rich.console import Console
 from rich.theme import Theme
 
+
 def force_utf8_streams() -> None:
     """
     TD-019 — no console padrão do Windows (cp1252), imprimir os glifos
