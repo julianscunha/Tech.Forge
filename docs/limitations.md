@@ -39,7 +39,10 @@ estado atual da plataforma.
   completos.** A separação entre diretório de instalação e diretório de
   dados do usuário já garante que reinstalar preserva dados — mas um
   fluxo guiado de update/desinstalação com opções (manter ou remover
-  dados) depende do instalador que ainda não existe.
+  dados) depende do instalador que ainda não existe. `techforge update`
+  (`git pull` + deps + build + migrations) cobre o caso de quem já roda
+  a partir de um clone git — não é esse fluxo guiado, e não serve pra
+  quem no futuro instalar via um `.exe`/instalador.
 - **Sem tela de configuração de proxy corporativo.** Nada na plataforma
   hoje assume acesso direto à internet, mas configurar proxy/certificados
   explicitamente ainda não tem interface.

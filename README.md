@@ -172,6 +172,7 @@ pip install -e cli
 techforge start     # sobe backend + frontend + abre o browser
 techforge status    # verifica saúde
 techforge stop      # shutdown ordenado
+techforge update    # git pull + deps + build + migrations, só em clone git
 ```
 
 > O launcher garante instância única (pidfile), espera o backend ficar pronto por
