@@ -75,9 +75,6 @@ estado atual da plataforma.
 - **Secret Store depende do `keyring` do sistema operacional**, sem
   fallback para ambientes Linux headless sem D-Bus/Secret Service — só
   relevante para quem tentar rodar sem sessão gráfica.
-- **`techforge validate-module` pode falhar no console do PowerShell no
-  Windows** por incompatibilidade de encoding com os glifos usados na
-  saída formatada — não reproduzido em terminais UTF-8.
 
 ## Notas técnicas (baixo impacto no uso, relevantes para quem for mexer no código)
 
