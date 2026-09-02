@@ -47,6 +47,11 @@ estado atual da plataforma.
   Module Storage API é key-value simples, sem provisionamento de schema
   relacional por módulo. Ambas decisões conscientes — revisitar quando um
   módulo real precisar de algo mais rico.
+- **Sem runtime compartilhado (React/etc.) entre Core e módulos.** Cada
+  módulo React empacota sua própria cópia do framework — duplica bytes no
+  navegador se vários módulos React forem instalados juntos, mas evita
+  acoplamento de versão/ABI entre módulos independentes. Revisitar só com
+  medição real de múltiplos módulos React instalados simultaneamente.
 
 ## Limitações conhecidas, candidatas a melhoria futura
 
@@ -88,48 +93,22 @@ estado atual da plataforma.
 
 ## Notas técnicas (baixo impacto no uso, relevantes para quem for mexer no código)
 
-- Um ponto do Package Manager importa a instância viva da aplicação
-  (`app.main`) para montar rotas de um módulo recém-ativado sem reiniciar
-  o processo — funciona, mas é uma inversão de camada que qualquer
-  refatoração futura do bootstrap deve levar em conta.
-- Uma rota de segurança reaproveita um handler de outra rota como se
-  fosse um serviço compartilhado, em vez de ambas chamarem uma camada de
-  serviço comum.
-- Existem dois tipos distintos chamados `RuntimeState` no código (um para
-  o estado da plataforma, outro para o estado de execução de um módulo) —
-  colisão de nome, não de comportamento.
-- O ciclo de vida de um módulo é modelado em três estruturas de estado
-  separadas (job de instalação, estado administrativo, estado de
-  runtime) em vez de uma única máquina de estados — o comportamento está
-  correto, só a organização interna diverge do que a documentação de
-  arquitetura descreve como exemplo.
-- Uma classe de repositório remoto de módulos ficou órfã no código depois
-  que a funcionalidade equivalente foi entregue por outro caminho — é
-  código morto, candidato a remoção simples.
-- O registro de execução de módulos silenciosamente não persiste se
-  chamado de dentro de um event loop assíncrono já em execução — funciona
-  hoje porque o único ponto de chamada real é síncrono, mas é frágil a um
-  futuro caminho de execução assíncrono.
-- O registro de jobs de instalação remota é um dicionário em memória
-  amarrado ao processo que o criou — não sobreviveria a múltiplos
-  processos trabalhando em paralelo, cenário que não existe hoje por
-  design (a plataforma é single-process).
-- A cobertura de teste do health-check de armazenamento só cobre o
-  caminho saudável — nenhum teste simula disco cheio ou indisponível.
-- A suíte de testes do backend ainda tem uma falha conhecida dependente
-  da ordem de execução (passa isoladamente, falha ocasionalmente quando
-  rodada junto com o resto da suíte) — o banco de dados usa uma conexão
-  compartilhada por todo o processo de teste, mas cada teste que sobe a
-  aplicação roda num loop assíncrono próprio; ocasionalmente uma conexão
-  criada num loop já encerrado é reaproveitada por um teste posterior e
-  a operação falha ao tentar notificar o loop antigo. Não afeta
-  produção (lá a aplicação sobe uma única vez, um único loop). (Uma
-  segunda causa, uma corrida real que vazava notificação de segurança
-  pro banco de teste compartilhado, já foi corrigida.)
-- Uma parte da validação de compliance de documentação está duplicada
-  entre o CLI e o motor de documentação do Core.
-- A interface do frontend nunca foi verificada visualmente em navegador
-  real por uma ferramenta de automação — a build (compilação) é
-  verificada, o comportamento visual não.
-- A validação de empacotamento em máquina limpa nunca foi 100% real —
-  só simulada num ambiente que ainda tinha o repositório presente.
+Achados pontuais de código (inversões de camada, nomes colidentes, código
+morto, lacunas de cobertura de teste, etc.) são rastreados com ID,
+prioridade e motivo do adiamento em
+[`docs/architecture/technical-debt-registry.md`](architecture/technical-debt-registry.md)
+— não duplicados aqui.
+
+Os dois itens abaixo ficam só neste documento porque dependem de um fluxo
+de update/instalador ainda inexistente, mesma lógica das decisões de
+escopo acima:
+
+- O ciclo completo de upgrade (`upgrade(from_version)`) e desinstalação
+  real a partir de um `.mod` empacotado não tem teste de integração
+  ponta a ponta — só o contrato isolado e `scan_installed()` são
+  cobertos hoje.
+- `uvicorn --reload` (modo dev) costuma deixar um processo worker órfão
+  vivo mesmo depois de matar o PID do reloader — é comportamento do
+  watcher, não do Core, mas atrapalha quem repete o ciclo de teste
+  manual local sem saber que precisa localizar o PID real via
+  `netstat`/`tasklist`.
