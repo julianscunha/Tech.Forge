@@ -33,7 +33,9 @@ acompanhamento de progresso e recuperação de erros.
 
 ### Catálogo Oficial
 - **Hospedado por:** TechForge (nós)
-- **URL:** definida em `CatalogSourceConfig` (tipicamente `https://techforge.io/catalog`)
+- **URL:** fixa em `settings.OFFICIAL_CATALOG_BASE_URL` (não em `CatalogSourceConfig` —
+  essa tabela é só para fontes customizadas), hoje apontando para
+  `https://raw.githubusercontent.com/julianscunha/Tech.Forge.Modules/main/modules`
 - **Formato:** `index.json` (metadados de todos os módulos) + arquivos `.mod`
 - **Gerado por:** pipeline de CI/CD (ver "Publicação" abaixo)
 - **Uso:** módulos verificados; atualizações automáticas via sincronização do registry
