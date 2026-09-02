@@ -89,3 +89,4 @@ def test_update_runs_full_flow_when_newer_version_exists(runner, monkeypatch, tm
     assert ("start",) in launcher_calls
     assert "Release notes" in result.output
     assert "Fixed things" in result.output
+    assert "parar a plataforma" in result.output

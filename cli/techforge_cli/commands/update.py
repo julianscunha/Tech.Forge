@@ -15,7 +15,7 @@ import click
 from rich.markdown import Markdown
 
 from techforge_cli.commands.platform import _run_launcher
-from techforge_cli.console import console, print_error, print_info, print_section
+from techforge_cli.console import console, print_error, print_info, print_section, print_warning
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PY = sys.executable
@@ -56,6 +56,7 @@ def update_cmd(yes: bool) -> None:
         print_section(f"Release notes — v{result.latest_version}")
         console.print(Markdown(result.release_notes))
 
+    print_warning("Isso vai parar a plataforma (se estiver rodando) durante o update e reiniciá-la ao final.")
     if not yes and not click.confirm("Atualizar agora?", default=True):
         raise SystemExit(0)
 
