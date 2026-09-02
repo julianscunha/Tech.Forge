@@ -12,7 +12,7 @@ ensure_user_data_dirs(USER_DATA_DIR)
 class Settings(BaseSettings):
     # Platform
     PLATFORM_NAME: str = "TechForge"
-    PLATFORM_VERSION: str = "1.0.0"
+    PLATFORM_VERSION: str = "1.1.0"
     # owner/repo do GitHub que hospeda o Core — usado só para checar releases
     # mais novas (GET /system/update-check, techforge update).
     PLATFORM_REPO_SLUG: str = "julianscunha/Tech.Forge"

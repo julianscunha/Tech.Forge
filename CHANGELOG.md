@@ -6,6 +6,8 @@ Este changelog cobre o **Core** apenas. Cada módulo mantém seu próprio `CHANG
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-02
+
 ### Added
 - **Observability, Telemetry & Diagnostics** — logs estruturados (JSON-lines) com rotação/retenção configurável; redação automática de dados sensíveis por padrão de chave; métricas operacionais (execuções, falhas, dependências); Error Registry e Execution History persistidos com códigos de diagnóstico estáveis; correlação de falha entre erro, módulo, execução e dependências; página `/diagnostics` e Dashboard incrementado (uso de recursos, módulo mais pesado, eventos críticos recentes, cards reorganizáveis); export de relatório de diagnóstico e Support Bundle sanitizado (JSON/TXT/ZIP); `techforge diagnostics`/`techforge modules diagnostics`/`techforge logs --follow`.
 - **Desktop Runtime Resilience** — paths oficiais por SO (diretório de instalação vs. diretório de dados do usuário); `GET /ready` com erro de startup amigável no launcher; nova instância foca a janela existente em vez de só avisar; Safe Mode global (Core mínimo, nenhum módulo carregado); `techforge repair-check`; Developer Mode real (paths + reload de módulos); empacotamento do backend via PyInstaller onedir.

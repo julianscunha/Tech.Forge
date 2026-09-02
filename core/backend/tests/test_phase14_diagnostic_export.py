@@ -33,6 +33,8 @@ class TestBuildSnapshot:
         from app.db.database import AsyncSessionLocal
         from app.services.diagnostic_export import DiagnosticExportService
 
+        from app.core.settings import settings
+
         async with AsyncSessionLocal() as db:
             snapshot = await DiagnosticExportService.build_snapshot(db)
 
@@ -40,7 +42,7 @@ class TestBuildSnapshot:
             "generated_at", "platform_version", "system", "startup",
             "recent_errors", "recent_executions",
         }
-        assert snapshot["platform_version"] == "1.0.0"
+        assert snapshot["platform_version"] == settings.PLATFORM_VERSION
         assert isinstance(snapshot["recent_errors"], list)
         assert isinstance(snapshot["recent_executions"], list)
 
