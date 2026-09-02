@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
 from app.module_engine import journal as loader_journal
@@ -53,12 +54,17 @@ logger = logging.getLogger("techforge.package_manager")
 # ── Operation results ─────────────────────────────────────────────────────────
 
 class InstallResult:
-    def __init__(self, status: InstallStatus, module_id: str, version: str, message: str):
+    def __init__(self, status: InstallStatus, module_id: str, version: str, message: str,
+                 trust_level: Optional[str] = None, trust_warning: bool = False):
         self.status    = status
         self.module_id = module_id
         self.version   = version
         self.message   = message
         self.success   = status == InstallStatus.SUCCESS
+        # Set only when a `db` session was passed in (real API calls always
+        # have one; direct-call tests that don't care about trust don't).
+        self.trust_level   = trust_level
+        self.trust_warning = trust_warning
 
 
 class RemoveResult:
@@ -71,13 +77,16 @@ class RemoveResult:
 
 class UpdateResult:
     def __init__(self, status: UpdateStatus, module_id: str,
-                 from_version: str, to_version: str, message: str):
+                 from_version: str, to_version: str, message: str,
+                 trust_level: Optional[str] = None, trust_warning: bool = False):
         self.status       = status
         self.module_id    = module_id
         self.from_version = from_version
         self.to_version   = to_version
         self.message      = message
         self.success      = status == UpdateStatus.SUCCESS
+        self.trust_level   = trust_level
+        self.trust_warning = trust_warning
 
 
 # ── Package Manager ───────────────────────────────────────────────────────────
@@ -130,7 +139,7 @@ class PackageManager:
 
     # ── Install ───────────────────────────────────────────────────────────────
 
-    async def install(self, mod_path: Path) -> InstallResult:
+    async def install(self, mod_path: Path, db: Optional[AsyncSession] = None) -> InstallResult:
         """
         Install a module from a .mod file path.
 
@@ -141,6 +150,11 @@ class PackageManager:
           4. Check for duplicate installation
           5. Extract to modules/installed/<module_id>/
           6. Hot-reload registry
+
+        db: quando passada, resolve o Trust Level do módulo recém-extraído e
+        sinaliza aviso (TD-005 / DesktopSecurityPolicy.requires_warning) no
+        InstallResult. Callers que não passam `db` (testes diretos do
+        PackageManager) simplesmente não recebem trust_level/trust_warning.
         """
         mod_path = Path(mod_path)
 
@@ -252,6 +266,18 @@ class PackageManager:
                 shutil.rmtree(extract_tmp, ignore_errors=True)
             return self._fail_install(module_id, version, f"Extraction failed: {exc}")
 
+        # ── 5.5 Trust resolution (TD-005) — não bloqueia instalação
+        # (DesktopSecurityPolicy.allows_install() é sempre True), só decide
+        # se o resultado deve carregar um aviso pro caller sinalizar ao usuário.
+        trust_level_value: Optional[str] = None
+        trust_warning = False
+        if db is not None:
+            from app.module_trust.resolve import resolve_module_trust
+            from app.module_trust.security_policy import default_security_policy
+            trust_level, _, _, _ = await resolve_module_trust(target_dir, raw, db)
+            trust_level_value = trust_level.value
+            trust_warning = default_security_policy.requires_warning(trust_level)
+
         # ── 6. Hot-reload registry ────────────────────────────────────────────
         await self._hot_reload()
 
@@ -259,7 +285,8 @@ class PackageManager:
         operation_log.record("install", module_id, version, "success", msg,
                               source=str(mod_path.name))
         logger.info(msg)
-        return InstallResult(InstallStatus.SUCCESS, module_id, version, msg)
+        return InstallResult(InstallStatus.SUCCESS, module_id, version, msg,
+                              trust_level=trust_level_value, trust_warning=trust_warning)
 
     # ── Remove ────────────────────────────────────────────────────────────────
 
@@ -344,7 +371,8 @@ class PackageManager:
 
     # ── Update ────────────────────────────────────────────────────────────────
 
-    async def update(self, module_id: str, mod_path: Path) -> UpdateResult:
+    async def update(self, module_id: str, mod_path: Path,
+                      db: Optional[AsyncSession] = None) -> UpdateResult:
         """
         Update an installed module from a newer .mod file.
 
@@ -356,6 +384,9 @@ class PackageManager:
           5. Backup current version to cache/
           6. Extract new version
           7. Hot-reload registry
+
+        db: mesma semântica de install() — resolve e sinaliza Trust Level
+        quando passada (TD-005).
         """
         mod_path = Path(mod_path)
         target_dir = self._installed / module_id
@@ -465,13 +496,24 @@ class PackageManager:
             return self._fail_update(module_id, from_version, to_version,
                                      f"Update failed: {exc}")
 
+        # ── Trust resolution (TD-005) — mesma lógica de install() ─────────────
+        trust_level_value: Optional[str] = None
+        trust_warning = False
+        if db is not None:
+            from app.module_trust.resolve import resolve_module_trust
+            from app.module_trust.security_policy import default_security_policy
+            trust_level, _, _, _ = await resolve_module_trust(target_dir, raw, db)
+            trust_level_value = trust_level.value
+            trust_warning = default_security_policy.requires_warning(trust_level)
+
         await self._hot_reload()
 
         msg = (f"Module '{module_id}' updated from v{from_version} to v{to_version}.")
         operation_log.record("update", module_id, to_version, "success", msg,
                              from_version=from_version)
         logger.info(msg)
-        return UpdateResult(UpdateStatus.SUCCESS, module_id, from_version, to_version, msg)
+        return UpdateResult(UpdateStatus.SUCCESS, module_id, from_version, to_version, msg,
+                             trust_level=trust_level_value, trust_warning=trust_warning)
 
     # ── Query helpers ─────────────────────────────────────────────────────────
 

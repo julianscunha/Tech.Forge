@@ -13,10 +13,12 @@ import asyncio
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
+from app.db.database import get_db
 from app.package_manager import (
     RemoveStatus,
     operation_log,
@@ -91,6 +93,8 @@ class OperationResponse(BaseModel):
     status:    str
     module_id: str
     message:   str
+    trust_level:   Optional[str] = None
+    trust_warning: bool = False
 
 
 class OperationLogRead(BaseModel):
@@ -132,7 +136,7 @@ async def list_updates():
 # ── Install ───────────────────────────────────────────────────────────────────
 
 @router.post("/install/{module_id}", response_model=OperationResponse)
-async def install_module(module_id: str):
+async def install_module(module_id: str, db: AsyncSession = Depends(get_db)):
     """
     Install a module from modules/repository/.
 
@@ -146,12 +150,20 @@ async def install_module(module_id: str):
             detail=f"No .mod file found for '{module_id}' in repository.",
         )
 
-    result = await package_manager.install(mod_path)
+    result = await package_manager.install(mod_path, db=db)
+    if result.trust_warning:
+        await _notify_installation(
+            db, result.module_id, "warning", "Módulo instalado sem verificação",
+            f"{result.module_id}: instalado com Trust Level {result.trust_level} "
+            "— integridade/assinatura ainda não verificadas.",
+        )
     return OperationResponse(
         success=result.success,
         status=result.status.value,
         module_id=result.module_id,
         message=result.message,
+        trust_level=result.trust_level,
+        trust_warning=result.trust_warning,
     )
 
 
@@ -179,7 +191,7 @@ async def remove_module(module_id: str, keep_data: bool = False):
 # ── Update ────────────────────────────────────────────────────────────────────
 
 @router.post("/update/{module_id}", response_model=OperationResponse)
-async def update_module(module_id: str):
+async def update_module(module_id: str, db: AsyncSession = Depends(get_db)):
     """
     Update an installed module to the latest version in repository/.
     Blocked if the new version is incompatible.
@@ -191,19 +203,27 @@ async def update_module(module_id: str):
             detail=f"No .mod file found for '{module_id}' in repository.",
         )
 
-    result = await package_manager.update(module_id, mod_path)
+    result = await package_manager.update(module_id, mod_path, db=db)
+    if result.trust_warning:
+        await _notify_installation(
+            db, result.module_id, "warning", "Módulo atualizado sem verificação",
+            f"{result.module_id}: atualizado para Trust Level {result.trust_level} "
+            "— integridade/assinatura ainda não verificadas.",
+        )
     return OperationResponse(
         success=result.success,
         status=result.status.value,
         module_id=result.module_id,
         message=result.message,
+        trust_level=result.trust_level,
+        trust_warning=result.trust_warning,
     )
 
 
 # ── Manual import ─────────────────────────────────────────────────────────────
 
 @router.post("/import", response_model=OperationResponse)
-async def import_module(file: UploadFile = File(...)):
+async def import_module(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """
     Import a .mod file uploaded directly by the user.
 
@@ -222,7 +242,7 @@ async def import_module(file: UploadFile = File(...)):
     # Store to cache/
     stored_path = await package_manager._repo.store_upload(file.filename, content)
 
-    result = await package_manager.install(stored_path)
+    result = await package_manager.install(stored_path, db=db)
 
     # Clean up cache after install attempt
     try:
@@ -230,11 +250,20 @@ async def import_module(file: UploadFile = File(...)):
     except Exception as exc:
         logger.warning("Cache cleanup failed for %s: %s", stored_path, exc)
 
+    if result.trust_warning:
+        await _notify_installation(
+            db, result.module_id, "warning", "Módulo instalado sem verificação",
+            f"{result.module_id}: instalado com Trust Level {result.trust_level} "
+            "— integridade/assinatura ainda não verificadas.",
+        )
+
     return OperationResponse(
         success=result.success,
         status=result.status.value,
         module_id=result.module_id,
         message=result.message,
+        trust_level=result.trust_level,
+        trust_warning=result.trust_warning,
     )
 
 
@@ -389,18 +418,26 @@ async def _install_remote_background(module_id: str, job_id: str, source_id: Opt
             existing_entry is not None
             and existing_entry.status not in (ModuleStatus.INVALID, ModuleStatus.INCOMPATIBLE)
         )
-        if already_installed:
-            result = await package_manager.update(module_id, mod_path)
-        else:
-            result = await package_manager.install(mod_path)
-        if not result.success:
-            install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
-            async with AsyncSessionLocal() as db:
+        async with AsyncSessionLocal() as db:
+            if already_installed:
+                result = await package_manager.update(module_id, mod_path, db=db)
+            else:
+                result = await package_manager.install(mod_path, db=db)
+
+            if not result.success:
+                install_job_registry.set_phase(job_id, InstallJobPhase.FAILED, error=result.message)
                 await _notify_installation(
                     db, module_id, "error", "Falha na instalação",
                     f"{module_id}: {result.message}"
                 )
-            return
+                return
+
+            if result.trust_warning:
+                await _notify_installation(
+                    db, module_id, "warning", "Módulo instalado sem verificação",
+                    f"{module_id}: instalado com Trust Level {result.trust_level} "
+                    "— integridade/assinatura ainda não verificadas.",
+                )
 
         install_job_registry.set_phase(job_id, InstallJobPhase.DONE)
         async with AsyncSessionLocal() as db:

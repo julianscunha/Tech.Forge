@@ -9,7 +9,7 @@ import pytest
 import pytest_asyncio
 import asyncio
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -290,7 +290,7 @@ class TestRemoteInstallEndpoints:
              patch.object(marketplace_module.package_manager, "install", AsyncMock()) as mock_install:
             await marketplace_module._install_remote_background("hello_world", job_id, None)
 
-        mock_update.assert_awaited_once_with("hello_world", fake_mod_path)
+        mock_update.assert_awaited_once_with("hello_world", fake_mod_path, db=ANY)
         mock_install.assert_not_called()
         final_job = clean_install_jobs.get(job_id)
         assert final_job.phase == InstallJobPhase.DONE

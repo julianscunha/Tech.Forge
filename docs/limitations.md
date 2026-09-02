@@ -62,12 +62,6 @@ estado atual da plataforma.
 - **Hot-unload de módulo não existe.** Desativar um módulo não descarrega
   o código já montado em runtime — é preciso reiniciar a plataforma para
   o efeito ser completo.
-- **Aviso de confiança (trust) na instalação nunca chega ao usuário.** A
-  política de segurança já decide corretamente não bloquear instalação
-  por nível de confiança isolado, e já calcula quando deveria emitir um
-  aviso — mas esse aviso nunca é de fato exibido em nenhum fluxo de
-  instalação ou atualização hoje. É uma peça pronta que não foi conectada
-  na interface.
 - **Conflito de capability entre módulos concorrentes é só reportado, sem
   política de resolução automática.** Se dois módulos oferecerem a mesma
   capability, não há uma regra de precedência definida.

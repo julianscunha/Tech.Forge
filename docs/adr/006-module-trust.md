@@ -36,11 +36,12 @@ instalação por nível de confiança isolado — `allows_install()` é sempre
   contexto atual (módulos internos, instalação já é um ato deliberado do
   usuário) — não é adequado pra um marketplace público aberto sem
   revisão dessa política.
-- **Gap conhecido**: o mecanismo de aviso (`requires_warning()`) existe e
-  está correto, mas nenhum call site de instalação/atualização o chama
-  hoje — o aviso nunca chega de fato à UI. Registrado no Technical Debt
-  Registry como item a resolver antes de expandir o alcance de
-  instalação remota.
+- **Gap fechado (TD-005)**: `install()`/`update()` agora resolvem o Trust
+  Level do módulo logo após a extração (`resolve_module_trust()`,
+  compartilhado com `GET /modules/{id}/trust`) e, quando
+  `requires_warning()` é `True`, criam uma notificação real via
+  `NotificationService` — o aviso chega ao sino de notificações do Core
+  em vez de ficar só calculado e nunca exibido.
 
 ## Alternatives Considered
 

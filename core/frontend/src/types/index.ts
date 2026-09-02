@@ -196,6 +196,8 @@ export interface OperationResponse {
   status: string
   module_id: string
   message: string
+  trust_level: string | null
+  trust_warning: boolean
 }
 
 // ── Catalog (Fase 11) ───────────────────────────────────────────────────────

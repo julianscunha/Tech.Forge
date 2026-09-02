@@ -6,7 +6,6 @@ polling: chamado manualmente, no startup, ou depois de update.
 """
 from __future__ import annotations
 
-import base64
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,12 +17,8 @@ from app.db.database import get_db
 from app.dependency_engine.parser import DependencyParser
 from app.module_engine.registry import registry
 from app.module_trust.integrity import verify_integrity
-from app.module_trust.signature import (
-    SignatureStatus,
-    canonical_manifest_bytes,
-    default_signature_provider,
-)
-from app.module_trust.trust import TrustResolver
+from app.module_trust.resolve import resolve_module_trust
+from app.module_trust.signature import SignatureStatus
 from app.module_trust.verification import verify_module_integrity
 from app.observability.events import event_bus
 from app.schemas.publisher import PublisherRead
@@ -105,26 +100,13 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
         raise HTTPException(404, f"Module not found: {module_id!r}")
 
     package_dir = settings.MODULES_INSTALLED_PATH / module_id
-    integrity_result = verify_integrity(package_dir)
-
     raw = entry.manifest_raw or {}
-    publisher_field = raw.get("publisher")
-    publisher_id = (publisher_field.get("id")
-                    if isinstance(publisher_field, dict) else publisher_field)
-    publisher = await PublisherService.get_by_id(db, publisher_id) if publisher_id else None
+    trust_level, integrity_status, signature_status, publisher = await resolve_module_trust(package_dir, raw, db)
 
-    signature_value = raw.get("signature")
-    signature_bytes = base64.b64decode(signature_value) if signature_value else None
-    signature_status = default_signature_provider.verify(
-        data=canonical_manifest_bytes(raw), signature=signature_bytes,
-        public_key=publisher.public_key if publisher else None,
-    ).value
     if signature_status == SignatureStatus.VALID.value:
         event_bus.publish("security.signature_valid", module_id=module_id)
     elif signature_status == SignatureStatus.INVALID.value:
         event_bus.publish("security.signature_invalid", module_id=module_id)
-
-    trust_level = TrustResolver.resolve(integrity_result.status, publisher, signature_status)
 
     previous = _last_known_trust.get(module_id)
     if previous is not None and previous != trust_level.value:
@@ -134,7 +116,7 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
 
     return TrustRead(
         module_id=module_id, trust_level=trust_level.value,
-        integrity_status=integrity_result.status.value, signature_status=signature_status,
+        integrity_status=integrity_status.value, signature_status=signature_status,
         publisher=publisher,
     )
 
