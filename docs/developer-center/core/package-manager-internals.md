@@ -50,7 +50,7 @@ O `.mod` é um ZIP estruturado com a seguinte árvore interna:
 ├── backend/
 │   └── main.py                ← entry_backend declarado no manifest
 ├── frontend/
-│   └── index.tsx              ← entry_frontend declarado no manifest
+│   └── index.js                ← entry_frontend declarado no manifest (JS/ESM compilado, não .tsx cru)
 ├── assets/                    ← opcional
 ├── docs/                      ← opcional
 ├── tests/                     ← opcional

@@ -84,14 +84,10 @@ prioridade e motivo do adiamento em
 [`docs/architecture/technical-debt-registry.md`](architecture/technical-debt-registry.md)
 — não duplicados aqui.
 
-Os dois itens abaixo ficam só neste documento porque dependem de um fluxo
+O item abaixo fica só neste documento porque depende de um fluxo
 de update/instalador ainda inexistente, mesma lógica das decisões de
 escopo acima:
 
-- O ciclo completo de upgrade (`upgrade(from_version)`) e desinstalação
-  real a partir de um `.mod` empacotado não tem teste de integração
-  ponta a ponta — só o contrato isolado e `scan_installed()` são
-  cobertos hoje.
 - `uvicorn --reload` (modo dev) costuma deixar um processo worker órfão
   vivo mesmo depois de matar o PID do reloader — é comportamento do
   watcher, não do Core, mas atrapalha quem repete o ciclo de teste

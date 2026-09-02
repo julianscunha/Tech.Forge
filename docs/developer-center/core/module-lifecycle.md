@@ -8,9 +8,11 @@ order: 3
 
 # Ciclo de Vida dos Módulos
 
-Todo módulo TechForge deve implementar o contrato `ModuleContract` que define os hooks de ciclo de vida chamados pelo Core.
+Todo módulo TechForge deve implementar o contrato `ModuleContract`, que define
+os hooks de ciclo de vida. **Nem todos são chamados pelo Core hoje** — ver
+tabela abaixo antes do fluxo conceitual.
 
-## Fluxo completo
+## Fluxo completo (conceitual)
 
 ```
 install()   ← chamado uma vez na primeira instalação
@@ -25,6 +27,20 @@ upgrade(v)  ← chamado ao atualizar (from_version como parâmetro)
     ↓
 uninstall() ← chamado ao remover permanentemente
 ```
+
+## O que o Core realmente chama hoje
+
+| Hook | Chamado pelo Core? | Quando |
+|---|---|---|
+| `enable()` | ✅ Sim | `POST /api/v1/marketplace/activate/{id}` |
+| `disable()` | ✅ Sim | `POST /api/v1/marketplace/deactivate/{id}` |
+| `health_check()` | ✅ Sim | `GET /api/v1/health`, sob demanda |
+| `uninstall()` | ✅ Sim | `PackageManager.remove()` |
+| `install()` | ❌ Não | Declarado no contrato, mas nenhum caminho de código do Core o invoca — `PackageManager.install()` extrai o pacote e atualiza o registry, sem chamar o hook do módulo |
+| `upgrade(from_version)` | ❌ Não | Mesma situação — `PackageManager.update()` não invoca o hook |
+
+Implemente `install()`/`upgrade()` se quiser, mas não dependa deles rodando
+automaticamente: hoje eles só existem no contrato do SDK.
 
 ## Implementação
 

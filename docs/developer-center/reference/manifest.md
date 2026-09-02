@@ -31,7 +31,7 @@ order: 10
 color: blue
 
 entry_backend: backend/main.py
-entry_frontend: frontend/index.tsx
+entry_frontend: frontend/index.js
 
 module_type: application
 channel: stable
@@ -39,7 +39,8 @@ channel: stable
 homepage: https://example.com
 documentation: https://docs.example.com
 
-# Preenchidos automaticamente pelo Core ao empacotar/publicar
+# checksum é preenchido automaticamente ao empacotar/publicar.
+# signature ainda não é gerada automaticamente — ver seção "Campos opcionais".
 signature:
 checksum:
 ```
@@ -56,7 +57,7 @@ checksum:
 | `author` | string | Nome do desenvolvedor. |
 | `description` | string | Descrição de uma linha. |
 | `entry_backend` | path | Caminho para `backend/main.py`. |
-| `entry_frontend` | path | Caminho para `frontend/index.tsx`. |
+| `entry_frontend` | path | Caminho para o JS compilado (ESM), ex. `frontend/index.js`. **Não** um `.tsx`/`.ts` cru — o Core só serve/importa `.js`/`.mjs` (`ModuleHost` rejeita silenciosamente qualquer outra extensão). |
 | `icon` | string | Nome do ícone lucide-react em **kebab-case**. Ex: `shield-check`. |
 | `order` | int | Posição na Sidebar dentro do grupo category/vendor. Menor = primeiro. |
 
@@ -77,8 +78,8 @@ checksum:
 | `configuration.fields` | list | Campos de configuração expostos na UI do módulo (`id`, `type`: `string`\|`integer`\|`float`\|`boolean`, `default`). |
 | `source_type` | string | Origem do módulo: `local` (padrão), `catalog` ou `development`. Preenchido pelo Core, normalmente não editado à mão. |
 | `source_location` | string | Localização de origem quando `source_type` não é `local`. Preenchido pelo Core. |
-| `signature` | string | Assinatura digital, preenchida automaticamente ao empacotar/publicar via Marketplace. |
-| `checksum` | string | Checksum SHA-256, preenchido automaticamente ao empacotar/publicar via Marketplace. |
+| `signature` | string | Assinatura digital do publisher. **Ainda não implementada** — nenhum caminho de produção (`package-module`, install, publish) a preenche hoje; ver [Package Manager — Internals](../core/package-manager-internals.md#3-formato-do-arquivo-mod). |
+| `checksum` | string | Checksum SHA-256 do `.mod`, preenchido automaticamente por `techforge package-module`. |
 
 ## Ícones disponíveis
 

@@ -16,7 +16,7 @@ author: Developer Name
 description: Breve descrição do módulo
 
 entry_backend: backend/main.py     # relativo à raiz do módulo
-entry_frontend: frontend/index.tsx # relativo à raiz do módulo — ESM compilado (ex.: Vite lib mode), não .tsx cru
+entry_frontend: frontend/index.js  # relativo à raiz do módulo — ESM compilado (ex.: Vite lib mode), não .tsx cru
 
 # Navegação e apresentação (icon e order são obrigatórios)
 icon: shield-check          # nome do ícone lucide-react em kebab-case
@@ -51,7 +51,8 @@ documentation: https://docs.example.com   # forma simples: URL externa
 #       type: string
 #       default: null
 
-# Preenchidos automaticamente pelo Core ao empacotar/publicar — não editar manualmente
+# checksum é preenchido automaticamente por `techforge package-module` — não editar manualmente.
+# signature ainda não é gerada automaticamente por nenhum caminho de produção.
 signature:
 checksum:
 
