@@ -17,21 +17,11 @@ from app.db.database import get_db
 from app.dependency_engine.parser import DependencyParser
 from app.module_engine.registry import registry
 from app.module_trust.integrity import verify_integrity
-from app.module_trust.resolve import resolve_module_trust
-from app.module_trust.signature import SignatureStatus
+from app.module_trust.service import get_module_trust_result, list_all_module_trust
 from app.module_trust.verification import verify_module_integrity
-from app.observability.events import event_bus
 from app.schemas.publisher import PublisherRead
-from app.services.publisher import PublisherService
 
 router = APIRouter(prefix="/modules", tags=["module-trust"])
-
-# Fase 17 §36 — cache in-memory do último Trust Level resolvido por
-# módulo, só pra detectar transição real (MODULE_TRUST_CHANGED). Não
-# persiste entre restarts — decisão consciente, o Trust Level em si
-# sempre é recalculado do zero a cada chamada, isto é só pra saber se
-# mudou desde a última verificação nesta sessão do processo.
-_last_known_trust: dict[str, str] = {}
 
 
 class IntegrityVerifyRead(BaseModel):
@@ -67,14 +57,7 @@ async def verify_module(module_id: str, db: AsyncSession = Depends(get_db)) -> I
 @router.get("/trust", response_model=list[TrustRead],
             summary="Trust Level of every INSTALLED module in one call (§21/§22 — avoid N+1)")
 async def list_modules_trust(db: AsyncSession = Depends(get_db)) -> list[TrustRead]:
-    from app.module_engine.enums import ModuleStatus
-
-    results: list[TrustRead] = []
-    for entry in registry.all():
-        if entry.status != ModuleStatus.INSTALLED:
-            continue
-        results.append(await get_module_trust(entry.module_id, db))
-    return results
+    return [TrustRead(**r.__dict__) for r in await list_all_module_trust(registry, db)]
 
 
 @router.get("/{module_id}/integrity", response_model=IntegrityVerifyRead,
@@ -100,25 +83,8 @@ async def get_module_trust(module_id: str, db: AsyncSession = Depends(get_db)) -
         raise HTTPException(404, f"Module not found: {module_id!r}")
 
     package_dir = settings.MODULES_INSTALLED_PATH / module_id
-    raw = entry.manifest_raw or {}
-    trust_level, integrity_status, signature_status, publisher = await resolve_module_trust(package_dir, raw, db)
-
-    if signature_status == SignatureStatus.VALID.value:
-        event_bus.publish("security.signature_valid", module_id=module_id)
-    elif signature_status == SignatureStatus.INVALID.value:
-        event_bus.publish("security.signature_invalid", module_id=module_id)
-
-    previous = _last_known_trust.get(module_id)
-    if previous is not None and previous != trust_level.value:
-        event_bus.publish("security.module_trust_changed", module_id=module_id,
-                          **{"from": previous, "to": trust_level.value})
-    _last_known_trust[module_id] = trust_level.value
-
-    return TrustRead(
-        module_id=module_id, trust_level=trust_level.value,
-        integrity_status=integrity_status.value, signature_status=signature_status,
-        publisher=publisher,
-    )
+    result = await get_module_trust_result(module_id, package_dir, entry.manifest_raw or {}, db)
+    return TrustRead(**result.__dict__)
 
 
 class SBOMDependencyRead(BaseModel):
@@ -141,13 +107,14 @@ class SBOMRead(BaseModel):
             summary="Minimal Software Bill of Materials (§31/§32) — no SPDX/CycloneDX")
 async def get_module_sbom(module_id: str, db: AsyncSession = Depends(get_db)) -> SBOMRead:
     """Reaproveita dependency_engine (dependências já declaradas) + Trust/
-    Publisher (`get_module_trust`) — nenhuma lógica de resolução duplicada."""
+    Publisher (`get_module_trust_result`) — nenhuma lógica de resolução duplicada."""
     entry = registry.get(module_id)
     if entry is None:
         raise HTTPException(404, f"Module not found: {module_id!r}")
 
-    trust = await get_module_trust(module_id, db)
+    package_dir = settings.MODULES_INSTALLED_PATH / module_id
     raw = entry.manifest_raw or {}
+    trust = await get_module_trust_result(module_id, package_dir, raw, db)
     dependencies = DependencyParser.parse(raw.get("dependencies") or [])
 
     return SBOMRead(

@@ -1,8 +1,8 @@
 """
 /api/v1/security — Security & Trust overview (Fase 17 §44/§45)
 ====================================================================
-Agrega dados já expostos por outras rotas (Trust Level por módulo via
-`list_modules_trust`, Publisher Registry) sob o prefixo `/security`
+Agrega dados já expostos pelo módulo de Trust (Trust Level por módulo via
+`list_all_module_trust`, Publisher Registry) sob o prefixo `/security`
 pedido pelo spec — nenhuma lógica de trust/publisher duplicada aqui.
 """
 from __future__ import annotations
@@ -11,8 +11,9 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.module_verification import list_modules_trust
 from app.db.database import get_db
+from app.module_engine.registry import registry
+from app.module_trust.service import list_all_module_trust
 from app.module_trust.signature import SignatureStatus
 from app.module_trust.trust import TrustLevel
 from app.schemas.publisher import PublisherRead
@@ -31,7 +32,7 @@ class SecurityStatusRead(BaseModel):
 @router.get("/status", response_model=SecurityStatusRead,
             summary="Aggregate security posture across all installed modules (§44)")
 async def get_security_status(db: AsyncSession = Depends(get_db)) -> SecurityStatusRead:
-    trust_results = await list_modules_trust(db)
+    trust_results = await list_all_module_trust(registry, db)
     by_trust_level = {level.value: 0 for level in TrustLevel}
     unsigned_count = 0
     for result in trust_results:
