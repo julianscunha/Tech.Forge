@@ -91,6 +91,18 @@ estado atual da plataforma.
   fake e aninhar `render`+`moduleConfig` num único objeto default, só
   pra passar no validador. É acoplamento a um detalhe textual, não a uma
   garantia real do contrato.
+- **~~Notificação de evento crítico agendada no startup podia vazar entre
+  testes.~~ Corrigido.** `notifications_bridge.py` agenda a criação de
+  notificações de segurança (`security.integrity_failure` etc.) via
+  `loop.create_task()` fire-and-forget quando publicadas dentro de um
+  loop já rodando (ex: verificação de integridade no startup do
+  `TestClient`) — a task só termina quando alguma requisição HTTP
+  seguinte dá oportunidade ao loop, não necessariamente antes do
+  `_clean()` de isolamento do teste. Resultado: falha intermitente em
+  `test_phase2_notifications.py` (a notificação de segurança materializa
+  entre o clean e a asserção). Corrigido drenando `_pending_tasks` via
+  `c.portal.call(drain_pending_notifications)` antes do clean, no mesmo
+  loop da task — determinístico, 40+ execuções seguidas sem flake.
 - **Suíte de testes de dois módulos instalados pode colidir por nome de
   arquivo.** Pytest em modo rootless usa o primeiro `tests/_loader.py`
   (ou qualquer nome de arquivo repetido) importado num processo e

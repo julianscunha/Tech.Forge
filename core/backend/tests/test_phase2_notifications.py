@@ -25,15 +25,28 @@ pytestmark = pytest.mark.integration
 def client():
     with TestClient(app) as c:
         # isolate each test with a clean slate
-        from app.db.database import AsyncSessionLocal
         import asyncio
+
         from sqlalchemy import delete
+
+        from app.db.database import AsyncSessionLocal
         from app.models.notifications import Notification
 
         async def _clean():
             async with AsyncSessionLocal() as s:
                 await s.execute(delete(Notification))
                 await s.commit()
+
+        # notifications_bridge.py agenda notificações de segurança
+        # disparadas no startup (ex: falha de integridade de módulo) via
+        # loop.create_task() fire-and-forget, no mesmo loop que o
+        # TestClient usa pra toda requisição — sem esperar essa task
+        # antes de limpar, ela pode materializar DEPOIS deste clean e
+        # ANTES da asserção do teste (corrida real, intermitente). Drenar
+        # via c.portal (mesmo loop da task) antes do clean torna
+        # determinístico — ver docs/limitations.md.
+        from app.observability.notifications_bridge import drain_pending_notifications
+        c.portal.call(drain_pending_notifications)
         asyncio.run(_clean())
         yield c
         asyncio.run(_clean())
