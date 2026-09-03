@@ -1,0 +1,32 @@
+id: hello_world
+name: Hello World
+version: 1.0.0
+
+platform_min_version: 1.0.0
+platform_max_version: 2.0.0
+
+category: Examples
+module_type: service
+vendor: TechForge
+author: TechForge Team
+description: >
+  Minimal reference module that validates the Phase 2–4 plugin architecture.
+  Demonstrates the complete manifest contract, directory structure, and
+  registry integration. Not a functional tool — architecture proof only.
+
+# Navigation & Presentation (§7.1) — required
+icon: blocks
+order: 99
+
+# Optional presentation
+color: blue
+
+entry_backend: backend/main.py
+entry_frontend: frontend/index.js
+
+homepage: https://github.com/techforge/modules/hello_world
+documentation: https://docs.techforge.io/modules/hello_world
+
+# Security fields — populated by Marketplace in Phase 5
+signature:
+checksum:
