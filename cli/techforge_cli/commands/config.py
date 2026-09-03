@@ -8,19 +8,8 @@ import json
 
 import click
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
-from techforge_cli.console import console, print_error
-
-
-def _get(path: str):
-    import urllib.error
-    import urllib.request
-    try:
-        with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
+from techforge_cli.console import console
+from techforge_cli.http import core_get as _get
 
 
 @click.group("config")

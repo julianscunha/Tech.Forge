@@ -7,15 +7,12 @@ from __future__ import annotations
 
 import json
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 from pathlib import Path
 
 import click
 from rich.table import Table
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import (
     console,
     print_error,
@@ -25,24 +22,12 @@ from techforge_cli.console import (
     print_section,
     print_success,
 )
+from techforge_cli.http import core_get as _get
 from techforge_cli.packager.builder import PackageBuilder
 
 # Add core backend to path for imports
 ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "core" / "backend"))
-
-
-def _get(path: str):
-    """Fetch JSON from Core API."""
-    try:
-        with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
 
 
 @click.group("catalog")

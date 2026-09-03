@@ -19,6 +19,7 @@ from techforge_cli.console import (
     print_info,
     print_success,
 )
+from techforge_cli.http import core_get, core_post
 
 # Core engine — added to path so the CLI can run from any checkout
 _CORE = Path(__file__).resolve().parent.parent.parent.parent / "core" / "backend"
@@ -27,7 +28,6 @@ if str(_CORE) not in sys.path:
 
 from app.module_engine.manifest import ManifestError, ManifestParser  # noqa: E402
 from app.module_engine.validator import ModuleValidator  # noqa: E402
-from techforge_cli.config import CORE_BASE_URL  # noqa: E402
 
 
 def _scan(modules_dir: Path):
@@ -135,19 +135,7 @@ def validate_cmd(module_path, platform_version):
 # ── Lifecycle (Fase 4 §19) — delegates to Core API ───────────────────────────
 
 def _core_post(path: str) -> dict:
-    import urllib.request
-    req = urllib.request.Request(
-        f"{CORE_BASE_URL}{path}", data=b"", method="POST",
-        headers={"Content-Type": "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        return {"ok": False, "detail": exc.read().decode("utf-8", errors="replace")}
-    except urllib.error.URLError as exc:
-        return {"ok": False, "detail": f"Plataforma não acessível ({exc.reason}). "
-                                       f"Use 'techforge platform start'."}
+    return core_post(path, method="POST", timeout=10, raise_on_error=False)
 
 
 def _lifecycle(action: str, module_id: str) -> None:
@@ -183,33 +171,13 @@ def remove_cmd(module_id, yes):
             f"Remover PERMANENTEMENTE o módulo '{module_id}' e seus arquivos?",
             abort=True,
         )
-    import urllib.request
-    req = urllib.request.Request(
-        f"{CORE_BASE_URL}/marketplace/remove/{module_id}",
-        method="DELETE",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30):
-            print_success(f"Módulo '{module_id}' removido.")
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível: {exc.reason}")
-        raise SystemExit(1)
+    core_post(f"/marketplace/remove/{module_id}", method="DELETE", timeout=30)
+    print_success(f"Módulo '{module_id}' removido.")
 
 
 # ── Dependency Governance (Fase 8.1 §24) — delegates to Core API ────────────
 
-def _core_get(path: str):
-    import urllib.error
-    import urllib.request
-    try:
-        with urllib.request.urlopen(f"{CORE_BASE_URL}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
+_core_get = core_get
 
 
 @modules_cmd.command("dependencies")
@@ -286,41 +254,11 @@ def _parse_set_values(pairs: tuple[str, ...]) -> dict:
 
 
 def _core_put_json(path: str, payload: dict) -> dict:
-    import urllib.error
-    import urllib.request
-    body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        f"{CORE_BASE_URL}{path}", data=body, method="PUT",
-        headers={"Content-Type": "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
+    return core_post(path, payload, method="PUT")
 
 
 def _core_post_json(path: str, payload: dict) -> dict:
-    import urllib.error
-    import urllib.request
-    body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        f"{CORE_BASE_URL}{path}", data=body, method="POST",
-        headers={"Content-Type": "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
+    return core_post(path, payload, method="POST")
 
 
 @modules_cmd.command("config")

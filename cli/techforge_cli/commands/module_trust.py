@@ -12,7 +12,6 @@ Core em runtime (spec §12).
 from __future__ import annotations
 
 import base64
-import json
 import sys
 from pathlib import Path
 
@@ -20,43 +19,15 @@ import click
 import yaml
 from rich.table import Table
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import console, print_error, print_info, print_success, print_warning
+from techforge_cli.http import core_get as _get
+from techforge_cli.http import core_post as _post
 
 # `app` vive em core/backend/, irmão de cli/ no monorepo Tech.Forge — mesmo
 # padrão de resolução de path usado por techforge_cli/packager/builder.py.
 _CORE_BACKEND = Path(__file__).resolve().parents[3] / "core" / "backend"
 if str(_CORE_BACKEND) not in sys.path:
     sys.path.insert(0, str(_CORE_BACKEND))
-
-
-def _get(path: str):
-    import urllib.error
-    import urllib.request
-    try:
-        with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
-
-
-def _post(path: str):
-    import urllib.error
-    import urllib.request
-    req = urllib.request.Request(f"{_CORE}{path}", data=b"", method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        print_error(exc.read().decode("utf-8", errors="replace"))
-        raise SystemExit(1)
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
 
 
 def _print_integrity_result(result: dict) -> None:

@@ -1,42 +1,19 @@
 """techforge diagnostics — health/errors/export (Fase 14 §35).
 
 Cliente HTTP fino sobre /api/v1/diagnostics* — nenhuma lógica duplicada
-aqui, mesmo padrão de `_core_get` já usado em commands/modules.py.
+aqui, mesmo padrão de `techforge_cli.http` usado no resto do CLI.
 Requer a plataforma rodando (`techforge start`).
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import click
 from rich.table import Table
 
-from techforge_cli.config import CORE_BASE_URL as _BASE
-from techforge_cli.console import console, print_error, print_header, print_info, print_success
-
-
-def _core_get(path: str):
-    import urllib.error
-    import urllib.request
-    try:
-        with urllib.request.urlopen(f"{_BASE}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge start'.")
-        raise SystemExit(1)
-
-
-def _core_post_raw(path: str) -> bytes:
-    import urllib.error
-    import urllib.request
-    req = urllib.request.Request(f"{_BASE}{path}", method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.read()
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge start'.")
-        raise SystemExit(1)
+from techforge_cli.console import console, print_header, print_info, print_success
+from techforge_cli.http import core_get as _core_get
+from techforge_cli.http import core_post_raw as _core_post_raw
 
 
 @click.group("diagnostics", invoke_without_command=True)

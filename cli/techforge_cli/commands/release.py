@@ -7,28 +7,20 @@ de dentro do próprio processo do servidor avaliado seria pesado e circular.
 """
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 import click
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
 from techforge_cli.console import console, print_error, print_info
+from techforge_cli.http import core_get
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _get_readiness() -> dict | None:
-    try:
-        with urllib.request.urlopen(f"{_CORE}/release/readiness", timeout=30) as resp:
-            return json.loads(resp.read())
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        return None
+    return core_get("/release/readiness", timeout=30)
 
 
 def _run_backend_tests() -> bool:

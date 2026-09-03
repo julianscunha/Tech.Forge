@@ -5,25 +5,11 @@ invocação duplicada aqui.
 """
 from __future__ import annotations
 
-import json
-
 import click
 from rich.table import Table
 
-from techforge_cli.config import CORE_BASE_URL as _CORE
-from techforge_cli.console import console, print_error, print_info
-
-
-def _get(path: str):
-    """GET na API do Core. Levanta SystemExit com mensagem amigável em erro."""
-    import urllib.error
-    import urllib.request
-    try:
-        with urllib.request.urlopen(f"{_CORE}{path}", timeout=15) as resp:
-            return json.loads(resp.read())
-    except urllib.error.URLError as exc:
-        print_error(f"Plataforma não acessível ({exc.reason}). Use 'techforge platform start'.")
-        raise SystemExit(1)
+from techforge_cli.console import console, print_info
+from techforge_cli.http import core_get as _get
 
 
 @click.group("services")
