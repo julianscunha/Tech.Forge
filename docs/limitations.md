@@ -58,10 +58,46 @@ estado atual da plataforma.
 
 ## Limitações conhecidas, candidatas a melhoria futura
 
-- **O material de referência para frontends de módulo ainda é vanilla JS.** O
-  Core serve assets estáticos, mas não há um módulo de referência com
-  React/TypeScript e bundle ESM (por exemplo, Vite library mode). É uma lacuna
-  de documentação e exemplo, não uma limitação do runtime.
+- **`sdk.services.invoke()` é síncrono e bloqueante, e nada detecta o uso
+  incorreto.** Chamado de dentro de uma rota `async def`, trava o único
+  event loop do uvicorn tentando servir sua própria requisição de
+  loopback — deadlock silencioso, sem exceção nem log, só descoberto
+  testando ao vivo. Achado no desenvolvimento do `system_health_check`
+  (Fase System Health). Revisitar: `invoke()` detectar que está rodando
+  dentro de um loop async e falhar alto, em vez de travar.
+- **`ServicesSDK.http_timeout` tem default de 2.0s, curto para chamadas
+  reais de sistema, e não tem override por chamada.** Uma leitura de
+  drivers via `Get-CimInstance` sozinha já leva ~2.3s no host de
+  referência — forçou setar o atributo mutável antes de cada rota que
+  precisava de mais tempo, em vez de passar um timeout explícito no
+  próprio `invoke()`. Achado no `system_health_check`.
+- **Import relativo (`from . import x`) não funciona em módulo carregado
+  via `importlib.spec_from_file_location`**, e o workaround
+  (`sys.path.insert(0, Path(__file__).parent)`) não está documentado em
+  lugar nenhum — só descoberto por tentativa e erro. Achado no
+  desenvolvimento de ambos os módulos da Fase System Health.
+- **`node_modules/` esquecido num módulo instalado trava o boot inteiro
+  da plataforma, sem pista da causa real.** O scanner de integridade
+  (`app/module_trust/integrity.py`) faz hash recursivo de todo arquivo de
+  todo módulo instalado, sem excluir `node_modules/` — esquecer de apagar
+  após o build do frontend estoura o timeout de readiness (60s) com um
+  erro genérico, não algo que aponte pra causa. Contorno atual (não é
+  fix do Core): apagar `node_modules/` depois de cada build, convenção só
+  informal hoje (`lead_tracker`, `system_health_check`).
+- **`techforge validate-module` confirma "export default" por busca
+  textual literal, não análise real do bundle.** Bundlers como Rollup em
+  lib mode emitem `export { X as default }`, não a string literal — isso
+  forçou um plugin Rollup só pra injetar um comentário `// export default`
+  fake e aninhar `render`+`moduleConfig` num único objeto default, só
+  pra passar no validador. É acoplamento a um detalhe textual, não a uma
+  garantia real do contrato.
+- **Suíte de testes de dois módulos instalados pode colidir por nome de
+  arquivo.** Pytest em modo rootless usa o primeiro `tests/_loader.py`
+  (ou qualquer nome de arquivo repetido) importado num processo e
+  ignora silenciosamente os demais — quebra a descoberta de testes do
+  segundo módulo sem erro nenhum. Contorno: prefixar o nome do loader por
+  módulo (`_si_loader.py`, `_shc_loader.py`); não documentado no
+  CONTRIBUTING do repo de módulos.
 - **Hot-unload de módulo não existe.** Desativar um módulo não descarrega
   o código já montado em runtime — é preciso reiniciar a plataforma para
   o efeito ser completo.

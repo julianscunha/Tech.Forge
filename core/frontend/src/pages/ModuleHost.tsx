@@ -15,7 +15,7 @@
  */
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Puzzle, ArrowLeft, ExternalLink, AlertTriangle, Maximize2 } from 'lucide-react'
+import { Puzzle, ArrowLeft, AlertTriangle, Maximize2 } from 'lucide-react'
 import { registryApi, runtimeApi } from '@/lib/api'
 import { useFocusModeStore } from '@/store/focusMode'
 import type { ModuleEntry, ModuleRuntimeEntry } from '@/types'
@@ -220,28 +220,6 @@ export function ModuleHost({ moduleId: moduleIdProp }: ModuleHostProps = {}) {
         )
       )}
 
-      {/* Metadata */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          ['Categoria', entry.category],
-          ['Vendor', entry.vendor],
-          ['Autor', entry.author],
-          ['Status', entry.status],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg-elevated))] p-3">
-            <p className="text-[10px] uppercase tracking-widest text-[hsl(var(--text-subtle))]">{label}</p>
-            <p className="text-sm text-[hsl(var(--text))] mt-0.5 truncate">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Backend API probe — mounted by the Plugin Loader under /api/v1/modules/<id> */}
-      <div className="rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--bg-elevated))] p-4 space-y-3">
-        <p className="text-xs font-medium text-[hsl(var(--text-muted))]">
-          API do módulo <span className="font-mono text-[hsl(var(--text-subtle))]">/api/v1/modules/{moduleId}</span>
-        </p>
-        <BackendProbe moduleId={moduleId!} />
-      </div>
     </div>
   )
 }
@@ -270,41 +248,3 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-function BackendProbe({ moduleId }: { moduleId: string }) {  const [result, setResult] = useState<string | null>(null)
-  const [ok, setOk] = useState<boolean | null>(null)
-
-  const ping = () => {
-    fetch(`/api/v1/modules/${moduleId}/ping`)
-      .then(async (r) => {
-        setOk(r.ok)
-        setResult(await r.text())
-      })
-      .catch((e) => {
-        setOk(false)
-        setResult(String(e))
-      })
-  }
-
-  return (
-    <div className="space-y-2">
-      <button
-        onClick={ping}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[hsl(var(--accent))] text-white hover:opacity-90 transition-opacity"
-      >
-        <ExternalLink size={12} /> Testar GET /ping
-      </button>
-      {ok !== null && (
-        <pre
-          className={cn(
-            'rounded p-2.5 text-xs font-mono whitespace-pre-wrap break-all',
-            ok
-              ? 'bg-green-500/10 text-green-500'
-              : 'bg-red-500/10 text-red-500',
-          )}
-        >
-          {result}
-        </pre>
-      )}
-    </div>
-  )
-}
