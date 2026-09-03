@@ -135,6 +135,22 @@ prioridade e motivo do adiamento em
 [`docs/architecture/technical-debt-registry.md`](architecture/technical-debt-registry.md)
 — não duplicados aqui.
 
+- **CI (`ci.yml`) não tinha `timeout-minutes`, e o step "CLI test suite"
+  já travou o job inteiro por ~6h (timeout default do GitHub Actions) em
+  pelo menos 3 execuções distintas no mesmo dia.** O log mostra o pytest
+  imprimindo `137 passed... in 1.59s` normalmente — a suíte em si sempre
+  termina — mas o processo do runner não retorna o controle depois disso,
+  característico de processo/thread órfão vazando de um step anterior no
+  mesmo job (steps de uma job compartilham a árvore de processos do
+  runner). Buscas em todo `Popen`/thread/subprocess do repo (CLI,
+  launcher, testes de arquitetura) não encontraram um cleanup faltando —
+  todos os spawns achados têm `kill()+wait()` em `finally`. Não
+  reproduzido localmente no Windows (roda limpo em ~30s). Mitigado com
+  `timeout-minutes: 15` no job e `timeout-minutes: 5` só no step de CLI
+  (teto de segurança, não a correção da causa raiz) — a causa raiz exigiria
+  reproduzir interativamente num runner Linux de verdade pra isolar qual
+  processo específico está vazando.
+
 O item abaixo fica só neste documento porque depende de um fluxo
 de update/instalador ainda inexistente, mesma lógica das decisões de
 escopo acima:
