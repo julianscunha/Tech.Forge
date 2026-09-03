@@ -58,6 +58,20 @@ estado atual da plataforma.
 
 ## Limitações conhecidas, candidatas a melhoria futura
 
+- **Espaço morto em telas com pouco conteúdo (Dashboard, Módulos, Developer
+  Center).** Grid de cards com poucos itens deixa área vazia grande abaixo
+  (Dashboard, Módulos) ou o painel de conteúdo do Developer Center sobra
+  sem preencher a largura em certas seções. Achado em revisão visual real
+  (`/frontend-design`, screenshots de 1440×900). Não é um fix pontual —
+  precisa de decisão de layout (masonry? menos padding? mais conteúdo por
+  card?) antes de mexer.
+- **Labels uppercase-tracked nos StatCards do Dashboard.** É o "tell"
+  genérico de UI gerada por IA apontado pela própria skill de design — não
+  é bug, é escolha estética herdada por default, nunca decidida de
+  propósito. Fica pendente de decisão explícita antes de alterar (trocar
+  a tipografia dos StatCards é mudança visual perceptível em toda a tela
+  inicial, não algo pra decidir sem o usuário ver antes/depois).
+
 - **`sdk.services.invoke()` é síncrono e bloqueante, e nada detecta o uso
   incorreto.** Chamado de dentro de uma rota `async def`, trava o único
   event loop do uvicorn tentando servir sua própria requisição de
