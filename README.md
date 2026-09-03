@@ -11,7 +11,7 @@ Build once as a module — install, run and document it inside a single lightwei
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-async-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/tests-959%20passing-brightgreen)](#-testes)
+[![Tests](https://img.shields.io/badge/tests-962%20passing-brightgreen)](#-testes)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4)](#-contribuindo)
 
@@ -230,13 +230,14 @@ específicas de SQLite ficam isoladas na camada de dados.
 
 ## 🧪 Testes
 
-959 testes no backend (`core/backend/tests/`), organizados por nível via
+962 testes no backend (`core/backend/tests/`), organizados por nível via
 `pytest` markers (`unit`/`integration`/`contract`/`e2e`/`smoke`/`regression`,
-`--strict-markers`); 133 no CLI (`cli/tests/`). CI roda tudo automaticamente
-em cada push/PR ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+`--strict-markers`); 137 no CLI (`cli/tests/`). CI roda tudo automaticamente
+em cada push/PR ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)),
+com `timeout-minutes` como teto de segurança em todo job/step.
 
-> Duas falhas conhecidas dependem de ordem de execução da suíte completa
-> (passam isoladamente) — não são regressão, ver [`docs/limitations.md`](docs/limitations.md).
+> Falhas isoladas e raras dependem de ordem de execução da suíte completa
+> (passam sozinhas) — não são regressão, ver [`docs/limitations.md`](docs/limitations.md).
 
 ```bash
 cd core/backend
@@ -305,6 +306,14 @@ techforge package-module ./meu_modulo   # gera meu_modulo.mod (ZIP assinável)
 
 O módulo aparece automaticamente na navegação, seus endpoints são montados
 sob `/api/v1` e sua documentação entra no índice com score de completude.
+
+> ⚠️ **`sdk.database` e `asyncio.run()` por chamada:** se seu código faz
+> `asyncio.run(sdk.database.execute(...))` chamada a chamada (em vez de um
+> loop só pro processo todo — comum em scripts, testes e handlers síncronos),
+> atualize o SDK antes de escrever o módulo. Versões anteriores a essa
+> correção vazavam uma thread por chamada nesse padrão de uso, podendo
+> travar o processo do módulo silenciosamente sem erro nenhum no log — ver
+> `[Unreleased] > Fixed` no [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 

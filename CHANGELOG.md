@@ -6,6 +6,12 @@ Este changelog cobre o **Core** apenas. Cada módulo mantém seu próprio `CHANG
 
 ## [Unreleased]
 
+### Fixed
+- **`sdk.database` vazava uma thread por chamada quando o caller usava `asyncio.run()` por chamada em vez de manter um loop vivo** (padrão comum em scripts/CLIs/testes de módulo) — `DatabaseSDK._get_lock()` trocava de conexão ao detectar mudança de event loop mas nunca fechava a antiga; sem `close()`, a thread dedicada do aiosqlite (não-daemon) ficava presa para sempre, podendo travar o processo do módulo silenciosamente. Bloqueava qualquer desenvolvedor de módulo da comunidade que seguisse esse padrão de uso perfeitamente razoável do SDK. Corrigido — a troca de loop agora fecha a conexão obsoleta antes de descartá-la.
+- `ModuleHost` não desenhava mais o grid genérico de metadata (Categoria/Vendor/Autor/Status) nem o bloco de teste "GET /ping" por cima da UI de todo módulo — tela mais limpa, sem placeholder de plataforma competindo com a interface do módulo.
+- Corrida intermitente em `test_phase2_notifications.py` (notificação de segurança agendada de forma fire-and-forget no startup podia materializar entre o `_clean()` do teste e a asserção).
+- CI sem `timeout-minutes` podia travar um job inteiro por até 6h em vez de falhar rápido (causa raiz era o bug do `sdk.database` acima).
+
 ## [1.1.0] - 2026-09-02
 
 ### Added
