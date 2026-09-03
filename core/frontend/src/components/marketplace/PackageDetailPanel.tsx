@@ -52,12 +52,12 @@ export function PackageDetailPanel({ pkg, onClose }: Props) {
             <TrustBadge level={pkg.trust_level} />
             {pkg.is_installed && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]">
-                Installed
+                Instalado
               </span>
             )}
             {pkg.has_update && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]">
-                Update available
+                Atualização disponível
               </span>
             )}
           </div>

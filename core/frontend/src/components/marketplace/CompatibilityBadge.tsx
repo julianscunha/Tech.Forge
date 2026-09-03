@@ -2,9 +2,9 @@ import { cn } from '@/lib/utils'
 import type { CompatibilityLevel } from '@/types'
 
 const CONFIG: Record<CompatibilityLevel, { label: string; classes: string; dot: string }> = {
-  compatible:   { label: 'Compatible',   classes: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]',  dot: 'bg-[hsl(var(--success))]' },
-  warning:      { label: 'Warning',      classes: 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]', dot: 'bg-[hsl(var(--warning))]' },
-  incompatible: { label: 'Incompatible', classes: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]',   dot: 'bg-[hsl(var(--danger))]'  },
+  compatible:   { label: 'Compatível',   classes: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]',  dot: 'bg-[hsl(var(--success))]' },
+  warning:      { label: 'Atenção',      classes: 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]', dot: 'bg-[hsl(var(--warning))]' },
+  incompatible: { label: 'Incompatível', classes: 'bg-[hsl(var(--danger)/0.12)] text-[hsl(var(--danger))]',   dot: 'bg-[hsl(var(--danger))]'  },
 }
 
 interface Props {

@@ -82,7 +82,7 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
             <TrustBadge level={pkg.trust_level} />
             {tab === 'installed' && (
               <span className="inline-flex items-center gap-1 text-[10px] text-[hsl(var(--success))]">
-                <CheckCircle2 size={10} /> Installed
+                <CheckCircle2 size={10} /> Instalado
               </span>
             )}
           </div>
@@ -106,16 +106,9 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
         {tab === 'available' && pkg.is_installed && (
           <span className="text-[10px] text-[hsl(var(--text-subtle))]">Já instalado</span>
         )}
-        {tab === 'installed' && (
-          <ActionBtn
-            icon={Trash2}
-            label="Remover"
-            disabled={loading}
-            loading={loading}
-            onClick={() => onRemove?.(pkg)}
-            variant="danger"
-          />
-        )}
+        {/* Ativar/Desativar (reversível) antes de Remover (destrutivo) —
+            ação de risco por último reduz clique acidental ao escanear a
+            fileira da esquerda pra direita (achado na revisão visual). */}
         {tab === 'installed' && pkg.is_enabled !== false && !isIncompat && (
           <ActionBtn
             icon={Power}
@@ -134,6 +127,16 @@ export function PackageCard({ pkg, tab, loading, onInstall, onRemove, onUpdate, 
             loading={loading}
             onClick={() => onActivate?.(pkg)}
             variant="primary"
+          />
+        )}
+        {tab === 'installed' && (
+          <ActionBtn
+            icon={Trash2}
+            label="Remover"
+            disabled={loading}
+            loading={loading}
+            onClick={() => onRemove?.(pkg)}
+            variant="danger"
           />
         )}
         {tab === 'updates' && (

@@ -7,11 +7,11 @@ const CONFIG: Record<TrustLevel, {
   icon: typeof ShieldCheck
   classes: string
 }> = {
-  TRUSTED:    { label: 'Trusted',    icon: ShieldCheck, classes: 'text-[hsl(var(--success))]' },
-  VERIFIED:   { label: 'Verified',   icon: Shield,      classes: 'text-[hsl(var(--accent))]'  },
-  UNVERIFIED: { label: 'Unverified', icon: ShieldAlert, classes: 'text-[hsl(var(--warning))]' },
-  MODIFIED:   { label: 'Modified',   icon: ShieldAlert, classes: 'text-[hsl(var(--warning))]' },
-  INVALID:    { label: 'Invalid',    icon: XCircle,     classes: 'text-[hsl(var(--danger))]'  },
+  TRUSTED:    { label: 'Confiável',   icon: ShieldCheck, classes: 'text-[hsl(var(--success))]' },
+  VERIFIED:   { label: 'Verificado',  icon: Shield,      classes: 'text-[hsl(var(--accent))]'  },
+  UNVERIFIED: { label: 'Não verificado', icon: ShieldAlert, classes: 'text-[hsl(var(--warning))]' },
+  MODIFIED:   { label: 'Modificado', icon: ShieldAlert, classes: 'text-[hsl(var(--warning))]' },
+  INVALID:    { label: 'Inválido',   icon: XCircle,     classes: 'text-[hsl(var(--danger))]'  },
 }
 
 interface Props { level: TrustLevel; className?: string }

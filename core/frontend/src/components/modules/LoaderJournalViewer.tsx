@@ -88,11 +88,11 @@ export function LoaderJournalViewer({ result }: Props) {
 
       {/* Summary strip */}
       <div className="flex items-center gap-4 px-4 py-2 bg-[hsl(var(--bg))] border-b border-[hsl(var(--border-subtle))] text-[10px]">
-        <Pill label="Scanned"     value={result.scanned}      color="text-[hsl(var(--text-muted))]" />
-        <Pill label="Installed"   value={result.installed}    color="text-[hsl(var(--success))]" />
-        <Pill label="Disabled"    value={result.disabled}     color="text-[hsl(var(--text-subtle))]" />
-        <Pill label="Invalid"     value={result.invalid}      color="text-[hsl(var(--danger))]" />
-        <Pill label="Incompatible" value={result.incompatible} color="text-[hsl(var(--warning))]" />
+        <Pill label="Escaneados"  value={result.scanned}      color="text-[hsl(var(--text-muted))]" />
+        <Pill label="Instalados"  value={result.installed}    color="text-[hsl(var(--success))]" />
+        <Pill label="Desativados" value={result.disabled}     color="text-[hsl(var(--text-subtle))]" />
+        <Pill label="Inválidos"   value={result.invalid}      color="text-[hsl(var(--danger))]" />
+        <Pill label="Incompatíveis" value={result.incompatible} color="text-[hsl(var(--warning))]" />
       </div>
 
       {/* Log lines */}

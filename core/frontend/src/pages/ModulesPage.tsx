@@ -21,6 +21,13 @@ const STATUS_FILTERS: { value: ModuleStatus | 'ALL'; label: string }[] = [
   { value: 'INCOMPATIBLE', label: 'Incompatíveis' },
 ]
 
+const STATUS_LABEL: Record<string, string> = {
+  INSTALLED: 'Instalados',
+  DISABLED: 'Desabilitados',
+  INVALID: 'Inválidos',
+  INCOMPATIBLE: 'Incompatíveis',
+}
+
 export function ModulesPage() {
   const { developerMode, toggleDeveloperMode } = useDevModeStore()
 
@@ -144,7 +151,7 @@ export function ModulesPage() {
                 status === 'INVALID'     && 'bg-[hsl(var(--danger))]',
                 status === 'INCOMPATIBLE' && 'bg-[hsl(var(--warning))]',
               )} />
-              <span className="text-[hsl(var(--text-muted))]">{status.charAt(0) + status.slice(1).toLowerCase()}</span>
+              <span className="text-[hsl(var(--text-muted))]">{STATUS_LABEL[status] ?? status}</span>
               <span className="font-mono font-semibold text-[hsl(var(--text))]">{count}</span>
             </div>
           ))}

@@ -3,12 +3,12 @@ import { cn } from '@/lib/utils'
 
 const CONFIG: Record<string, { label: string; classes: string; Icon: typeof Server }> = {
   service: {
-    label: 'Service',
+    label: 'Serviço',
     classes: 'bg-[hsl(var(--info)/0.12)] text-[hsl(var(--info))]',
     Icon: Server,
   },
   application: {
-    label: 'Application',
+    label: 'Aplicação',
     classes: 'bg-[hsl(var(--accent-muted))] text-[hsl(var(--accent))]',
     Icon: AppWindow,
   },

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   BookOpen, Code2, Layers, Puzzle, FileText, HelpCircle,
   Package, Zap, ChevronRight, Download, RefreshCw,
@@ -28,12 +28,12 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
   { id: 'modules',        label: 'Módulos Instalados',      icon: Boxes,     category: 'module'         },
   { id: 'sdk-backend',    label: 'SDK Backend',             icon: Zap,       category: 'sdk-backend'    },
   { id: 'sdk-frontend',   label: 'SDK Frontend',            icon: LayoutGrid, category: 'sdk-frontend'  },
-  { id: 'service-module', label: 'Service Modules',         icon: Puzzle,    category: 'service-module' },
+  { id: 'service-module', label: 'Módulos de Serviço',      icon: Puzzle,    category: 'service-module' },
   { id: 'examples',       label: 'Exemplos',                icon: FileText,  category: 'examples'       },
   { id: 'manifest-reference', label: 'Referência do Manifesto', icon: Package, category: 'manifest-reference' },
   { id: 'marketplace',    label: 'Marketplace para Devs',   icon: Store,     category: 'marketplace'    },
   { id: 'governance',     label: 'Documentation First',      icon: ShieldCheck, category: 'governance'  },
-  { id: 'dependency-graph', label: 'Dependency Graph',       icon: GitBranch, category: 'dependency-graph' },
+  { id: 'dependency-graph', label: 'Grafo de Dependências',  icon: GitBranch, category: 'dependency-graph' },
   { id: 'faq',            label: 'FAQ',                     icon: HelpCircle, category: 'faq'           },
 ]
 
@@ -43,6 +43,12 @@ export function DeveloperCenterPage() {
   const [activeSection,   setActiveSection]   = useState('intro')
   const [articles,        setArticles]        = useState<DocEntryMeta[]>([])
   const [selectedArticle, setSelectedArticle] = useState<DocEntryFull | null>(null)
+  // loadSection é useCallback([]) — ler selectedArticle direto ali veria
+  // sempre o valor inicial (closure obsoleta). Ref espelhado via effect
+  // evita isso sem mudar a identidade de loadSection (que resetaria o
+  // efeito de activeSection toda vez que um artigo é selecionado).
+  const selectedArticleRef = useRef<DocEntryFull | null>(null)
+  useEffect(() => { selectedArticleRef.current = selectedArticle }, [selectedArticle])
   const [contracts,       setContracts]       = useState<ServiceContract[]>([])
   const [serviceStatus,   setServiceStatus]   = useState<Record<string, ServiceStatus>>({})
   const [mermaidGraph,    setMermaidGraph]    = useState<string | null>(null)
@@ -64,6 +70,7 @@ export function DeveloperCenterPage() {
     // corrida entre os dois fetches). Quem troca de seção de propósito
     // (clique na sidebar) já reseta explicitamente no próprio onClick.
     setMermaidGraph(null)
+    let loadedArticles: DocEntryMeta[] = []
     try {
       if (sectionId === 'dependency-graph') {
         const { mermaid } = await dependenciesApi.graph()
@@ -92,13 +99,24 @@ export function DeveloperCenterPage() {
           servicesApi.list().catch(() => []),
         ])
         setArticles(arts)
+        loadedArticles = arts
         setContracts(conts)
         setServiceStatus(Object.fromEntries(services.map(s => [s.service_id, s.status])))
       } else {
         const arts = await docsApi.list(section.category)
         setArticles(arts)
+        loadedArticles = arts
         setContracts([])
         setServiceStatus({})
+      }
+      // Seção com um único artigo — abre direto, sem exigir clique numa
+      // lista de 1 item só (achado na revisão visual: a lista some assim
+      // que um artigo é selecionado, então o painel de conteúdo ficava
+      // vazio até o clique extra). Não se aplica a "modules" (tem chips de
+      // filtro por módulo — abrir sozinho esconderia a lista de propósito)
+      // nem quando um artigo já foi selecionado por outra via (busca).
+      if (loadedArticles.length === 1 && !selectedArticleRef.current) {
+        openArticle(loadedArticles[0].id)
       }
     } catch { setArticles([]); setContracts([]); setServiceStatus({}) }
     finally { setLoading(false) }

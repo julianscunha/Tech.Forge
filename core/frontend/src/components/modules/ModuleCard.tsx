@@ -63,15 +63,20 @@ export function ModuleCard({ module, developerMode, completeness, trust, onClick
         </div>
       )}
 
-      {/* Description */}
-      <p className="text-xs text-[hsl(var(--text-muted))] line-clamp-2 leading-relaxed">
+      {/* Description — min-h reserva a altura de 2 linhas mesmo quando o
+          texto cabe em 1, pra card ficar com altura igual aos vizinhos na
+          mesma linha do grid (achado na revisão visual: alturas variando
+          por linha de descrição desalinhava a base da linha inteira). */}
+      <p className="text-xs text-[hsl(var(--text-muted))] line-clamp-2 leading-relaxed min-h-[2.5em]">
         {module.description}
       </p>
 
-      {/* Category tag */}
+      {/* Category tag — border adicionada porque bg-subtle sozinho tem
+          contraste quase nulo contra bg-elevated do card, a tag ficava
+          visualmente "sumindo" ao lado do ModuleTypeBadge (que é colorido) */}
       <div className="flex items-center gap-2 mt-2.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium
-          bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))]">
+          bg-[hsl(var(--bg-subtle))] text-[hsl(var(--text-muted))] border border-[hsl(var(--border-subtle))]">
           {module.category}
         </span>
 
@@ -80,7 +85,7 @@ export function ModuleCard({ module, developerMode, completeness, trust, onClick
         {hasIssues && (
           <span className="flex items-center gap-1 text-[10px] text-[hsl(var(--danger))]">
             <AlertCircle size={10} />
-            {module.errors.length} {module.errors.length === 1 ? 'error' : 'errors'}
+            {module.errors.length} {module.errors.length === 1 ? 'erro' : 'erros'}
           </span>
         )}
 
