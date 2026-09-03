@@ -135,21 +135,27 @@ prioridade e motivo do adiamento em
 [`docs/architecture/technical-debt-registry.md`](architecture/technical-debt-registry.md)
 — não duplicados aqui.
 
-- **CI (`ci.yml`) não tinha `timeout-minutes`, e o step "CLI test suite"
-  já travou o job inteiro por ~6h (timeout default do GitHub Actions) em
-  pelo menos 3 execuções distintas no mesmo dia.** O log mostra o pytest
-  imprimindo `137 passed... in 1.59s` normalmente — a suíte em si sempre
-  termina — mas o processo do runner não retorna o controle depois disso,
-  característico de processo/thread órfão vazando de um step anterior no
-  mesmo job (steps de uma job compartilham a árvore de processos do
-  runner). Buscas em todo `Popen`/thread/subprocess do repo (CLI,
-  launcher, testes de arquitetura) não encontraram um cleanup faltando —
-  todos os spawns achados têm `kill()+wait()` em `finally`. Não
-  reproduzido localmente no Windows (roda limpo em ~30s). Mitigado com
-  `timeout-minutes: 15` no job e `timeout-minutes: 5` só no step de CLI
-  (teto de segurança, não a correção da causa raiz) — a causa raiz exigiria
-  reproduzir interativamente num runner Linux de verdade pra isolar qual
-  processo específico está vazando.
+- **~~CI travava ~6h no step "CLI test suite".~~ Corrigido — causa raiz era
+  um bug real de `techforge_sdk.database.DatabaseSDK`.** `_get_lock()`
+  detecta corretamente quando o event loop mudou (ex: chamador fazendo
+  `asyncio.run()` por chamada em vez de um loop só pro processo todo) e
+  descarta a conexão antiga pra abrir uma nova no loop atual — mas
+  descartava sem fechar. Cada conexão aiosqlite roda o driver sqlite3
+  síncrono numa `Thread` dedicada não-daemon; sem `close()`, essa thread
+  fica presa pra sempre em `self._tx.get()` esperando trabalho que nunca
+  chega — e uma thread não-daemon viva impede o processo Python de sair
+  de verdade, mesmo com o pytest já tendo impresso "N passed". Achado com
+  uma sonda temporária (`aiosqlite.connect()` interceptado +
+  `sys._current_frames()` nas threads vivas no fim da sessão) — não
+  reproduzia de forma confiável no Windows local (RAM instável na máquina
+  de dev), mas era 100% reproduzível no runner Linux do CI. Testado por
+  `test_database_insert_fetch_across_separate_event_loops`
+  (`cli/tests/test_phase3.py`), que já existia justamente pra essa
+  regressão de troca de loop, mas nunca fechava a última conexão no fim.
+  Corrigido em duas frentes: `_get_lock()` agora fecha a conexão obsoleta
+  antes de descartá-la, e o teste fecha a conexão final explicitamente.
+  `timeout-minutes` no `ci.yml` (15 no job, 5 no step de CLI) continua
+  como teto de segurança independente da causa raiz.
 
 O item abaixo fica só neste documento porque depende de um fluxo
 de update/instalador ainda inexistente, mesma lógica das decisões de

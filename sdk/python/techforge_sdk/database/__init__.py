@@ -54,6 +54,20 @@ class DatabaseSDK:
         if self._loop is not loop:
             self._loop = loop
             self._lock = asyncio.Lock()
+            if self._conn is not None:
+                # Discarding the reference without closing it leaks the
+                # connection's dedicated worker thread (aiosqlite runs the
+                # sync sqlite3 driver on a background Thread) — it blocks
+                # forever on its internal queue, non-daemon, keeping the
+                # whole process alive. Safe to await here even though the
+                # connection was opened on the now-dead old loop: the
+                # worker thread and its shutdown queue are thread-safe,
+                # not bound to any particular event loop.
+                try:
+                    await self._conn.close()
+                except Exception:
+                    logger.warning("Failed to close stale connection for '%s' "
+                                    "across event-loop switch", self._module_id)
             self._conn = None
         return self._lock
 

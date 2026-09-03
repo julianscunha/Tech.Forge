@@ -455,6 +455,7 @@ class TestSDKServices:
         asyncio.run(db.execute("CREATE TABLE jobs (name TEXT)"))
         asyncio.run(db.execute("INSERT INTO jobs (name) VALUES (?)", ["nightly"]))
         rows = asyncio.run(db.fetch_all("SELECT * FROM jobs"))
+        asyncio.run(db.close())
         assert rows == [{"name": "nightly"}]
 
     def test_notifications_push(self):
